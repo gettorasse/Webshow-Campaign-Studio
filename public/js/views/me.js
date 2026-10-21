@@ -2,7 +2,7 @@
 import { state } from "../store.js";
 import { esc, IC } from "../lib.js";
 import { SHOWRUNNERS, SR_KEYS } from "../../shared/showrunners.js";
-import { planOf, euro } from "../../shared/plans.js";
+import { planOf, priceText } from "../../shared/plans.js";
 import { aiMode } from "../ai.js";
 
 export const PROFILE_FIELDS = [
@@ -27,7 +27,7 @@ export function meView() {
     <h2 class="sec">Remembered from your chats ${p.memory.length ? `<span class="count">${p.memory.length}</span>` : ""}</h2>
     ${p.memory.length ? `<div class="list">${p.memory.map((m, i) => `<div class="mem-row"><span>${esc(m.text)}</span><button class="icon-btn sm" data-act="forget" data-i="${i}" aria-label="Forget this">${IC.x}</button></div>`).join("")}</div>` : `<p class="muted small">Nothing yet. When you tell your Showrunner something lasting, like a price or who your customers are, it saves it here.</p>`}
     <h2 class="sec">Plan</h2>
-    <button class="card row-card tap" data-act="sheet" data-k="plans"><span class="ic-round">${IC.layers}</span><span class="grow"><b>${esc(plan.name)}</b><span class="muted small">${euro(plan.price)} / ${plan.per === "once" ? "one-off" : "month"} · demo</span></span>${IC.arrow}</button>
+    <button class="card row-card tap" data-act="sheet" data-k="plans"><span class="ic-round">${IC.layers}</span><span class="grow"><b>${esc(plan.name)}</b><span class="muted small">${priceText(plan)} · demo</span></span>${IC.arrow}</button>
     <h2 class="sec">Settings</h2>
     <div class="card">
       <div class="set"><span>Theme</span><div class="seg sm">${[["", "Auto"], ["light", "Light"], ["dark", "Dark"]].map(([v, l]) => `<button aria-pressed="${state.settings.theme === v}" data-act="theme" data-v="${v}">${l}</button>`).join("")}</div></div>

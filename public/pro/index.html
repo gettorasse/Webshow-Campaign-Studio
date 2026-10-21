@@ -6504,18 +6504,19 @@ Object.assign(A, {
   nextseason() { const s = cur(); const d = dnaOf(s); const L = showLen(d) || 28; const st = addDays(todayISO(), 7); cloneShow(s.name.replace(/ · season \d+$/, "") + " · season 2", { kitOnly: true, dna: { ...d, idea: "", start: st, end: addDays(st, L - 1) } }); S.seasonFmt = s.plan?.format || "launch"; toast("New season: the kit, page and style come along. Write the new big idea, then plan."); },
 });
 /* ============================================================
-   Plans: Free, Basic and Advanced. Nodes and customisation tools
+   Plans: Starter (free), Connect, Premium and Enterprise, plus Webshow on AIR. Nodes and customisation tools
    unlock by plan. The prototype lets you switch plans to try them.
    ============================================================ */
 ICON.cube = P('<path d="M8 1.8l5.5 3.1v6.2L8 14.2l-5.5-3.1V4.9z"/><path d="M2.5 4.9L8 8l5.5-3.1M8 8v6.2"/>');
 const TIERS = {
-  free: { label: "Starter", price: "€19", per: "/ month", who: "Try the idea on your own", feats: ["Build a show on the canvas", "Showrunner onboarding, Show DNA and the season plan", "Landing page, carousels and image posts", "Upload your own images", "Publish to staging.webshow.ai"], no: ["AI images", "Ads, quizzes and polls", "Your own domain"] },
-  basic: { label: "Basic", price: "€49", per: "/ month", who: "Run a good show on your own", feats: ["Everything in Starter", "AI images and copy within your credits", "Meta and Google ads, boosts and budgets", "Quizzes, polls, popups, booking, cookie banner", "Weekly check and end report", "Your own domain"], no: ["Chatbots, configurators, 3D and games", "Per-section styling and overlays"] },
-  advanced: { label: "Advanced", price: "€149", per: "/ month", who: "Heavy AI tools for big shows", feats: ["Everything in Basic", "Chatbot trained on the show", "Configurators, Three.js motion and mini games (soon)", "Per-section styles, overlays and gradients, colour palettes", "Manual links and full wiring control", "More credits"], no: ["Hands-on help from the Webshow studio"] },
-  pro: { label: "Pro", price: "€690", per: "/ month", who: "Full access with the Webshow studio beside you", feats: ["Everything in Advanced", "Hands-on support from the Webshow creative studio", "Creative direction for every show", "Production help: photo, video and design", "Priority AI credits"], no: [] },
+  free: { label: "Starter", price: "Free", per: "", who: "Try the idea on your own", feats: ["Build a show on the canvas", "Showrunner onboarding, Show DNA and the season plan", "Landing page, carousels and image posts", "Upload your own images", "Publish to staging.webshow.ai"], no: ["AI images", "Ads, quizzes and polls", "Your own domain"] },
+  basic: { label: "Connect", price: "€49", per: "/ month", who: "Run a good show on your own", feats: ["Everything in Starter", "AI images and copy within your credits", "Meta and Google ads, boosts and budgets", "Quizzes, polls, popups, booking, cookie banner", "Weekly check and end report", "Your own domain"], no: ["Chatbots, configurators, 3D and games", "Per-section styling and overlays"] },
+  advanced: { label: "Premium", price: "€199", per: "/ month", who: "Heavy AI tools for big shows", feats: ["Everything in Connect", "Chatbot trained on the show", "Configurators, Three.js motion and mini games (soon)", "Per-section styles, overlays and gradients, colour palettes", "Manual links and full wiring control", "More credits"], no: ["Done-for-you marketing (that's Webshow on AIR)"] },
+  pro: { label: "Enterprise", price: "€490", per: "/ month", who: "For teams and agencies", feats: ["Everything in Premium", "Several brands and a team", "API access (coming)", "Priority AI credits", "Priority support"], no: ["Done-for-you marketing (that's Webshow on AIR)"] },
 };
 const ADDONS = [
-  ["funnel", "Webshow Funnel", "We produce one complete campaign for one product or service.", "€1,500 + VAT"],
+  ["air", "Webshow on AIR", "Our team runs your marketing with AI, every month.", "€999 / month"],
+  ["funnel", "Launch campaign", "We produce one complete campaign for one product or service.", "€2,490 one-off"],
   ["direction", "Creative direction session", "A Webshow strategist reviews your show and sharpens the idea.", "Quoted per show"],
   ["production", "Photo and video production", "A shoot for your show's visuals, edited for every channel.", "Quoted per project"],
 ];
@@ -6528,7 +6529,7 @@ const tierOfNode = (t) => ["free", "basic", "advanced"][NODE_TIER[t] ?? 0];
 function nodeAllowed(t) { return tierAtLeast(tierOfNode(t)); }
 { const _lc = loadConnectors; loadConnectors = async function (f) { const r = await _lc(f); try { const v = await Store.getDoc("workspace/plan", null); if (v?.tier && TIER_RANK[v.tier] != null && v.tier !== S.tier) { S.tier = v.tier; lsSet("wss.tier", v.tier); render(); } } catch {} return r; }; }
 function setTier(k) { S.tier = k; lsSet("wss.tier", k); Store.putDoc("workspace/plan", { tier: k, at: now(), by: Store.me.id }).catch(() => {}); }
-function tierFootHTML() { return `<button class="srow brand" data-act="plans"><span class="ic">${ICON.lock}</span><span class="lbl">${TIERS[S.tier].label} plan</span><span class="ct">${S.tier === "pro" ? "studio support" : "upgrade"}</span></button>`; }
+function tierFootHTML() { return `<button class="srow brand" data-act="plans"><span class="ic">${ICON.lock}</span><span class="lbl">${TIERS[S.tier].label} plan</span><span class="ct">${S.tier === "pro" ? "full access" : "upgrade"}</span></button>`; }
 function lockedBox(what, need = "advanced") { return `<div class="grp"><div class="locked"><span class="nico" style="--nc:var(--brand)">${ICON.lock}</span><span class="t"><b>${esc(what)}</b><span>Part of the ${TIERS[need].label} plan</span></span><button class="btn sm" data-act="plans">See plans</button></div></div>`; }
 
 /* library: locked nodes are visible but closed */
@@ -6563,7 +6564,7 @@ libraryPop = function () {
 
 /* plans modal: a full upgrade simulation. Nothing is charged; switching unlocks at once. */
 function plansModal() {
-  const pro = S.tier === "pro";
+  const pro = false; /* studio services are sold separately on every plan */
   return `<div class="scrim" data-act="closemodal"><div class="modal wide" data-stop="1" role="dialog" aria-label="Plans"><div class="modal-h"><span class="nico" style="--nc:var(--brand)">${ICON.lock}</span><h3>Plans</h3><span class="demo-b">Demo · no payment</span><span class="grow"></span><button class="ib" data-act="closemodal" aria-label="Close">${ICON.x}</button></div>
     <div class="modal-b"><p class="muted" style="font-size:12.5px">Pick any plan to try it. It unlocks right away, and you can switch back whenever you like. No account, card or subscription is created.</p>
       <div class="plans">${Object.entries(TIERS).map(([k, t]) => `<div class="plan ${S.tier === k ? "on" : ""} ${k === "pro" ? "plan-pro" : ""}"><div class="plan-h"><b class="px">${t.label}</b><span class="price"><b>${t.price}</b> ${t.per}</span><span class="muted">${t.who}</span></div>

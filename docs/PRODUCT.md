@@ -7,21 +7,19 @@ A small business owner has one place and one buddy: **their Showrunner**. It liv
 
 ## How we launch (in this order)
 
-1. **Webshow Studio (a service run by people, AI-first).** Our team uses the Showrunner internally to run clients' marketing. Every campaign teaches us what good looks like, and those cases become the training material and the proof.
-   - **€999 / month:** ongoing done-for-you marketing.
-   - **€2,490 one-off:** one launch campaign, made for you.
-   - ⚠️ *A €9,999/month tier was also mentioned. We assumed this was a slip for €999. If a premium agency tier is intended, add it to `public/shared/plans.js`.*
-2. **The app (self-serve).** The same Showrunner, used directly by owners.
+1. **Webshow on AIR (a service run by people, AI-first).** Our team uses the Showrunner to run clients' marketing. Every campaign teaches us what good looks like, and those cases become the training material and the proof.
+2. **The app (self-serve).** The same Showrunner, used directly by owners. Starter is free, so anyone can try it.
 
 | Plan | Price | What | Status |
 |---|---|---|---|
-| Starter | €49 / month | Chat, campaigns, every post written, daily to-dos and tips, exports | Built (demo pricing) |
-| Connect | €199 / month *(placeholder)* | Connectors: publish to Instagram/Facebook/email, results back into the chat | Not built |
-| Enterprise | €999 / month | API, team, several brands, Webshow Pro on desktop | Not built |
-| Webshow Studio | €999 / month | Human team + Showrunner | Service, sold outside the app |
+| Starter | Free | Chat, campaigns with every post written, daily to-dos and tips, exports | Built |
+| Connect | €49 / month | Connect Instagram, Facebook and email; scheduling; results back into the chat | Not built |
+| Premium | €199 / month | Webshow Pro on desktop, several campaigns side by side, more AI | Pro is legacy |
+| Enterprise | €490 / month | Several brands and a team, API, priority support | Not built |
+| **Webshow on AIR** | €999 / month | Our team runs your marketing with AI, a new campaign every month | Service |
 | Launch campaign | €2,490 one-off | One campaign made for you | Service |
 
-There are no payments in the app. **Plans** in *Me* is a clearly labelled demo, so we can watch which plan people pick. Prices live in `public/shared/plans.js`. The word "free" is never used (a test enforces this).
+There are no payments in the app and nothing is locked by plan yet. **Plans** in *Me* is a clearly labelled demo, so we can watch which plan people pick. Prices live in `public/shared/plans.js`. Pro (desktop) uses the same names and prices in `legacy/pro-studio/src/tiers.js`, where plans do unlock features in the demo.
 
 ## Phone first, desktop is Pro
 
@@ -56,7 +54,7 @@ There are three styles, named by surname only: **Ogilvy**, **Hormozi**, **Vayner
 ## Roadmap (suggested)
 
 1. **Now:** test the AI against real briefs (docs/AI-TESTING.md). Fix prompts until 4 out of 5 posts are "would post as is".
-2. Use it inside Webshow Studio for real clients and save every good campaign as a test case.
+2. Use it inside Webshow on AIR for real clients and save every good campaign as a test case.
 3. Add accounts and sync (Supabase or similar), real rate limits, and error tracking.
 4. Add push notifications (service worker + Web Push), then a native shell (Capacitor) if needed.
 5. **Connect:** Meta and email connectors, scheduling, and results flowing back into the chat ("your reel got 3 bookings").

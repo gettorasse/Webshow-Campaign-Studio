@@ -65,8 +65,8 @@ test("exports are well formed", () => {
   const j = JSON.parse(showJSON(show)); assert.equal(j.format, "webshow.campaign"); assert.equal(j.assets.length, slots.length); assert.ok(!("pending" in j.assets[0]));
   assert.match(showMD(show), /^# /);
 });
-test("the word 'free' never appears in the app", async () => {
+test("the word 'free' appears only as the Starter price", async () => {
   const { readdirSync, readFileSync, statSync } = await import("node:fs"); const { join } = await import("node:path");
   const walk = (d) => readdirSync(d).flatMap(f => { const p = join(d, f); return statSync(p).isDirectory() ? (f === "pro" ? [] : walk(p)) : [p]; });
-  for (const f of walk("public")) if (/\.(js|html|css|json)$/.test(f)) assert.doesNotMatch(readFileSync(f, "utf8"), /\bfree\b/i, f);
+  for (const f of walk("public")) if (/\.(js|html|css|json)$/.test(f) && !f.endsWith("plans.js")) assert.doesNotMatch(readFileSync(f, "utf8"), /\bfree\b/i, f);
 });

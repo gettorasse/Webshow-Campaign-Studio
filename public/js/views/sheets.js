@@ -3,7 +3,7 @@ import { state } from "../store.js";
 import { esc, IC } from "../lib.js";
 import { CHANNELS, FORMATS, KINDS, PHASES } from "../../shared/model.js";
 import { fmtDate } from "../../shared/util.js";
-import { APP_PLANS, STUDIO_PLANS, euro } from "../../shared/plans.js";
+import { APP_PLANS, STUDIO_PLANS, euro, priceText } from "../../shared/plans.js";
 
 export function sheetHTML() {
   const sh = state.ui.sheet; if (!sh) return "";
@@ -38,8 +38,8 @@ function exportSheet() {
 }
 function plansSheet() {
   const cur = state.settings.plan;
-  const card = (p) => `<div class="plan-card${p.key === cur ? " on" : ""}"><div class="row between"><b class="h">${p.name}</b><span class="price">${euro(p.price)}<small>/${p.per === "once" ? "one-off" : "mo"}</small></span></div><p class="muted small">${p.for}${p.draft ? " · price to be confirmed" : ""}</p><ul>${p.points.map(x => `<li>${IC.check}${x}</li>`).join("")}</ul>${p.key === cur ? `<span class="tag">Current plan</span>` : `<button class="btn sm${p.key === "starter" ? "" : " go"}" data-act="setplan" data-k="${p.key}">Choose ${p.name}</button>`}</div>`;
+  const card = (p) => `<div class="plan-card${p.key === cur ? " on" : ""}"><div class="row between"><b class="h">${p.name}</b><span class="price">${p.price === 0 ? priceText(p) : `${euro(p.price)}<small>/${p.per === "once" ? "one-off" : "mo"}</small>`}</span></div><p class="muted small">${p.for}</p><ul>${p.points.map(x => `<li>${IC.check}${x}</li>`).join("")}</ul>${p.key === cur ? `<span class="tag">Current plan</span>` : `<button class="btn sm${p.key === "starter" ? "" : " go"}" data-act="setplan" data-k="${p.key}">Choose ${p.name}</button>`}</div>`;
   return `<header class="sheet-h"><div class="grow"><span class="kicker">Demo · no payment is taken</span><h2>Plans</h2></div><button class="icon-btn" data-act="closesheet" aria-label="Close">${IC.x}</button></header>
     <h3 class="sec">The app</h3>${APP_PLANS.map(card).join("")}
-    <h3 class="sec">Done for you by Webshow Studio</h3><p class="muted small">A human team that works with AI, for businesses that want it handled.</p>${STUDIO_PLANS.map(card).join("")}`;
+    <h3 class="sec">Done for you</h3><p class="muted small">A human team that works with AI, for businesses that want it handled.</p>${STUDIO_PLANS.map(card).join("")}`;
 }
