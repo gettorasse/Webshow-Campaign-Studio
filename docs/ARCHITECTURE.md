@@ -11,7 +11,7 @@
 ## Request flow
 
 ```
-phone ──POST /api/showrunner {task:"chat"|"strategy"|"assets", input}──▶ api/showrunner.js
+phone ──POST /api/showrunner {task:"chat"|"showchat"|"strategy"|"assets", input}──▶ api/showrunner.js
                                                                            │ TASKS[task](input) → prompt   (shared/prompts.js)
                                                                            │ fetch api.anthropic.com/v1/messages
                                                                            │ parseJSON(reply)
@@ -32,7 +32,8 @@ Making one campaign costs 1 strategy call plus ⌈posts / 5⌉ asset calls. A 4-
 {
   version: 1,
   profile: { business, what, audience, offer, voice, facts, avoid, website, showrunner, memory: [{text, at}] },
-  chat: [{ id, role: "user"|"sr", text, cards: [card], at }],       // last 200 kept
+  chats: { [id]: { id, title, showrunner, showId?,                 // showId set = that show's own chat
+                   messages: [{ id, role: "user"|"sr", text, cards: [card], at }], createdAt, updatedAt } },  // last 200 messages kept
   shows: { [id]: {
     id, createdAt, showrunner, status: "writing"|"ready",
     brief: { goal, offer, audience, channels: [..], start, weeks, budget, idea,
@@ -46,7 +47,7 @@ Making one campaign costs 1 strategy call plus ⌈posts / 5⌉ asset calls. A 4-
 }
 ```
 
-Card types in chat: `style`, `question`, `plan` (+ `showId` once created), `post`, `tip`, `remembered`, `open`.
+Card types in chat: `question`, `plan` (+ `showId` once created), `post`, `tip`, `remembered`, `open`, and in show chats `change` (`{summary, ops}` with ops `rewrite`, `move`, `shift`, `strategy`, `done`; applied by `applyChange()` in campaign.js only when the owner taps Apply). Version 1 data (one long chat) is migrated into a first chat on load.
 If you change this shape, bump `VERSION` in `store.js` and add a migration in `load()`.
 
 ## "Make it": prompts for ChatGPT

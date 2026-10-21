@@ -1,4 +1,12 @@
 <title>Webshow Campaign Studio</title>
+<script>
+/* Webshow Pro is part of Premium and Enterprise. Other plans go back to the app, with the plans open. */
+(function () { try {
+  if (!/\/pro\/(index\.html)?$/.test(location.pathname)) return;
+  var plan = (JSON.parse(localStorage.getItem("webshow.v1") || "{}").settings || {}).plan;
+  if (plan !== "premium" && plan !== "enterprise") location.replace("../?plans=pro");
+} catch (e) {} })();
+</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -6516,19 +6524,24 @@ const TIERS = {
 };
 const ADDONS = [
   ["air", "Webshow on AIR", "Our team runs your marketing with AI, every month.", "€999 / month"],
-  ["funnel", "Launch campaign", "We produce one complete campaign for one product or service.", "€2,490 one-off"],
+  ["funnel", "Live campaign", "A team of real talent comes to your place: a shoot on location and every post made for you.", "€2,490 one-off"],
   ["direction", "Creative direction session", "A Webshow strategist reviews your show and sharpens the idea.", "Quoted per show"],
   ["production", "Photo and video production", "A shoot for your show's visuals, edited for every channel.", "Quoted per project"],
 ];
 const TIER_RANK = { free: 0, basic: 1, advanced: 2, pro: 3 };
 const NODE_TIER = { brief: 0, text: 0, image: 0, style: 0, page: 0, publish: 0, carousel: 0, popup: 1, metaad: 1, ad: 1, quiz: 1, poll: 1, scheduler: 1, cookie: 1, social: 1, adchannel: 1, chatbot: 2, palette: 2, link: 2 };
-S.tier = lsGet("wss.tier", "basic"); if (!TIERS[S.tier]) S.tier = "basic";
+/* Pro is part of Premium and Enterprise; the plan is shared with the phone app (webshow.v1). */
+const PHONE_TO_PRO = { premium: "advanced", enterprise: "pro" }, PRO_TO_PHONE = { advanced: "premium", pro: "enterprise" };
+const phonePlan = () => { try { return (JSON.parse(localStorage.getItem("webshow.v1") || "{}").settings || {}).plan; } catch { return ""; } };
+S.tier = PHONE_TO_PRO[phonePlan()] || lsGet("wss.tier", "advanced"); if (!PRO_TO_PHONE[S.tier]) S.tier = "advanced";
 S.addons = lsGet("wss.addons", {});
 const tierAtLeast = (k) => TIER_RANK[S.tier] >= TIER_RANK[k];
 const tierOfNode = (t) => ["free", "basic", "advanced"][NODE_TIER[t] ?? 0];
 function nodeAllowed(t) { return tierAtLeast(tierOfNode(t)); }
-{ const _lc = loadConnectors; loadConnectors = async function (f) { const r = await _lc(f); try { const v = await Store.getDoc("workspace/plan", null); if (v?.tier && TIER_RANK[v.tier] != null && v.tier !== S.tier) { S.tier = v.tier; lsSet("wss.tier", v.tier); render(); } } catch {} return r; }; }
-function setTier(k) { S.tier = k; lsSet("wss.tier", k); Store.putDoc("workspace/plan", { tier: k, at: now(), by: Store.me.id }).catch(() => {}); }
+{ const _lc = loadConnectors; loadConnectors = async function (f) { const r = await _lc(f); try { const v = await Store.getDoc("workspace/plan", null); if (v?.tier && PRO_TO_PHONE[v.tier] && v.tier !== S.tier) { S.tier = v.tier; lsSet("wss.tier", v.tier); render(); } } catch {} return r; }; }
+function setTier(k) {
+  try { const d = JSON.parse(localStorage.getItem("webshow.v1") || "null"); if (d && PRO_TO_PHONE[k]) { d.settings = { ...(d.settings || {}), plan: PRO_TO_PHONE[k] }; localStorage.setItem("webshow.v1", JSON.stringify(d)); } } catch {}
+  S.tier = k; lsSet("wss.tier", k); Store.putDoc("workspace/plan", { tier: k, at: now(), by: Store.me.id }).catch(() => {}); }
 function tierFootHTML() { return `<button class="srow brand" data-act="plans"><span class="ic">${ICON.lock}</span><span class="lbl">${TIERS[S.tier].label} plan</span><span class="ct">${S.tier === "pro" ? "full access" : "upgrade"}</span></button>`; }
 function lockedBox(what, need = "advanced") { return `<div class="grp"><div class="locked"><span class="nico" style="--nc:var(--brand)">${ICON.lock}</span><span class="t"><b>${esc(what)}</b><span>Part of the ${TIERS[need].label} plan</span></span><button class="btn sm" data-act="plans">See plans</button></div></div>`; }
 
@@ -6566,8 +6579,8 @@ libraryPop = function () {
 function plansModal() {
   const pro = false; /* studio services are sold separately on every plan */
   return `<div class="scrim" data-act="closemodal"><div class="modal wide" data-stop="1" role="dialog" aria-label="Plans"><div class="modal-h"><span class="nico" style="--nc:var(--brand)">${ICON.lock}</span><h3>Plans</h3><span class="demo-b">Demo · no payment</span><span class="grow"></span><button class="ib" data-act="closemodal" aria-label="Close">${ICON.x}</button></div>
-    <div class="modal-b"><p class="muted" style="font-size:12.5px">Pick any plan to try it. It unlocks right away, and you can switch back whenever you like. No account, card or subscription is created.</p>
-      <div class="plans">${Object.entries(TIERS).map(([k, t]) => `<div class="plan ${S.tier === k ? "on" : ""} ${k === "pro" ? "plan-pro" : ""}"><div class="plan-h"><b class="px">${t.label}</b><span class="price"><b>${t.price}</b> ${t.per}</span><span class="muted">${t.who}</span></div>
+    <div class="modal-b"><p class="muted" style="font-size:12.5px">Webshow Pro is part of Premium and Enterprise. Starter and Connect live in the phone app: <a href="../?view=phone" style="text-decoration:underline">open the app</a>. Pick a plan to try it; no account, card or subscription is created.</p>
+      <div class="plans">${Object.entries(TIERS).filter(([k]) => PRO_TO_PHONE[k]).map(([k, t]) => `<div class="plan ${S.tier === k ? "on" : ""} ${k === "pro" ? "plan-pro" : ""}"><div class="plan-h"><b class="px">${t.label}</b><span class="price"><b>${t.price}</b> ${t.per}</span><span class="muted">${t.who}</span></div>
         ${S.tier === k ? `<span class="chip st-live"><i></i>Current plan</span>` : `<button class="btn ${TIER_RANK[k] > TIER_RANK[S.tier] ? "primary" : ""}" data-act="settier" data-k="${k}">${TIER_RANK[k] > TIER_RANK[S.tier] ? "Upgrade to" : "Switch to"} ${t.label}</button>`}
         <ul>${t.feats.map(f => `<li>${ICON.check}<span>${esc(f)}</span></li>`).join("")}${t.no.map(f => `<li class="no"><span class="dash">–</span><span>${esc(f)}</span></li>`).join("")}</ul></div>`).join("")}</div>
       <div class="addons"><div class="sec-h"><span>Webshow studio services ${pro ? `<span class="muted" style="font-weight:400">· included in Pro</span>` : `<span class="muted" style="font-weight:400">· paid add-ons on any plan</span>`}</span></div>

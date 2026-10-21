@@ -55,3 +55,22 @@ export function offlineAsset(profile, show, a) {
   return { title: `${{ hook: "Hook", show: "Show", convert: "Convert", always: "Always on" }[ph]} · ${KINDS[k].label}`, fields: F, image: isVisual(k) ? `Photo for a ${KINDS[k].label.toLowerCase()}: ${clip(profile.what || biz, 90)}. ${ph === "show" ? "Candid, people using it, natural light" : "One bold subject, room at the top for a headline"}. No text in the image.` : "", goal: { hook: "Make people stop scrolling.", show: "Build trust by showing what it's really like.", convert: `Turn interest into ${g.unit} before the deadline.`, always: `Catch everyone who looks for you.` }[ph] };
 }
 export const channelLabel = (k) => CHANNELS[k]?.label || k;
+
+/* Demo mode for a show's own chat: understands a few common adjustments. */
+export function offlineShowChat({ show, messages }) {
+  const t = (messages.filter(m => m.role === "user").at(-1)?.text || "").toLowerCase();
+  const open = show.assets.filter(a => !a.done && !a.pending).sort((x, y) => x.date.localeCompare(y.date));
+  const next = open.slice(0, 3);
+  const days = /(\d+)\s*(day|päiv)/.exec(t)?.[1]; const weeks = /(\d+|a|one|yksi)\s*(week|viik)/.exec(t);
+  if (/later|postpone|delay|push|myöhemm|siirr/.test(t) && (days || weeks)) {
+    const n = days ? +days : (weeks && /\d/.test(weeks[1]) ? +weeks[1] : 1) * 7;
+    return { reply: `I can move everything that's still to do ${n} days later. The posts you've done stay where they are.`, cards: [{ type: "change", summary: `Move ${open.length} posts ${n} days later`, ops: [{ op: "shift", days: n }] }], remember: [] };
+  }
+  if (/short|long|funn|serious|rewrite|change|tone|casual|formal|lyhy|hausk|muuta|kirjoita/.test(t) && next.length) {
+    return { reply: `Here's what I'd do: rewrite the next ${next.length} posts with your note. Apply it and I'll write them again.`, cards: [{ type: "change", summary: `Rewrite: ${next.map(a => a.title || KINDS[a.kind].label).join(", ")}`, ops: [{ op: "rewrite", ids: next.map(a => a.id), note: messages.filter(m => m.role === "user").at(-1)?.text || "" }] }], remember: [] };
+  }
+  if (/next|what now|seuraav|mitä nyt/.test(t) || !t) {
+    return { reply: next.length ? `Next up: ${next.map(a => `${a.title || KINDS[a.kind].label} (${fmtDate(a.date)})`).join(", ")}. Want me to change anything in these?` : "Everything is done. Nice work. Want to plan the next show?", cards: next.length ? [{ type: "question", q: "Change something?", options: ["Make them shorter", "Make them funnier", "Move everything a week later"] }] : [], remember: [] };
+  }
+  return { reply: "Tell me what to change: the tone, the timing, or the idea. I'll show you the change before anything happens.", cards: [{ type: "question", q: "What should change?", options: ["Make the posts shorter", "Move everything a week later", "What's next?"] }], remember: [] };
+}

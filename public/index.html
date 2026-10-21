@@ -10,18 +10,22 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script id="desktop-to-pro">
-/* On a computer (wide screen, mouse, no touch), Webshow opens as Pro. Phones and tablets get the app.
-   ?view=phone keeps the phone app on this computer (for testing); ?view=pro switches back. */
+/* On a computer (wide screen, mouse, no touch), Premium and Enterprise open as Webshow Pro.
+   Other plans, phones and tablets get the app. ?view=phone keeps the app on this computer; ?view=pro undoes it. */
 (function () {
+  var pro = false;
   try {
+    var plan = (JSON.parse(localStorage.getItem("webshow.v1") || "{}").settings || {}).plan;
+    pro = plan === "premium" || plan === "enterprise";
     var q = new URLSearchParams(location.search).get("view");
     if (q === "phone") localStorage.setItem("webshow.view", "phone");
     if (q === "pro") localStorage.removeItem("webshow.view");
+    document.documentElement.dataset.pro = pro ? "yes" : "no";
     if (localStorage.getItem("webshow.view") === "phone") return;
   } catch (e) {}
   var ipad = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
   var desktop = matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)").matches && !ipad;
-  if (desktop) location.replace("pro/");
+  if (desktop && pro) location.replace("pro/");
 })();
 </script>
 <link rel="manifest" href="manifest.webmanifest">
@@ -35,12 +39,13 @@
 <body>
 <aside class="desk" aria-label="About this view">
   <span class="wordmark">webshow<b>.ai</b></span>
-  <p>You're looking at the phone app on a computer (test mode). On a computer, Webshow normally opens as Pro.</p>
-  <a class="btn sm" href="./?view=pro">Back to Webshow Pro</a>
+  <div class="if-pro"><p>You're looking at the phone app on a computer. With your plan, Webshow opens as Pro here.</p><a class="btn sm" href="./?view=pro">Back to Webshow Pro</a></div>
+  <div class="if-no-pro"><p>This is Webshow, made for your phone. Open it there, or add it to your home screen.</p><p>Webshow Pro, the desktop studio with the full canvas, comes with Premium and Enterprise.</p><button class="btn sm" data-act="sheet" data-k="plans">See plans</button></div>
 </aside>
 <div class="app">
   <main id="view"></main>
   <nav id="tabs" aria-label="Main"></nav>
+  <div id="drawer"></div>
 </div>
 <div id="sheet"></div>
 <div id="toasts" role="status" aria-live="polite"></div>

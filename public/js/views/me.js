@@ -1,5 +1,5 @@
 /* Me: train your Showrunner (what it knows), pick its style, plan and settings. */
-import { state } from "../store.js";
+import { state, hasPro } from "../store.js";
 import { esc, IC } from "../lib.js";
 import { SHOWRUNNERS, SR_KEYS } from "../../shared/showrunners.js";
 import { planOf, priceText } from "../../shared/plans.js";
@@ -21,7 +21,8 @@ export function meView() {
   const p = state.profile; const plan = planOf(state.settings.plan); const mode = aiMode();
   return `<section class="page">
     <header class="page-h"><div><span class="eyebrow">Train your Showrunner</span><h1>Me</h1></div><span class="wordmark">webshow<b>.ai</b></span></header>
-    <h2 class="sec">Showrunner style</h2>
+    <h2 class="sec">Favourite Showrunner</h2>
+    <p class="muted small">Each chat starts by picking who runs it. Your favourite gives the daily tips.</p>
     <div class="srs">${SR_KEYS.map(k => `<button class="sr-pick" data-act="setstyle" data-k="${k}" aria-pressed="${p.showrunner === k}"><span class="sr-av sm">${IC[SHOWRUNNERS[k].icon]}</span><b>${SHOWRUNNERS[k].name}</b><span>${esc(SHOWRUNNERS[k].line)}</span></button>`).join("")}</div>
     <h2 class="sec">What it knows about you</h2>
     <p class="muted small">Your Showrunner uses this in every answer. It never makes up facts, so the more you tell it, the better it gets.</p>
@@ -34,7 +35,7 @@ export function meView() {
     <div class="card">
       <div class="set"><span>Theme</span><div class="seg sm">${[["", "Auto"], ["light", "Light"], ["dark", "Dark"]].map(([v, l]) => `<button aria-pressed="${state.settings.theme === v}" data-act="theme" data-v="${v}">${l}</button>`).join("")}</div></div>
       <div class="set"><span>AI</span><span class="muted small">${mode === "offline" ? "Demo mode (no AI connected)" : mode === "claude" ? "Connected through Claude" : "Connected"}</span></div>
-      <a class="set link-row" href="pro/" target="_blank" rel="noopener"><span>${IC.desktop} Webshow Pro</span><span class="muted small">Desktop only ${IC.arrow}</span></a>
+      ${hasPro() ? `<a class="set link-row" href="pro/" target="_blank" rel="noopener"><span>${IC.desktop} Webshow Pro</span><span class="muted small">On a computer ${IC.arrow}</span></a>` : `<button class="set link-row" data-act="sheet" data-k="plans"><span>${IC.desktop} Webshow Pro</span><span class="muted small">${IC.lock} Premium and Enterprise</span></button>`}
       <button class="set link-row" data-act="exportall"><span>${IC.down} Download my data</span></button>
       <button class="set link-row danger" data-act="reset"><span>${IC.trash} ${state.ui.confirmReset ? "Tap again to erase everything" : "Start over"}</span></button>
     </div>

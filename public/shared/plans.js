@@ -13,8 +13,8 @@ export const APP_PLANS = [
 export const STUDIO_PLANS = [
   { key: "air", name: "Webshow on AIR", price: 999, per: "month", for: "Our team runs your marketing with AI",
     points: ["A human team plus your Showrunner", "A new campaign every month", "Photo and video direction", "Monthly review call"] },
-  { key: "launch", name: "Launch campaign", price: 2490, per: "once", for: "One campaign, made for you",
-    points: ["Strategy and big idea", "All posts, ads and emails", "Landing page copy", "Hand-over in the app"] },
+  { key: "live", name: "Live campaign", price: 2490, per: "once", for: "A team of real talent comes to your place",
+    points: ["Creative team on location for a day", "Photo and video shoot at your business", "Strategy and big idea", "Every post, ad and email ready in the app"] },
 ];
 export const planOf = (k) => [...APP_PLANS, ...STUDIO_PLANS].find(p => p.key === k) || APP_PLANS[0];
 export const euro = (n) => "€" + n.toLocaleString("en-US");

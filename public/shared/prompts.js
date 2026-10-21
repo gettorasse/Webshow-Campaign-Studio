@@ -75,6 +75,57 @@ export function normChat(r) {
   return { reply: clip(r.reply, 900) || "Tell me a bit more?", cards, remember: arr(r.remember, 5).map(x => clip(x, 200)).filter(Boolean) };
 }
 
+/* ---------- a show's own chat: talk about one campaign and change it ---------- */
+const STRAT_FIELDS = ["name", "idea", "tagline", "message", "offer", "cta", "audience", "voice", "visual"];
+export function showChatPrompt({ profile, show, messages, today }) {
+  const st = show?.strategy || {}; const b = show?.brief || {};
+  const posts = arr(show?.assets, 60).map(a => `- id "${a.id}" · ${a.date} · ${KINDS[a.kind]?.label} · ${a.phase} · ${a.done ? "DONE" : "to do"} · "${clip(a.title, 40)}" · ${clip(Object.values(a.fields || {})[0], 80)}`).join("\n");
+  const hist = arr(messages, 14).map(m => `${m.role === "user" ? "OWNER" : "YOU"}: ${clip(m.text, 600)}`).join("\n");
+  return { tier: "default", maxTokens: 1600, prompt: `You are the owner's Showrunner from Webshow, and this chat is about ONE campaign ("show") that is already planned and written. Help them adjust it. Short, warm, phone-friendly.
+${RULES}
+${showrunnerBlock(show?.showrunner || profile?.showrunner)}
+${profileBlock(profile)}
+${briefBlock(b)}
+THE SHOW
+Name: ${st.name} · Big idea: ${st.idea} · Message: ${st.message} · Offer: ${st.offer} · Call to action: ${st.cta}
+Arc: hook = ${st.arc?.hook}; show = ${st.arc?.show}; convert = ${st.arc?.convert}
+POSTS (date · type · phase · status · title · first field)
+${posts}
+TODAY: ${today}
+CONVERSATION SO FAR
+${hist}
+
+HOW TO ANSWER
+- Keep "reply" under 70 words.
+- When the owner wants something changed, propose it as ONE "change" card. Only use post ids from the list. Never touch posts marked DONE unless they ask.
+- Changes you can make: rewrite posts with a note ("rewrite"), move one post to a date ("move"), shift all posts that are still to do by some days ("shift"), change a strategy field ("strategy": one of ${STRAT_FIELDS.join(", ")}), mark posts done ("done").
+- If the request is unclear, ask ONE question with 2-4 options. Give a "tip" only when it helps.
+Reply with ONLY JSON:
+{"reply": "...", "cards": [0-2 of: {"type":"change","summary":"what will change, one sentence","ops":[{"op":"rewrite","ids":["..."],"note":"what to change"} | {"op":"move","id":"...","date":"YYYY-MM-DD"} | {"op":"shift","days":7} | {"op":"strategy","field":"idea","value":"..."} | {"op":"done","ids":["..."]}]} | {"type":"question","q":"...","options":["..."]} | {"type":"tip","title":"...","text":"..."}]}` };
+}
+export function normShowChat(r, show) {
+  r = r && typeof r === "object" ? r : {}; const ids = new Set((show?.assets || []).map(a => a.id));
+  const iso = (d) => /^\d{4}-\d{2}-\d{2}$/.test(str(d)) ? str(d) : "";
+  const cards = arr(r.cards, 3).map(c => {
+    if (!c || typeof c !== "object") return null;
+    if (c.type === "change") {
+      const ops = arr(c.ops, 12).map(o => {
+        if (o?.op === "rewrite") { const x = arr(o.ids, 30).filter(i => ids.has(i)); return x.length ? { op: "rewrite", ids: x, note: clip(o.note, 300) } : null; }
+        if (o?.op === "move" && ids.has(o.id) && iso(o.date)) return { op: "move", id: o.id, date: iso(o.date) };
+        if (o?.op === "shift" && Math.abs(Math.round(+o.days)) >= 1) return { op: "shift", days: Math.max(-30, Math.min(30, Math.round(+o.days))) };
+        if (o?.op === "strategy" && STRAT_FIELDS.includes(o.field) && str(o.value)) return { op: "strategy", field: o.field, value: clip(o.value, 300) };
+        if (o?.op === "done") { const x = arr(o.ids, 30).filter(i => ids.has(i)); return x.length ? { op: "done", ids: x } : null; }
+        return null;
+      }).filter(Boolean);
+      return ops.length ? { type: "change", summary: clip(c.summary, 200) || "Here's the change", ops } : null;
+    }
+    if (c.type === "question" && str(c.q)) return { type: "question", q: clip(c.q, 200), options: arr(c.options, 4).map(o => clip(o, 60)).filter(Boolean) };
+    if (c.type === "tip" && str(c.text)) return { type: "tip", title: clip(c.title, 60), text: clip(c.text, 300) };
+    return null;
+  }).filter(Boolean);
+  return { reply: clip(r.reply, 900) || "What would you like to change?", cards, remember: [] };
+}
+
 /* ---------- campaign: strategy first, then the assets in small batches ---------- */
 const STRAT_SHAPE = `{"name": "2-5 words", "idea": "the big idea, max 8 words", "tagline": "one line", "audience": "who exactly", "insight": "the human truth the idea answers", "message": "central message, 1-2 sentences", "offer": "only as stated", "cta": "2-4 words", "arc": {"hook": "what the hook phase does", "show": "what the show phase does", "convert": "what the convert phase does"}, "voice": "how it sounds, one line", "visual": "photo and design direction, one line", "offer_ideas": ["0-3 ideas to make the offer stronger, as suggestions only"]}`;
 export function strategyPrompt({ profile, brief }) {
@@ -115,4 +166,4 @@ export function normAsset(slot, x) {
 }
 
 /* The tasks the server accepts. The client sends data, never prompts. */
-export const TASKS = { chat: chatPrompt, strategy: strategyPrompt, assets: assetsPrompt };
+export const TASKS = { chat: chatPrompt, showchat: showChatPrompt, strategy: strategyPrompt, assets: assetsPrompt };

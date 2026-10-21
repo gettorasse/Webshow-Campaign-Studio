@@ -14,26 +14,26 @@ A small business owner has one place and one buddy: **their Showrunner**. It liv
 |---|---|---|---|
 | Starter | Free | Chat, campaigns with every post written, daily to-dos and tips, exports | Built |
 | Connect | €49 / month | Connect Instagram, Facebook and email; scheduling; results back into the chat | Not built |
-| Premium | €199 / month | Webshow Pro on desktop, several campaigns side by side, more AI | Pro is legacy |
+| Premium | €199 / month | **Webshow Pro on desktop** (Premium and Enterprise only), several campaigns side by side, more AI | Pro is legacy |
 | Enterprise | €490 / month | Several brands and a team, API, priority support | Not built |
 | **Webshow on AIR** | €999 / month | Our team runs your marketing with AI, a new campaign every month | Service |
-| Launch campaign | €2,490 one-off | One campaign made for you | Service |
+| Live campaign | €2,490 one-off | A team of real talent comes to your place: a shoot on location, and every post made for you | Service |
 
 There are no payments in the app and nothing is locked by plan yet. **Plans** in *Me* is a clearly labelled demo, so we can watch which plan people pick. Prices live in `public/shared/plans.js`. Pro (desktop) uses the same names and prices in `legacy/pro-studio/src/tiers.js`, where plans do unlock features in the demo.
 
 ## Phone first, desktop is Pro
 
 - **The phone app is the product.** It's light and fast, and mostly a conversation with the Showrunner. Everything it makes is meant to be copied and posted from a phone.
-- **Opening Webshow on a computer always launches Pro** (wide screen + mouse, no touch → `/pro/`). Phones and tablets get the app. Testers can force the phone app with `?view=phone`.
+- **Webshow Pro is part of Premium and Enterprise.** On a computer (wide screen + mouse, no touch) those plans open straight into Pro (`/pro/`); other plans see the phone app with a "See plans" note, and `/pro/` sends them back to the plans. Testers can force the phone app with `?view=phone`.
 - **Webshow Pro (desktop)** is for power users and our own studio team. It has the canvas, nodes and timeline, like CapCut's desktop version. Today it's the legacy studio in `public/pro/`, and the two share a format: export a show as `campaign.json` from the phone. Pro needs porting (see the roadmap).
 
 ## The four screens
 
 | Tab | What it's for |
 |---|---|
-| **Showrunner** (chat) | The home screen. On first open: pick a style, describe the business, then just talk. The answers come as cards: a question with tap-able answers, a **campaign plan** you can create in one tap, a **ready-to-copy post**, or a **tip**. Lasting facts are remembered. |
+| **Showrunner** (chats) | The home screen. Every new chat starts with **"Who's running your show?"**: pick Ogilvy, Hormozi or Vaynerchuk, then talk. Chats are kept in a side panel (☰), like ChatGPT. Answers come as cards: a question with tap-able answers, a **campaign plan** you create in one tap, a **ready-to-copy post**, or a **tip**. Lasting facts are remembered across all chats. |
 | **Today** | What to post today, the next 7 days, a tip, and a daily reminder (shown while the app is open). |
-| **Shows** | Your campaigns. Each one has a big idea and a goal, with Hook → Show → Convert spread over 2–8 weeks. Posts are grouped by week; tap one to see the full text, copy it, change the date, mark it done, or ask for a rewrite. Export to text, calendar, spreadsheet or campaign.json. |
+| **Shows** | Your campaigns. Each show has **its own chat** ("Talk about this show", also in the side panel): ask for changes and the Showrunner proposes them as a card (rewrite posts, move dates, shift everything, change the idea), applied only when you tap Apply. Each one has a big idea and a goal, with Hook → Show → Convert spread over 2–8 weeks. Posts are grouped by week; tap one to see the full text, copy it, change the date, mark it done, or ask for a rewrite. Export to text, calendar, spreadsheet or campaign.json. |
 | **Me** | Train your Showrunner: its style, what it knows about the business, what it remembered from chats (you can delete any of it). Also plan (demo), theme, data download and start over. |
 
 ## The Showrunner styles

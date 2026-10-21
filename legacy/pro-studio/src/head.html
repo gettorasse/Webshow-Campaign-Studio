@@ -1,4 +1,12 @@
 <title>Webshow Campaign Studio</title>
+<script>
+/* Webshow Pro is part of Premium and Enterprise. Other plans go back to the app, with the plans open. */
+(function () { try {
+  if (!/\/pro\/(index\.html)?$/.test(location.pathname)) return;
+  var plan = (JSON.parse(localStorage.getItem("webshow.v1") || "{}").settings || {}).plan;
+  if (plan !== "premium" && plan !== "enterprise") location.replace("../?plans=pro");
+} catch (e) {} })();
+</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

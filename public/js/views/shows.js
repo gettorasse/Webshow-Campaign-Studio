@@ -35,6 +35,7 @@ export function showView(s) {
     ${st.idea ? `<p class="idea big">“${esc(st.idea)}”</p>` : ""}
     <div class="row between small muted"><span>${srOf(s.showrunner).name} style · ${esc(GOALS[s.brief.goal]?.label || "")}</span><span>${p.d} of ${p.n} done</span></div>
     <span class="bar"><i style="width:${p.pct}%"></i></span>
+    <button class="row-card tap talk" data-act="showchat" data-id="${s.id}"><span class="sr-av sm">${IC[srOf(s.showrunner).icon]}</span><span class="grow"><b>Talk about this show</b><span class="muted small">Ask ${srOf(s.showrunner).name} to change the tone, the dates or the idea</span></span>${IC.chat}</button>
     <div class="seg" role="tablist"><button role="tab" aria-selected="${tab === "posts"}" data-act="showtab" data-t="posts">Posts</button><button role="tab" aria-selected="${tab === "plan"}" data-act="showtab" data-t="plan">Plan</button></div>
     ${tab === "plan" ? planTab(s) : postsTab(s)}
   </section>`;

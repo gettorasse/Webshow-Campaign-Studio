@@ -1,16 +1,16 @@
 /* Webshow – the phone app. One state object (store.js), one render(), one action table.
    Screens: Chat (default) · Today · Shows · Me. Sheets slide up from the bottom. */
-import { state, load, save, resetAll, exportAll } from "./store.js";
+import { state, load, save, resetAll, exportAll, chatsList, showChatOf, hasPro } from "./store.js";
 import { $, IC, toast, copyText, copyNow } from "./lib.js";
 import { ask, initAI, errText } from "./ai.js";
-import { normChat } from "../shared/prompts.js";
+import { normChat, normShowChat } from "../shared/prompts.js";
 import { srOf, SHOWRUNNERS } from "../shared/showrunners.js";
 import { copyOf, KINDS } from "../shared/model.js";
 import { clip, uid, todayISO, isISO } from "../shared/util.js";
-import { offlineChat } from "./offline.js";
-import { createShow, rewriteAsset, moveAsset, showsList, showEnd } from "./campaign.js";
+import { offlineChat, offlineShowChat } from "./offline.js";
+import { createShow, rewriteAsset, moveAsset, showsList, showEnd, applyChange } from "./campaign.js";
 import { showMD, showCSV, showICS, showJSON, fileBase, saveFile } from "./export.js";
-import { chatView } from "./views/chat.js";
+import { chatView, drawerHTML, currentChat } from "./views/chat.js";
 import { todayView, dueToday } from "./views/today.js";
 import { showsView, showView } from "./views/shows.js";
 import { meView } from "./views/me.js";
@@ -24,14 +24,14 @@ const TABS = [["chat", "Showrunner", "chat"], ["today", "Today", "home"], ["show
 /* ---------- render ---------- */
 let lastRoute = "";
 export function render() {
-  const route = state.ui.tab + (state.ui.showId || "");
+  const route = state.ui.tab + (state.ui.showId || "") + (state.ui.tab === "chat" ? state.ui.chatId : "");
   const view = $("#view"); const keep = route === lastRoute ? view.scrollTop : 0; const draft = $("#msg")?.value || "";
   const tab = state.ui.tab;
   view.innerHTML = tab === "chat" ? chatView() : tab === "today" ? todayView() : tab === "show" ? showView(state.shows[state.ui.showId]) : tab === "me" ? meView() : showsView();
   view.dataset.tab = tab;
   $("#tabs").innerHTML = TABS.map(([k, l, ic]) => { const on = k === tab || (k === "shows" && tab === "show"); const n = k === "today" ? dueToday().length : 0;
     return `<a href="#/${k}" class="tab" ${on ? 'aria-current="page"' : ""}>${IC[ic]}<span>${l}</span>${n ? `<i class="badge">${n}</i>` : ""}</a>`; }).join("");
-  renderSheet();
+  renderSheet(); $("#drawer").innerHTML = drawerHTML();
   if (tab === "chat") { const m = $("#msg"); if (m) { m.value = draft; grow(m); } const box = $("#msgs"); view.scrollTop = 0; if (box) box.scrollTop = box.scrollHeight; }
   else view.scrollTop = keep;
   lastRoute = route;
@@ -42,23 +42,34 @@ function renderSheet() { const el = $("#sheet"); const keep = el.querySelector("
 const fit = (t) => { if (!CSS.supports("field-sizing", "content")) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; } };
 const grow = (t) => { t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; };
 
-/* ---------- routing: #/chat #/today #/shows #/show/<id> #/me ---------- */
+/* ---------- routing: #/chat (current) #/chat/new #/chat/<id> #/today #/shows #/show/<id> #/me ---------- */
 function route() {
   const [, tab = "chat", id] = location.hash.split("/");
   state.ui.tab = ["chat", "today", "shows", "show", "me"].includes(tab) ? tab : "chat";
-  state.ui.showId = tab === "show" ? id : null; state.ui.sheet = null; state.ui.confirmReset = false;
+  state.ui.showId = tab === "show" ? id : null; state.ui.sheet = null; state.ui.confirmReset = false; state.ui.drawer = false;
+  if (state.ui.tab === "chat") state.ui.chatId = id === "new" ? null : state.chats[id] ? id : state.chats[state.ui.chatId] ? state.ui.chatId : chatsList()[0]?.id || null;
   render();
 }
 const go = (h) => { if (location.hash === h) route(); else location.hash = h; };
 
-/* ---------- the chat ---------- */
-const push = (role, text, cards = []) => { const m = { id: uid("m"), role, text, cards, at: Date.now() }; state.chat.push(m); save(); return m; };
-function greet() {
-  if (state.chat.length) return;
-  push("sr", "Hi! I'm your Showrunner. I plan your marketing, write every post, and tell you what to do each day. First, pick the style I should work in:", [{ type: "style" }]);
+/* ---------- chats ---------- */
+const push = (chat, role, text, cards = []) => { const m = { id: uid("m"), role, text, cards, at: Date.now() }; chat.messages.push(m); chat.updatedAt = m.at; save(); return m; };
+function newChat(showrunner, showId) {
+  const c = { id: uid("c"), title: "", showrunner, showId: showId || null, messages: [], createdAt: Date.now(), updatedAt: Date.now() };
+  state.chats[c.id] = c; return c;
+}
+/* A show's own chat, made the first time it's opened. */
+function openShowChat(showId) {
+  const s = state.shows[showId]; if (!s) return;
+  let c = showChatOf(showId);
+  if (!c) { c = newChat(s.showrunner || state.profile.showrunner || "ogilvy", showId); c.title = s.strategy?.name || "Show";
+    push(c, "sr", `Let's talk about “${s.strategy?.name || "this show"}”. Ask me to change the tone, move dates or rework the idea. I'll show you every change before anything happens.`, [{ type: "question", q: "Where do we start?", options: ["What's next?", "Make the posts shorter", "Move everything a week later"] }]); }
+  go("#/chat/" + c.id);
 }
 const showSummary = (s) => { const next = s.assets.filter(a => !a.done && !a.pending).sort((x, y) => x.date.localeCompare(y.date))[0];
   return { name: s.strategy?.name, idea: s.strategy?.idea, start: s.brief.start, end: showEnd(s), done: s.assets.filter(a => a.done).length, total: s.assets.length, next: next ? `${KINDS[next.kind].label} on ${next.date}` : "" }; };
+/* What the show chat sends: the show without the long texts. */
+const slimShow = (s) => ({ showrunner: s.showrunner, brief: s.brief, strategy: s.strategy, assets: s.assets.map(a => ({ id: a.id, date: a.date, kind: a.kind, phase: a.phase, done: !!a.done, title: a.title, fields: { first: Object.values(a.fields || {})[0] || "" } })) });
 /* What the AI sees of the conversation: the words plus a one-line note of each card. */
 const forAI = (m) => ({ role: m.role, text: [m.text, ...(m.cards || []).map(c => c.type === "plan" ? `[proposed plan: ${c.name}${c.showId ? ", created" : ""}]` : c.type === "post" ? `[post for ${c.channel}: ${c.hook}]` : c.type === "question" ? `[asked: ${c.q}]` : "").filter(Boolean)].filter(Boolean).join(" ") });
 
@@ -70,19 +81,24 @@ function learnFirst(p, text) {
 }
 async function send(text) {
   text = String(text || "").trim(); if (!text || state.ui.busy) return;
-  const p = state.profile;
-  if (!p.showrunner) p.showrunner = "ogilvy";
-  if (!p.what) learnFirst(p, text);
-  push("user", text); state.ui.busy = true; if (state.ui.tab !== "chat") go("#/chat"); else render();
+  const chat = currentChat(); if (!chat) { state.ui.pendingSay = text; return go("#/chat/new"); }
+  const show = chat.showId ? state.shows[chat.showId] : null;
+  const p = state.profile; const prof = { ...p, showrunner: chat.showrunner };
+  if (!p.what && !show) learnFirst(p, text);
+  if (!chat.title) chat.title = clip(text, 42);
+  push(chat, "user", text); state.ui.busy = true; render();
   const t0 = Date.now(); let r;
-  try { r = normChat(await ask("chat", { profile: p, messages: state.chat.slice(-14).map(forAI), shows: showsList().slice(0, 5).map(showSummary), today: todayISO() })); }
-  catch (e) { if (e?.code !== "offline") toast(errText(e)); r = offlineChat({ profile: p, messages: state.chat }); }
+  const msgs = chat.messages.slice(-14).map(forAI);
+  try {
+    r = show ? normShowChat(await ask("showchat", { profile: prof, show: slimShow(show), messages: msgs, today: todayISO() }), show)
+      : normChat(await ask("chat", { profile: prof, messages: msgs, shows: showsList().slice(0, 5).map(showSummary), today: todayISO() }));
+  } catch (e) { if (e?.code !== "offline") toast(errText(e)); r = show ? offlineShowChat({ show, messages: chat.messages }) : offlineChat({ profile: prof, messages: chat.messages }); }
   const cards = [...r.cards];
   const fresh = r.remember.filter(x => !p.memory.some(m => m.text.toLowerCase() === x.toLowerCase()));
   if (fresh.length) { p.memory.push(...fresh.map(text => ({ text, at: Date.now() }))); cards.push({ type: "remembered", items: fresh }); }
-  /* A short, natural pause while "Showrunner is answering…" shows, even when the answer is instant. */
+  /* A short, natural pause while "… is answering" shows, even when the answer is instant. */
   await pause(t0, 900 + Math.min(1300, r.reply.length * 10));
-  const m = push("sr", r.reply, cards); state.ui.fresh = m.id; state.ui.busy = false; render();
+  const m = push(chat, "sr", r.reply, cards); state.ui.fresh = m.id; state.ui.busy = false; render();
 }
 const pause = (t0, ms) => new Promise(ok => setTimeout(ok, Math.max(0, ms - (Date.now() - t0))));
 /* Copy a prompt and open ChatGPT (the app on phones, the site on computers). */
@@ -91,33 +107,52 @@ function toGPT(text, photo) {
   window.open("https://chatgpt.com/", "_blank", "noopener");
 }
 function setAfter(sid, patch) { const s = state.shows[sid]; if (!s) return; s.brief.after = { ...afterOf(s, state.profile), ...patch }; save(); }
-const cardOf = (d) => state.chat.find(m => m.id === d.m)?.cards?.[+d.c];
+const msgOf = (d) => { for (const c of Object.values(state.chats)) { const m = c.messages.find(x => x.id === d.m); if (m) return { chat: c, m }; } return {}; };
+const cardOf = (d) => msgOf(d).m?.cards?.[+d.c];
 
 /* ---------- actions: every data-act="…" in the views lands here ---------- */
 const A = {
   tab: (d) => go("#/" + d.t),
   say: (d) => send(d.t),
+  /* New chat: the owner picked who runs the show. */
   pickstyle(d) {
-    const first = !state.profile.showrunner; state.profile.showrunner = d.k; save();
-    state.ui.busy = true; render();
+    const sr = SHOWRUNNERS[d.k]; state.profile.showrunner = d.k;
+    const c = newChat(d.k); state.ui.busy = true; go("#/chat/" + c.id);
     setTimeout(() => {
-      const m = push("sr", first ? `${SHOWRUNNERS[d.k].name} style it is. Now tell me about your business: what you sell, and who buys it?` : `Switched to ${SHOWRUNNERS[d.k].name} style.`);
-      state.ui.fresh = m.id; state.ui.busy = false; render(); $("#msg")?.focus();
+      const first = !state.profile.what;
+      const m = push(c, "sr", first ? `I'm ${sr.name}, and I'm running your show. Tell me about your business: what you sell, and who buys it?` : `${sr.name} here. What are we working on today?`);
+      state.ui.fresh = m.id; state.ui.busy = false; render();
+      const say = state.ui.pendingSay; state.ui.pendingSay = ""; if (say && !first) send(say); else $("#msg")?.focus();
     }, 900);
   },
+  newchat: () => go("#/chat/new"),
+  openchat: (d) => go("#/chat/" + d.id),
+  showchat: (d) => openShowChat(d.id),
+  drawer: () => { state.ui.drawer = !state.ui.drawer; $("#drawer").innerHTML = drawerHTML(); },
+  delchat(d, el) {
+    if (!el.dataset.armed) { el.dataset.armed = 1; el.classList.add("armed"); el.setAttribute("aria-label", "Tap again to delete"); toast("Tap again to delete this chat"); return; }
+    delete state.chats[d.id]; save(); if (state.ui.chatId === d.id) { state.ui.chatId = null; state.ui.drawer = true; } render();
+  },
+  async applychange(d) {
+    const { chat } = msgOf(d); const c = cardOf(d); const show = state.shows[chat?.showId]; if (!c || !show || c.applied) return;
+    c.applied = true; save(); render(); toast("Applying the change…");
+    await applyChange(show, c.ops, () => render());
+    const m = push(chat, "sr", "Done. Have a look at the show.", [{ type: "open", showId: show.id, name: show.strategy?.name || "the show" }]); state.ui.fresh = m.id; render();
+  },
+  skipchange(d) { const c = cardOf(d); if (c) { c.dismissed = true; save(); render(); } },
   setstyle(d) { state.profile.showrunner = d.k; save(); render(); toast(`${SHOWRUNNERS[d.k].name} style`); },
   async createplan(d) {
-    const c = cardOf(d); if (!c || c.showId) return;
+    const c = cardOf(d); const { chat } = msgOf(d); if (!c || c.showId) return;
     let first = true;
-    const show = await createShow(c, (s) => { c.showId = s.id; if (first) { first = false; go("#/show/" + s.id); } else render(); });
-    push("sr", `“${show.strategy.name}” is ready: ${show.assets.length} posts, planned day by day. Your to-dos are in Today.`, [{ type: "open", showId: show.id, name: show.strategy.name }]);
+    const show = await createShow(c, (s) => { c.showId = s.id; if (first) { first = false; go("#/show/" + s.id); } else render(); }, chat?.showrunner);
+    push(chat, "sr", `“${show.strategy.name}” is ready: ${show.assets.length} posts, planned day by day. Your to-dos are in Today.`, [{ type: "open", showId: show.id, name: show.strategy.name }]);
     toast("Your show is ready"); render();
   },
   openshow: (d) => { state.ui.showTab = "posts"; go("#/show/" + d.id); },
   copypost: (d) => { const c = cardOf(d); copyText([c.hook, c.text, c.cta].filter(Boolean).join("\n\n"), "Post copied"); },
   gptpost: (d) => toGPT(chatPostPrompt(cardOf(d), state.profile)),
   openme: () => go("#/me"),
-  newshow: () => send("Plan a campaign"),
+  newshow() { state.ui.pendingSay = "Plan a campaign"; go("#/chat/new"); },
   toggledone(d) { const { a } = findAsset(d.s, d.a); if (!a) return; a.done = !a.done; a.doneOn = a.done ? todayISO() : ""; save(); render(); },
   openasset(d) {
     state.ui.sheet = { k: "asset", s: d.s, a: d.a }; renderSheet();
@@ -151,7 +186,10 @@ const A = {
     const s = state.shows[state.ui.showId]; if (!s) return; const n = fileBase(s);
     ({ md: () => saveFile(n + ".md", showMD(s), "text/markdown"), ics: () => saveFile(n + ".ics", showICS(s), "text/calendar"), csv: () => saveFile(n + ".csv", showCSV(s), "text/csv"), json: () => saveFile(n + ".campaign.json", showJSON(s), "application/json") })[d.k]();
   },
-  setplan(d) { state.settings.plan = d.k; save(); renderSheet(); render(); toast("Plan changed (demo, no payment)"); },
+  setplan(d) {
+    state.settings.plan = d.k; save(); document.documentElement.dataset.pro = hasPro() ? "yes" : "no"; renderSheet(); render();
+    toast(hasPro() && matchMedia("(min-width: 1024px) and (pointer: fine)").matches ? "Plan changed (demo). Webshow Pro is now yours on this computer." : "Plan changed (demo, no payment)");
+  },
   theme(d) { state.settings.theme = d.v; save(); applyTheme(); render(); },
   async nudges() {
     const on = !state.settings.nudges;
@@ -202,7 +240,7 @@ function wire() {
   });
   document.addEventListener("keydown", (e) => {
     if (e.target.id === "msg" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); e.target.form.requestSubmit(); }
-    if (e.key === "Escape" && state.ui.sheet) A.closesheet();
+    if (e.key === "Escape" && state.ui.sheet) A.closesheet(); else if (e.key === "Escape" && state.ui.drawer) A.drawer();
   });
   window.addEventListener("hashchange", route);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) nudge(); });
@@ -210,7 +248,8 @@ function wire() {
 }
 
 async function start() {
-  load(); applyTheme(); greet(); wire(); route();
+  load(); applyTheme(); wire(); route();
+  if (new URLSearchParams(location.search).has("plans")) { state.ui.sheet = { k: "plans" }; renderSheet(); }
   /* Optional: put the official ChatGPT logo at public/brand/chatgpt.svg and the buttons use it. */
   fetch("brand/chatgpt.svg", { method: "HEAD" }).then(r => { if (r.ok && /svg/.test(r.headers.get("content-type") || "")) { state.ui.gptLogo = true; render(); } }).catch(() => {});
   await initAI(); render();
