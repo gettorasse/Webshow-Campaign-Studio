@@ -111,7 +111,7 @@ export function normConcept(r, seed = {}) {
 const STRAT_FIELDS = ["name", "idea", "tagline", "message", "offer", "cta", "audience", "voice", "visual"];
 export function showChatPrompt({ profile, show, messages, today }) {
   const st = show?.strategy || {}; const b = show?.brief || {};
-  const posts = arr(show?.assets, 60).map(a => `- id "${a.id}" · ${a.date} · ${KINDS[a.kind]?.label} · ${a.phase} · ${a.done ? "POSTED" : "to do"}${a.outcome ? ` · result: ${a.outcome.got ? `got responses (${a.outcome.count || "some"})` : "no responses yet"}` : ""} · "${clip(a.title, 40)}" · ${clip(Object.values(a.fields || {})[0], 80)}`).join("\n");
+  const posts = arr(show?.assets, 60).map(a => `- id "${a.id}" · ${a.date} · ${KINDS[a.kind]?.label} · ${a.phase} · ${a.done ? "POSTED" : "to do"}${a.outcome ? ` · result: ${a.outcome.skipped ? "not recorded (owner skipped the question)" : a.outcome.got ? `owner reported responses (${a.outcome.count || "some"})` : "owner reported no responses"}` : ""} · "${clip(a.title, 40)}" · ${clip(Object.values(a.fields || {})[0], 80)}`).join("\n");
   const hist = arr(messages, 14).map(m => `${m.role === "user" ? "OWNER" : "YOU"}: ${clip(m.text, 600)}`).join("\n");
   return { tier: "default", maxTokens: 1600, prompt: `You are the owner's Showrunner from Webshow, and this chat is about ONE campaign ("show") that is already planned and written. Help them adjust it. Short, warm, phone-friendly. If some posts got responses, consider learning from them cautiously. Results are owner-reported, not verified analytics; never infer a sale or make a claim of causality.
 ${RULES}
