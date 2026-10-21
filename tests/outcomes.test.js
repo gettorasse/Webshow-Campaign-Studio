@@ -42,7 +42,7 @@ test("Showrunner chat can see owner feedback and is warned about causal claims",
   assert.match(chat, /Owner-reported feedback/);
   assert.match(chat, /NOT verified sales/);
   const showChat = showChatPrompt({ profile, show, messages: [], today:"2026-11-11" }).prompt;
-  assert.match(showChat, /got responses/);
+  assert.match(showChat, /owner reported responses/);
   assert.match(showChat, /owner-reported/);
   const concept = conceptPrompt({ profile, seed:{ goal:"bookings",note:summary },today:"2026-11-11" }).prompt;
   assert.match(concept, /self-reported|reported replies|reported replies/i);
