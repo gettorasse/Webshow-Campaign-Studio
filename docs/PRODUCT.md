@@ -26,6 +26,7 @@ There are no payments in the app. **Plans** in *Me* is a clearly labelled demo, 
 ## Phone first, desktop is Pro
 
 - **The phone app is the product.** It's light and fast, and mostly a conversation with the Showrunner. Everything it makes is meant to be copied and posted from a phone.
+- **Opening Webshow on a computer always launches Pro** (wide screen + mouse, no touch → `/pro/`). Phones and tablets get the app. Testers can force the phone app with `?view=phone`.
 - **Webshow Pro (desktop)** is for power users and our own studio team. It has the canvas, nodes and timeline, like CapCut's desktop version. Today it's the legacy studio in `public/pro/`, and the two share a format: export a show as `campaign.json` from the phone. Pro needs porting (see the roadmap).
 
 ## The four screens

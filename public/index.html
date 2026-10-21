@@ -9,6 +9,21 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script id="desktop-to-pro">
+/* On a computer (wide screen, mouse, no touch), Webshow opens as Pro. Phones and tablets get the app.
+   ?view=phone keeps the phone app on this computer (for testing); ?view=pro switches back. */
+(function () {
+  try {
+    var q = new URLSearchParams(location.search).get("view");
+    if (q === "phone") localStorage.setItem("webshow.view", "phone");
+    if (q === "pro") localStorage.removeItem("webshow.view");
+    if (localStorage.getItem("webshow.view") === "phone") return;
+  } catch (e) {}
+  var ipad = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  var desktop = matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)").matches && !ipad;
+  if (desktop) location.replace("pro/");
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -20,9 +35,8 @@
 <body>
 <aside class="desk" aria-label="About this view">
   <span class="wordmark">webshow<b>.ai</b></span>
-  <p>This is the phone app. Open it on your phone for the real feel, or add it to your home screen.</p>
-  <p>On a computer, Webshow Pro gives you the full canvas with nodes.</p>
-  <a class="btn sm" href="pro/" target="_blank" rel="noopener">Open Webshow Pro</a>
+  <p>You're looking at the phone app on a computer (test mode). On a computer, Webshow normally opens as Pro.</p>
+  <a class="btn sm" href="./?view=pro">Back to Webshow Pro</a>
 </aside>
 <div class="app">
   <main id="view"></main>

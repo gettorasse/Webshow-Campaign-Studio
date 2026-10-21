@@ -21,6 +21,7 @@ npm run dev                 # → http://localhost:5173
 - Without a key, the app runs in **demo mode**. Every screen works, but the answers are canned (`public/js/offline.js`).
 - With a key, every answer comes from the real model through `api/showrunner.js`.
 - To try it on your phone, open `http://<your-computer's-ip>:5173` on the same Wi-Fi.
+- **On a computer, the app opens Webshow Pro** (`/pro/`). To see the phone app on a computer, open `/?view=phone`; `/?view=pro` switches back.
 
 ## Deploy to Vercel
 
