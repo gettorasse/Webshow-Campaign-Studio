@@ -16,7 +16,7 @@ export function load() {
   Object.assign(state.profile, d.profile || {}); state.shows = d.shows || {}; Object.assign(state.settings, d.settings || {});
   state.chats = d.chats || {};
   /* version 1 had one long chat: keep it as the first chat */
-  if (d.version === 1 && d.chat?.length) { const id = "c_first"; state.chats[id] = { id, title: "First chat", showrunner: state.profile.showrunner || "ogilvy", messages: d.chat.filter(m => !m.cards?.some(c => c.type === "style")), createdAt: d.chat[0]?.at || Date.now(), updatedAt: d.chat.at(-1)?.at || Date.now() }; }
+  if (d.version === 1 && d.chat?.length) { const id = "c_first"; state.chats[id] = { id, title: "First chat", showrunner: state.profile.showrunner || "ogilvy", messages: d.chat.filter(m => !m.cards?.some(c => c.type === "style")), createdAt: d.chat[0]?.at || Date.now(), updatedAt: d.chat.at(-1)?.at || Date.now() }; save(); }
   Object.values(state.shows).forEach(s => s.assets?.forEach(a => { a.pending = false; }));
 }
 let t = 0;
