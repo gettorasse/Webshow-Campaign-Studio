@@ -12,6 +12,8 @@ export const CHANNELS = {
   website: { label: "Landing page", c: "#22a06b" },
   google: { label: "Google Ads", c: "#e0672b" },
 };
+/* What owners actually want, in their words. Maps to the campaign goals below. */
+export const MISSIONS = [["bookings", "Fill bookings", "cal"], ["leads", "Get more customers", "people"], ["sales", "Sell something", "target"], ["event", "Promote an event", "megaphone"]];
 export const GOALS = {
   bookings: { label: "Bookings", unit: "bookings", cta: "Book now" },
   leads: { label: "Leads", unit: "leads", cta: "Get in touch" },
@@ -90,7 +92,23 @@ export function planSlots(b) {
       out.push(s);
     }
   }
-  return out.map((s, i) => ({ id: uid("a"), ...s, time: KINDS[s.kind].time, order: i }));
+  return thin(out, b).map((s, i) => ({ id: uid("a"), ...s, time: KINDS[s.kind].time, order: i }));
+}
+/* How much the owner can realistically post. Light is the default: a show you can actually finish. */
+export const PACES = { light: { label: "Light", per: 2, d: "About 2 posts a week" }, steady: { label: "Steady", per: 4, d: "3–4 posts a week" }, full: { label: "All in", per: 99, d: "Everything the plan suggests" } };
+function thin(slots, b) {
+  const cap = PACES[b.pace]?.per; if (!cap || cap >= 99) return slots;
+  const keep = slots.filter(s => KINDS[s.kind].evergreen); const posts = slots.filter(s => !KINDS[s.kind].evergreen);
+  const weeks = new Map(); for (const s of posts) { const w = Math.floor((new Date(s.date) - new Date(b.start)) / 6048e5); if (!weeks.has(w)) weeks.set(w, []); weeks.get(w).push(s); }
+  for (const list of weeks.values()) {
+    /* keep variety: one per channel first, then the rest in date order */
+    const seen = new Set(); const first = [], rest = [];
+    for (const s of list.sort((x, y) => x.date.localeCompare(y.date))) (seen.has(KINDS[s.kind].ch) ? rest : (seen.add(KINDS[s.kind].ch), first)).push(s);
+    keep.push(...[...first, ...rest].slice(0, cap));
+  }
+  /* every phase must still be there, or the story breaks */
+  for (const ph of ["hook", "show", "convert"]) if (!keep.some(s => s.phase === ph)) { const s = posts.find(x => x.phase === ph); if (s) keep.push(s); }
+  return keep.sort((x, y) => x.date.localeCompare(y.date));
 }
 
 export function actionOf(a) {

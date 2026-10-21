@@ -1,14 +1,14 @@
 /* Webshow – the phone app. One state object (store.js), one render(), one action table.
    Screens: Chat (default) · Today · Shows · Me. Sheets slide up from the bottom. */
 import { state, load, save, resetAll, exportAll, chatsList, showChatOf, hasPro } from "./store.js";
-import { $, IC, toast, copyText, copyNow } from "./lib.js";
-import { ask, initAI, errText } from "./ai.js";
+import { $, IC, toast, copyText, copyNow, mascot, esc } from "./lib.js";
+import { ask, initAI, errText, aiMode } from "./ai.js";
 import { normChat, normShowChat } from "../shared/prompts.js";
-import { srOf, SHOWRUNNERS } from "../shared/showrunners.js";
-import { copyOf, KINDS } from "../shared/model.js";
+import { srOf, SHOWRUNNERS, SR_FOR_GOAL } from "../shared/showrunners.js";
+import { copyOf, KINDS, GOALS, PACES } from "../shared/model.js";
 import { clip, uid, todayISO, isISO } from "../shared/util.js";
-import { offlineChat, offlineShowChat } from "./offline.js";
-import { createShow, rewriteAsset, moveAsset, showsList, showEnd, applyChange } from "./campaign.js";
+import { offlineChat, offlineShowChat, guessGoal } from "./offline.js";
+import { rewriteAsset, moveAsset, showsList, showEnd, applyChange, makeConcept, createShowFromConcept, checkMilestones, MILESTONES, setOutcome, retryFailed, writeAssets } from "./campaign.js";
 import { showMD, showCSV, showICS, showJSON, fileBase, saveFile } from "./export.js";
 import { chatView, drawerHTML, currentChat } from "./views/chat.js";
 import { todayView, dueToday } from "./views/today.js";
@@ -19,7 +19,7 @@ import { buildPrompts, chatPostPrompt, afterOf, afterLine } from "../shared/make
 import { loadPhoto, savePhoto, removePhoto, renderPost, clearPhotos } from "./photos.js";
 import { slug } from "../shared/util.js";
 
-const TABS = [["chat", "Showrunner", "chat"], ["today", "Today", "home"], ["shows", "Shows", "layers"], ["me", "Me", "user"]];
+const TABS = [["today", "Home", "home"], ["chat", "Create", "spark"], ["shows", "Shows", "layers"]];
 
 /* ---------- render ---------- */
 let lastRoute = "";
@@ -44,10 +44,14 @@ const grow = (t) => { t.style.height = "auto"; t.style.height = Math.min(t.scrol
 
 /* ---------- routing: #/chat (current) #/chat/new #/chat/<id> #/today #/shows #/show/<id> #/me ---------- */
 function route() {
-  const [, tab = "chat", id] = location.hash.split("/");
+  const [, tab0, id] = location.hash.split("/");
+  const tab = tab0 || (Object.keys(state.shows).length ? "today" : "chat");
   state.ui.tab = ["chat", "today", "shows", "show", "me"].includes(tab) ? tab : "chat";
   state.ui.showId = tab === "show" ? id : null; state.ui.sheet = null; state.ui.confirmReset = false; state.ui.drawer = false;
-  if (state.ui.tab === "chat") state.ui.chatId = id === "new" ? null : state.chats[id] ? id : state.chats[state.ui.chatId] ? state.ui.chatId : chatsList()[0]?.id || null;
+  if (state.ui.tab === "chat") {
+    state.ui.chatId = id !== "new" && state.chats[id] ? id : id !== "new" && state.chats[state.ui.chatId] ? state.ui.chatId : id !== "new" && chatsList()[0]?.id || freshChat().id;
+    if (id !== state.ui.chatId) history.replaceState(null, "", "#/chat/" + state.ui.chatId);
+  }
   render();
 }
 const go = (h) => { if (location.hash === h) route(); else location.hash = h; };
@@ -57,6 +61,50 @@ const push = (chat, role, text, cards = []) => { const m = { id: uid("m"), role,
 function newChat(showrunner, showId) {
   const c = { id: uid("c"), title: "", showrunner, showId: showId || null, messages: [], createdAt: Date.now(), updatedAt: Date.now() };
   state.chats[c.id] = c; return c;
+}
+/* A new chat starts with the mission, not with a marketing decision. Reuses an untouched one. */
+function freshChat() {
+  const idle = Object.values(state.chats).find(c => !c.showId && c.flow?.step === "goal" && !c.messages.some(m => m.role === "user"));
+  if (idle) return idle;
+  const c = newChat(state.profile.showrunner || ""); c.flow = { step: "goal" };
+  push(c, "sr", state.profile.what ? "New idea time. What are we making happen?" : "Hi! I'm your Showrunner. Tell me what you want more of, and I'll come back with one campaign idea worth doing. So: what are we making happen?", [{ type: "goals" }]);
+  return c;
+}
+const OFFER_Q = { bookings: "What should people book? Anything special on right now?", leads: "What do new customers come to you for? Your main service is fine.", sales: "What are we selling? A product, a gift card, something new?", event: "What's the event, and when is it?", signups: "What are people signing up for?", awareness: "What should people know you for?" };
+const INTRO = { ogilvy: ["Here's the angle I'd bet on.", "One idea, sharpened."], hormozi: ["Here's an idea built around a clear yes.", "Offer first. Here's the idea."], vaynerchuk: ["Here's one people will actually stop scrolling for.", "Okay, this one's fun."] };
+/* The guided start: goal → business (once) → what to promote → the idea. Typed questions skip to normal chat. */
+async function flowStep(chat, text) {
+  const f = chat.flow; const p = state.profile;
+  if (f.step === "goal") {
+    if (/\?\s*$/.test(text)) { chat.flow = null; return false; }
+    f.goal = guessGoal(text) || "leads"; f.note = text; return nextFlow(chat);
+  }
+  if (f.step === "what") { learnFirst(p, text); return nextFlow(chat); }
+  if (f.step === "offer") { const pick = /you pick|not sure|en tiedä|valitse/i.test(text); f.offer = pick ? "" : text; if (!pick && !p.offer) p.offer = clip(text, 300); return nextFlow(chat); }
+  if (f.step === "tweak") { const { m, c } = f; chat.flow = null; const card = cardOf({ m, c }); if (!card) return true; card.state = "replaced"; await genConcept(chat, { ...card.seed, note: text, avoid: [...(card.seed.avoid || []), card.concept.name] }, card.showrunner); return true; }
+  return false;
+}
+async function nextFlow(chat) {
+  const f = chat.flow; const p = state.profile;
+  if (!p.what) { f.step = "what"; await say(chat, "Love it. What's the business? One sentence is plenty."); return true; }
+  if (f.offer === undefined) { f.step = "offer"; await say(chat, OFFER_Q[f.goal] || OFFER_Q.leads, [{ type: "question", q: "", options: ["You pick", ...(p.offer ? [clip(p.offer, 40)] : [])] }]); return true; }
+  chat.flow = null;
+  const sr = chat.showrunner || p.showrunner || SR_FOR_GOAL[f.goal] || "ogilvy"; chat.showrunner = sr;
+  await genConcept(chat, { goal: f.goal, what: [p.business, p.what].filter(Boolean).join(" – "), offer: f.offer, note: f.note && f.note !== GOAL_LABEL[f.goal] ? f.note : "" }, sr);
+  return true;
+}
+const GOAL_LABEL = { bookings: "Fill bookings", leads: "Get more customers", sales: "Sell something", event: "Promote an event" };
+async function say(chat, text, cards = [], ms = 700) { state.ui.busy = true; state.ui.busyLabel = "Thinking"; render(); await new Promise(ok => setTimeout(ok, ms)); const m = push(chat, "sr", text, cards); state.ui.fresh = m.id; state.ui.busy = false; render(); $("#msg")?.focus(); }
+/* The big reveal. A real AI error shows as an error with Try again, never as a fake idea. */
+async function genConcept(chat, seed, sr) {
+  state.ui.busy = true; state.ui.busyLabel = ["Cooking up an idea", "Setting the stage", "Finding your angle"][(seed.avoid?.length || 0) % 3]; render();
+  const t0 = Date.now();
+  try {
+    const { concept } = await makeConcept(seed, sr); await pause(t0, 1800);
+    const lines = INTRO[sr] || INTRO.ogilvy; const m = push(chat, "sr", lines[(seed.avoid?.length || 0) % lines.length], [{ type: "concept", concept, seed, showrunner: sr, state: "new" }]);
+    if (!chat.title) chat.title = concept.name; state.ui.fresh = m.id;
+  } catch (e) { await pause(t0, 900); push(chat, "sr", "", [{ type: "error", text: errText(e), retry: { kind: "concept", seed, sr } }]); }
+  state.ui.busy = false; render();
 }
 /* A show's own chat, made the first time it's opened. */
 function openShowChat(showId) {
@@ -81,18 +129,25 @@ function learnFirst(p, text) {
 }
 async function send(text) {
   text = String(text || "").trim(); if (!text || state.ui.busy) return;
-  const chat = currentChat(); if (!chat) { state.ui.pendingSay = text; return go("#/chat/new"); }
+  const chat = currentChat(); if (!chat) return go("#/chat/new");
   const show = chat.showId ? state.shows[chat.showId] : null;
-  const p = state.profile; const prof = { ...p, showrunner: chat.showrunner };
+  if (!chat.title && !chat.flow) chat.title = clip(text, 42);
+  if (chat.flow?.step) { push(chat, "user", text); render(); if (await flowStep(chat, text)) return; }
+  else push(chat, "user", text);
+  if (/^new campaign idea$/i.test(text)) { chat.flow = { step: "goal" }; return say(chat, "What are we making happen?", [{ type: "goals" }]); }
+  const p = state.profile; if (!chat.showrunner) chat.showrunner = p.showrunner || "ogilvy"; const prof = { ...p, showrunner: chat.showrunner };
   if (!p.what && !show) learnFirst(p, text);
   if (!chat.title) chat.title = clip(text, 42);
-  push(chat, "user", text); state.ui.busy = true; render();
+  state.ui.busy = true; state.ui.busyLabel = "Thinking"; render();
   const t0 = Date.now(); let r;
   const msgs = chat.messages.slice(-14).map(forAI);
   try {
     r = show ? normShowChat(await ask("showchat", { profile: prof, show: slimShow(show), messages: msgs, today: todayISO() }), show)
       : normChat(await ask("chat", { profile: prof, messages: msgs, shows: showsList().slice(0, 5).map(showSummary), today: todayISO() }));
-  } catch (e) { if (e?.code !== "offline") toast(errText(e)); r = show ? offlineShowChat({ show, messages: chat.messages }) : offlineChat({ profile: prof, messages: chat.messages }); }
+  } catch (e) {
+    if (e?.code !== "offline") { await pause(t0, 700); push(chat, "sr", "", [{ type: "error", text: errText(e), retry: { kind: "chat", text } }]); state.ui.busy = false; return render(); }
+    r = show ? offlineShowChat({ show, messages: chat.messages }) : offlineChat({ profile: prof, messages: chat.messages });
+  }
   const cards = [...r.cards];
   const fresh = r.remember.filter(x => !p.memory.some(m => m.text.toLowerCase() === x.toLowerCase()));
   if (fresh.length) { p.memory.push(...fresh.map(text => ({ text, at: Date.now() }))); cards.push({ type: "remembered", items: fresh }); }
@@ -109,22 +164,51 @@ function toGPT(text, photo) {
 function setAfter(sid, patch) { const s = state.shows[sid]; if (!s) return; s.brief.after = { ...afterOf(s, state.profile), ...patch }; save(); }
 const msgOf = (d) => { for (const c of Object.values(state.chats)) { const m = c.messages.find(x => x.id === d.m); if (m) return { chat: c, m }; } return {}; };
 const cardOf = (d) => msgOf(d).m?.cards?.[+d.c];
+/* Real milestones get a small, friendly moment. Nothing for just opening the app. */
+function cheer(s) {
+  const fresh = checkMilestones(s).filter(k => k !== "idea"); if (!fresh.length) return;
+  const [, title, line] = MILESTONES.find(([k]) => k === fresh.at(-1));
+  const box = $("#toasts"); box.replaceChildren(); const el = document.createElement("div"); el.className = "toast cheer";
+  el.innerHTML = `${mascot("happy")}<span><b>${esc(title)}</b><small>${esc(line)}</small></span>`; box.append(el);
+  setTimeout(() => el.remove(), 5000);
+}
 
 /* ---------- actions: every data-act="…" in the views lands here ---------- */
 const A = {
   tab: (d) => go("#/" + d.t),
   say: (d) => send(d.t),
-  /* New chat: the owner picked who runs the show. */
-  pickstyle(d) {
-    const sr = SHOWRUNNERS[d.k]; state.profile.showrunner = d.k;
-    const c = newChat(d.k); state.ui.busy = true; go("#/chat/" + c.id);
-    setTimeout(() => {
-      const first = !state.profile.what;
-      const m = push(c, "sr", first ? `I'm ${sr.name}, and I'm running your show. Tell me about your business: what you sell, and who buys it?` : `${sr.name} here. What are we working on today?`);
-      state.ui.fresh = m.id; state.ui.busy = false; render();
-      const say = state.ui.pendingSay; state.ui.pendingSay = ""; if (say && !first) send(say); else $("#msg")?.focus();
-    }, 900);
+  /* The guided start */
+  async goal(d) {
+    const chat = currentChat(); if (!chat || state.ui.busy) return; chat.flow = { ...(chat.flow || {}), step: "goal", goal: d.k };
+    push(chat, "user", GOAL_LABEL[d.k] || GOALS[d.k]?.label); render(); await nextFlow(chat);
   },
+  makeit(d) { const c = cardOf(d); if (c) { c.state = "pace"; save(); render(); } },
+  async pace(d) {
+    const c = cardOf(d); const { chat } = msgOf(d); if (!c || c.state === "approved") return;
+    c.state = "approved"; save(); let first = true;
+    const show = await createShowFromConcept(c.concept, d.v, c.showrunner, (s) => { c.showId = s.id; if (first) { first = false; state.ui.showTab = "journey"; state.ui.stage = null; go("#/show/" + s.id); } else render(); });
+    const n = show.assets.filter(a => a.source !== "failed").length;
+    push(chat, "sr", show.status === "partial" ? `“${show.strategy.name}” is set up, but some posts didn't get written. Open the show and tap Try again.` : `“${show.strategy.name}” is ready: ${n} posts at a ${PACES[d.v].label.toLowerCase()} pace. First mission: make your first post.`, [{ type: "open", showId: show.id, name: show.strategy.name }]);
+    render();
+  },
+  another(d) { const c = cardOf(d); const { chat } = msgOf(d); if (!c || state.ui.busy) return; c.state = "replaced"; genConcept(chat, { ...c.seed, avoid: [...(c.seed.avoid || []), c.concept.name] }, c.showrunner); },
+  restyle(d) { const c = cardOf(d); const { chat } = msgOf(d); if (!c || state.ui.busy) return; c.state = "replaced"; chat.showrunner = d.k; genConcept(chat, { ...c.seed, avoid: [...(c.seed.avoid || []), c.concept.name] }, d.k); },
+  tweak(d) { const { chat } = msgOf(d); if (!chat) return; chat.flow = { step: "tweak", m: d.m, c: d.c }; render(); $("#msg")?.focus(); },
+  reuseconcept(d) { const { chat } = msgOf(d); chat?.messages.forEach(m => m.cards?.forEach(x => { if (x.type === "concept" && x.state === "new") x.state = "replaced"; })); const c = cardOf(d); if (c) c.state = "new"; save(); render(); },
+  retry(d) {
+    const c = cardOf(d); const { chat } = msgOf(d); if (!c || state.ui.busy) return; c.retried = true; save();
+    if (c.retry?.kind === "concept") genConcept(chat, c.retry.seed, c.retry.sr);
+    else if (c.retry?.kind === "chat") { chat.messages = chat.messages.filter(m => !(m.role === "user" && m.text === c.retry.text && m === chat.messages.at(-2))); send(c.retry.text); }
+  },
+  async "retry-show"(d) { const s = state.shows[d.id]; if (s) { await retryFailed(s, () => render()); render(); } },
+  async "retry-one"(d) { const { s, a } = findAsset(d.s, d.a); if (a) { await writeAssets(s, [a], "", () => { render(); renderSheet(); }); renderSheet(); } },
+  outcome(d) {
+    const { s, a } = findAsset(d.s, d.a); if (!a) return;
+    if (d.v === "skip") a.outcome = { got: false, skipped: true, at: todayISO() }; else setOutcome(a, d.v === "yes", d.n || a.outcome?.count || "");
+    save(); render(); if (state.ui.sheet) renderSheet();
+    if (d.v === "yes") cheer(s); else if (d.v === "no") toast("Noted. One post rarely does it alone; the next ones build on it.", 3500);
+  },
+  stage: (d) => { state.ui.stage = d.k; render(); },
   newchat: () => go("#/chat/new"),
   openchat: (d) => go("#/chat/" + d.id),
   showchat: (d) => openShowChat(d.id),
@@ -141,30 +225,28 @@ const A = {
   },
   skipchange(d) { const c = cardOf(d); if (c) { c.dismissed = true; save(); render(); } },
   setstyle(d) { state.profile.showrunner = d.k; save(); render(); toast(`${SHOWRUNNERS[d.k].name} style`); },
-  async createplan(d) {
-    const c = cardOf(d); const { chat } = msgOf(d); if (!c || c.showId) return;
-    let first = true;
-    const show = await createShow(c, (s) => { c.showId = s.id; if (first) { first = false; go("#/show/" + s.id); } else render(); }, chat?.showrunner);
-    push(chat, "sr", `“${show.strategy.name}” is ready: ${show.assets.length} posts, planned day by day. Your to-dos are in Today.`, [{ type: "open", showId: show.id, name: show.strategy.name }]);
-    toast("Your show is ready"); render();
+  /* A plan suggested in conversation becomes a full idea to approve, never a show straight away. */
+  createplan(d) {
+    const c = cardOf(d); const { chat } = msgOf(d); if (!c || c.asked || state.ui.busy) return; c.asked = true; save();
+    const p = state.profile; genConcept(chat, { goal: c.goal, what: [p.business, p.what].filter(Boolean).join(" – "), offer: c.offer || c.idea, note: `Build on this direction: ${c.name} – ${c.idea}` }, chat.showrunner || p.showrunner || SR_FOR_GOAL[c.goal]);
   },
-  openshow: (d) => { state.ui.showTab = "posts"; go("#/show/" + d.id); },
+  openshow: (d) => { state.ui.showTab = "journey"; state.ui.stage = null; go("#/show/" + d.id); },
   copypost: (d) => { const c = cardOf(d); copyText([c.hook, c.text, c.cta].filter(Boolean).join("\n\n"), "Post copied"); },
   gptpost: (d) => toGPT(chatPostPrompt(cardOf(d), state.profile)),
   openme: () => go("#/me"),
-  newshow() { state.ui.pendingSay = "Plan a campaign"; go("#/chat/new"); },
-  toggledone(d) { const { a } = findAsset(d.s, d.a); if (!a) return; a.done = !a.done; a.doneOn = a.done ? todayISO() : ""; save(); render(); },
+  newshow() { go("#/chat/new"); },
+  toggledone(d) { const { s, a } = findAsset(d.s, d.a); if (!a || a.source === "failed") return; a.done = !a.done; a.doneOn = a.done ? todayISO() : ""; save(); render(); if (state.ui.sheet) renderSheet(); if (a.done) cheer(s); },
   openasset(d) {
-    state.ui.sheet = { k: "asset", s: d.s, a: d.a }; renderSheet();
+    state.ui.sheet = { k: "asset", s: d.s, a: d.a, t: d.t }; renderSheet();
     const { a } = findAsset(d.s, d.a); if (a?.hasPhoto) loadPhoto(a.id).then(u => { if (u && state.ui.sheet?.a === a.id) renderSheet(); });
   },
   sheettab: (d) => { state.ui.sheet.t = d.t; renderSheet(); },
   setlook(d) { const { a } = findAsset(d.s, d.a); if (!a) return; a.look = { ...(a.look || {}), [d.k]: d.v }; state.ui.lookOpen = true; save(); renderSheet(); },
-  gpt(d) { const { s, a } = findAsset(d.s, d.a); const p = buildPrompts(a, s, state.profile)[+d.i]; if (p) toGPT(p.text, p.photo); },
+  gpt(d) { const { s, a } = findAsset(d.s, d.a); const p = buildPrompts(a, s, state.profile)[+d.i]; if (!p) return; toGPT(p.text, p.photo); if (["image", "slides", "frames"].includes(p.key)) { a.gptImage = true; save(); setTimeout(() => cheer(s), 1200); } },
   copyp(d) { const { s, a } = findAsset(d.s, d.a); const p = buildPrompts(a, s, state.profile)[+d.i]; if (p) copyText(p.text, "Prompt copied"); },
   async saveimage(d) {
     const { s, a } = findAsset(d.s, d.a); if (!a) return; toast("Making your image…");
-    const blob = await renderPost(a); const name = `${slug(s.strategy?.name || "post")}-${slug(a.title || a.kind)}.jpg`;
+    const blob = await renderPost(a); const name = `${slug(s.strategy?.name || "post")}-${slug(a.title || a.kind)}.jpg`; a.imageSaved = true; save(); setTimeout(() => cheer(s), 600);
     const file = new File([blob], name, { type: "image/jpeg" });
     if (navigator.canShare?.({ files: [file] }) && matchMedia("(pointer: coarse)").matches) { try { await navigator.share({ files: [file] }); return; } catch (e) { if (e?.name === "AbortError") return; } }
     saveFile(name, blob, "image/jpeg");
@@ -234,7 +316,7 @@ function wire() {
   document.addEventListener("change", (e) => {
     const t = e.target;
     if (t.dataset.actChange === "photo" && t.files?.[0]) { const { a } = findAsset(t.dataset.s, t.dataset.a); if (!a) return; toast("Adding your photo…");
-      savePhoto(a.id, t.files[0]).then(() => { a.hasPhoto = true; a.look = { ...(a.look || {}), photo: "own" }; save(); renderSheet(); }).catch(() => toast("That photo couldn't be read. Try a JPG or PNG.")); return; }
+      savePhoto(a.id, t.files[0]).then(() => { a.hasPhoto = true; a.look = { ...(a.look || {}), photo: "own" }; save(); renderSheet(); render(); cheer(findAsset(t.dataset.s, t.dataset.a).s); }).catch(() => toast("That photo couldn't be read. Try a JPG or PNG.")); return; }
     if (t.dataset.actChange !== "movedate" || !isISO(t.value)) return;
     const { a } = findAsset(t.dataset.s, t.dataset.a); if (a) { moveAsset(a, t.value); render(); toast("Moved"); }
   });

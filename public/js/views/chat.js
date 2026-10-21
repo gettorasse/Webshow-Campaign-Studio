@@ -1,45 +1,34 @@
-/* Showrunner chats. Each chat starts with "Who's running your show?", then opens.
-   Chats live in a side panel, like ChatGPT. Every show also has its own chat. */
+/* Create: talking with your Showrunner. A new chat starts with "What are we making happen?",
+   asks two quick things, then reveals ONE campaign idea to approve. Style is a fun switch on the idea,
+   not a gate. Chats live in a side panel, like ChatGPT. Every show also has its own chat. */
 import { state, chatsList } from "../store.js";
-import { esc, IC } from "../lib.js";
-import { CHANNELS, GOALS, KINDS } from "../../shared/model.js";
+import { esc, IC, mascot } from "../lib.js";
+import { CHANNELS, GOALS, KINDS, MISSIONS, PACES } from "../../shared/model.js";
 import { SHOWRUNNERS, SR_KEYS, srOf } from "../../shared/showrunners.js";
 import { fmtDate } from "../../shared/util.js";
 import { aiMode } from "../ai.js";
 import { gptMark } from "./sheets.js";
 
-const QUICK = ["Plan a campaign", "What should I post today?", "Write a post", "Give me a tip"];
+const QUICK = ["New campaign idea", "What should I post today?", "Write a post", "Give me a tip"];
+const FLOW_HINT = { goal: "Or tell me in your own words…", what: "e.g. A sauna restaurant by the sea in Helsinki", offer: "e.g. Christmas parties for work teams", tweak: "What should change? e.g. more playful, focus on gift cards" };
 const QUICK_SHOW = ["What's next?", "Make the posts shorter", "Move everything a week later", "Give me a tip"];
 export const currentChat = () => state.chats[state.ui.chatId];
 
 export function chatView() {
-  const c = currentChat(); if (!c) return pickerView();
+  const c = currentChat(); if (!c) return `<section class="chat"><div class="msgs"></div></section>`;
   const show = c.showId ? state.shows[c.showId] : null; const r = srOf(c.showrunner); const busy = state.ui.busy;
   const title = show ? show.strategy?.name || "Show" : c.title || "New chat";
   return `<section class="chat">
     <header class="chat-h">
       <button class="icon-btn" data-act="drawer" aria-label="Chats">${IC.menu}</button>
-      <span class="sr-av sm">${IC[r.icon]}</span>
-      <div class="t grow"><b>${esc(title)}</b><span>${show ? `Show chat · ${r.name}` : r.name} · ${aiMode() === "offline" ? "demo mode" : "online"}</span></div>
+      ${mascot(busy ? "think" : "idle", c.showrunner ? r.icon : "")}
+      <div class="t grow"><b>${esc(title)}</b><span>${show ? "Show chat · " : ""}${c.showrunner ? r.role : "Your Showrunner"} · ${aiMode() === "offline" ? `<em class="demo">demo mode</em>` : "online"}</span></div>
       ${show ? `<button class="icon-btn" data-act="openshow" data-id="${show.id}" aria-label="Open the show">${IC.layers}</button>` : `<button class="icon-btn" data-act="newchat" aria-label="New chat">${IC.edit}</button>`}
     </header>
-    <div class="msgs" id="msgs" aria-live="polite">${c.messages.map((m, i) => msgHTML(c, m, i)).join("")}${busy ? `<div class="msg sr fresh" role="status"><div class="answering"><span class="sr-av sm">${IC[r.icon]}</span><span>${r.name} is answering</span><span class="typing" aria-hidden="true"><i></i><i></i><i></i></span></div></div>` : ""}</div>
+    <div class="msgs" id="msgs" aria-live="polite">${c.messages.map((m, i) => msgHTML(c, m, i)).join("")}${busy ? `<div class="msg sr fresh" role="status"><div class="answering">${mascot("think")}<span>${esc(state.ui.busyLabel || "Thinking")}</span><span class="typing" aria-hidden="true"><i></i><i></i><i></i></span></div></div>` : ""}</div>
     <div class="dock">
-      ${!busy ? `<div class="quick" role="group" aria-label="Suggestions">${(show ? QUICK_SHOW : QUICK).map(q => `<button class="chip" data-act="say" data-t="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
-      <form class="composer" data-form="chat"><textarea id="msg" rows="1" placeholder="${show ? "Ask for a change…" : `Message ${r.name}…`}" aria-label="Message" ${busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${busy ? "disabled" : ""}>${IC.send}</button></form>
-    </div>
-  </section>`;
-}
-
-/* A new chat: pick who runs the show first. */
-function pickerView() {
-  const has = chatsList().length + Object.keys(state.shows).length;
-  return `<section class="chat picker">
-    <header class="chat-h">${has ? `<button class="icon-btn" data-act="drawer" aria-label="Chats">${IC.menu}</button>` : ""}<div class="t grow"><b>New chat</b><span>${aiMode() === "offline" ? "demo mode" : "online"}</span></div></header>
-    <div class="msgs pick">
-      <div class="pick-h"><span class="wordmark">webshow<b>.ai</b></span><h1>Who's running your show?</h1><p class="muted">Pick a Showrunner for this chat. Each one plans and writes in their own way, always with your facts.</p></div>
-      <div class="srs big">${SR_KEYS.map(k => { const s = SHOWRUNNERS[k]; return `<button class="sr-pick" data-act="pickstyle" data-k="${k}"><span class="sr-av">${IC[s.icon]}</span><b>${s.name}</b><span>${esc(s.line)}</span></button>`; }).join("")}</div>
-      <p class="fine center">Each style follows the published marketing principles of the person it's named after. Not affiliated with them.</p>
+      ${!busy && !c.flow?.step ? `<div class="quick" role="group" aria-label="Suggestions">${(show ? QUICK_SHOW : QUICK).map(q => `<button class="chip" data-act="say" data-t="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
+      <form class="composer" data-form="chat"><textarea id="msg" rows="1" placeholder="${esc(FLOW_HINT[c.flow?.step] || (show ? "Ask for a change…" : "Message your Showrunner…"))}" aria-label="Message" ${busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${busy ? "disabled" : ""}>${IC.send}</button></form>
     </div>
   </section>`;
 }
@@ -48,13 +37,13 @@ function pickerView() {
 export function drawerHTML() {
   if (!state.ui.drawer) return "";
   const chats = chatsList(); const shows = Object.values(state.shows).sort((a, b) => b.createdAt - a.createdAt);
-  const row = (c) => `<div class="dr-row${c.id === state.ui.chatId ? " on" : ""}"><button class="dr-b" data-act="openchat" data-id="${c.id}"><span class="sr-av xs">${IC[srOf(c.showrunner).icon]}</span><span class="grow"><b>${esc(c.title || "New chat")}</b><small>${srOf(c.showrunner).name} · ${fmtDate(new Date(c.updatedAt).toISOString().slice(0, 10))}</small></span></button><button class="icon-btn sm" data-act="delchat" data-id="${c.id}" aria-label="Delete chat">${IC.trash}</button></div>`;
+  const row = (c) => `<div class="dr-row${c.id === state.ui.chatId ? " on" : ""}"><button class="dr-b" data-act="openchat" data-id="${c.id}"><span class="sr-av xs">${IC[srOf(c.showrunner).icon]}</span><span class="grow"><b>${esc(c.title || "New chat")}</b><small>${srOf(c.showrunner).role} · ${fmtDate(new Date(c.updatedAt).toISOString().slice(0, 10))}</small></span></button><button class="icon-btn sm" data-act="delchat" data-id="${c.id}" aria-label="Delete chat">${IC.trash}</button></div>`;
   return `<div class="dr-scrim" data-act="drawer"></div><nav class="drawer" aria-label="Chats">
     <div class="dr-h"><span class="wordmark">webshow<b>.ai</b></span><button class="icon-btn" data-act="drawer" aria-label="Close">${IC.x}</button></div>
     <button class="btn go dr-new" data-act="newchat">${IC.plus} New chat</button>
     <h3 class="sec">Chats</h3>
     ${chats.length ? chats.map(row).join("") : `<p class="muted small">No chats yet.</p>`}
-    ${shows.length ? `<h3 class="sec">Shows</h3>${shows.map(s => `<div class="dr-row${state.chats[state.ui.chatId]?.showId === s.id ? " on" : ""}"><button class="dr-b" data-act="showchat" data-id="${s.id}"><span class="sr-av xs show">${IC.layers}</span><span class="grow"><b>${esc(s.strategy?.name || "New show")}</b><small>Show chat · ${srOf(s.showrunner).name}</small></span></button></div>`).join("")}` : ""}
+    ${shows.length ? `<h3 class="sec">Shows</h3>${shows.map(s => `<div class="dr-row${state.chats[state.ui.chatId]?.showId === s.id ? " on" : ""}"><button class="dr-b" data-act="showchat" data-id="${s.id}"><span class="sr-av xs show">${IC.layers}</span><span class="grow"><b>${esc(s.strategy?.name || "New show")}</b><small>Show chat · ${srOf(s.showrunner).role}</small></span></button></div>`).join("")}` : ""}
   </nav>`;
 }
 
@@ -75,10 +64,13 @@ const opText = (show, o) => {
 function cardHTML(chat, c, m, k, answered) {
   const id = `data-m="${m.id}" data-c="${k}"`;
   switch (c.type) {
+    case "goals": return answered ? "" : `<div class="missions">${MISSIONS.map(([k, l, ic]) => `<button class="mission-b" data-act="goal" data-k="${k}" ${id}>${IC[ic]}<b>${l}</b></button>`).join("")}</div>`;
+    case "concept": return conceptHTML(chat, c, m, k);
+    case "error": return `<div class="card error"><span class="kicker">${IC.x} That didn't work</span><p>${esc(c.text)}</p>${c.retried ? "" : `<button class="btn sm" data-act="retry" ${id}>${IC.redo} Try again</button>`}</div>`;
     case "question": return answered ? "" : `<div class="opts">${c.options.map(o => `<button class="chip" data-act="say" data-t="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
     case "plan": return `<div class="card plan"><span class="kicker">${IC.layers} Campaign plan</span><b class="h">${esc(c.name)}</b>${c.idea ? `<p class="idea">“${esc(c.idea)}”</p>` : ""}
       <div class="meta"><span class="tag">${IC.target}${esc(GOALS[c.goal]?.label || "")}</span><span class="tag">${IC.cal}${c.weeks} weeks</span>${c.channels.map(k => `<span class="tag"><i class="dot" style="--c:${CHANNELS[k].c}"></i>${CHANNELS[k].label}</span>`).join("")}</div>
-      ${c.showId ? `<button class="btn" data-act="openshow" data-id="${c.showId}">Open the show ${IC.arrow}</button>` : `<button class="btn go" data-act="createplan" ${id}>${IC.spark} Create this show</button>`}</div>`;
+      ${c.showId ? `<button class="btn" data-act="openshow" data-id="${c.showId}">Open the show ${IC.arrow}</button>` : c.asked ? "" : `<button class="btn go" data-act="createplan" ${id}>${IC.spark} See the full idea</button>`}</div>`;
     case "change": { const show = state.shows[chat.showId];
       return `<div class="card change"><span class="kicker">${IC.edit} Change to the show</span><b>${esc(c.summary)}</b><ul>${c.ops.map(o => `<li>${esc(opText(show, o))}</li>`).join("")}</ul>
       ${c.applied ? `<span class="tag live">${IC.check} Applied</span>` : c.dismissed ? `<span class="tag">Skipped</span>` : `<div class="row"><button class="btn go sm" data-act="applychange" ${id}>${IC.check} Apply</button><button class="btn sm" data-act="skipchange" ${id}>Not now</button></div>`}</div>`; }
@@ -90,4 +82,27 @@ function cardHTML(chat, c, m, k, answered) {
     case "open": return `<button class="btn" data-act="openshow" data-id="${c.showId}">Open “${esc(c.name)}” ${IC.arrow}</button>`;
   }
   return "";
+}
+
+/* ---------- the big reveal: one idea, as a poster ---------- */
+export function posterHTML(c, small) {
+  const [a, b] = c.colors?.length === 2 ? c.colors : ["#6b5bff", "#ffd84d"];
+  return `<div class="poster${small ? " sm" : ""}" style="--p1:${a};--p2:${b}"><span class="p-k">${esc(GOALS[c.goal]?.label || "Campaign")}</span><b class="p-name">${esc(c.name)}</b>${c.hook ? `<span class="p-hook">“${esc(c.hook)}”</span>` : ""}<span class="p-brand">webshow</span></div>`;
+}
+function conceptHTML(chat, c, m, k) {
+  const x = c.concept; const id = `data-m="${m.id}" data-c="${k}"`; const r = srOf(c.showrunner);
+  if (c.state === "replaced") return `<div class="card quiet small">“${esc(x.name)}” · <button class="link sm" data-act="reuseconcept" ${id}>Bring it back</button></div>`;
+  const row = (l, v) => v ? `<div class="kv"><span>${l}</span><p>${esc(v)}</p></div>` : "";
+  return `<div class="card concept">
+    ${posterHTML(x)}
+    ${x.source === "demo" ? `<p class="demo-note">${IC.spark} Demo idea, written without AI from what you told me. Connect the AI for the real thing.</p>` : ""}
+    <p class="c-idea">${esc(x.idea)}</p>
+    ${x.message ? `<p class="c-msg">${esc(x.message)}</p>` : ""}
+    ${row("Who it's for", x.audience)}${row("Why it'll work", x.why)}${row("The look", x.visual)}
+    <div class="meta"><span class="tag">${IC.target}${esc(GOALS[x.goal]?.label || "")}</span><span class="tag">${IC.cal}${x.weeks} weeks</span>${(x.channels || []).map(ch => `<span class="tag"><i class="dot" style="--c:${CHANNELS[ch]?.c}"></i>${CHANNELS[ch]?.label}</span>`).join("")}</div>
+    ${c.state === "approved" ? `<button class="btn" data-act="openshow" data-id="${c.showId}">${IC.layers} Open the show ${IC.arrow}</button>`
+      : c.state === "pace" ? `<div class="pace"><b>How much can you post?</b><span class="muted small">Be honest. A show you finish beats a big one you don't.</span>${Object.entries(PACES).map(([p, v]) => `<button class="pace-b" data-act="pace" data-v="${p}" ${id}><b>${v.label}</b><span>${v.d}</span></button>`).join("")}</div>`
+      : `<div class="c-acts"><button class="btn go big" data-act="makeit" ${id}>${IC.spark} Let's make it</button><div class="row"><button class="btn sm" data-act="another" ${id}>${IC.redo} Different angle</button><button class="btn sm" data-act="tweak" ${id}>${IC.edit} Tweak it</button></div></div>
+      <div class="c-style"><span class="muted small">Run by ${r.role} · ${r.name} style</span><div class="row">${SR_KEYS.filter(s => s !== c.showrunner).map(s => `<button class="chip sm" data-act="restyle" data-k="${s}" ${id}>Try ${SHOWRUNNERS[s].role}</button>`).join("")}</div></div>`}
+  </div>`;
 }

@@ -8,10 +8,20 @@
 - **Code plans, AI writes.** Which posts go out, on which channel and which day is computed in `model.js` (`planSlots`), so the calendar always adds up. The model writes only the words.
 - **Every AI reply is checked.** `normChat`, `normStrategy` and `normAsset` clamp lengths, drop unknown values and fill gaps. When something can't be saved, `offline.js` writes a plain draft instead, so the app never shows a blank.
 
+## The core flow (v3)
+
+```
+Create → "What are we making happen?" (goal) → business (once) → what to promote
+       → task "concept" → ONE idea card → Let's make it → pace → createShowFromConcept()
+       → planSlots(brief with pace) → task "assets" in batches → show.status ready | partial
+Show   → nextMission(): retry → first creative → next post   ·   checkMilestones()   ·   askOutcome()
+```
+The chat's guided start is a small state machine on the chat (`chat.flow = { step: "goal"|"what"|"offer"|"tweak", … }` in `main.js`), so it is fast and predictable; free conversation still goes to the AI.
+
 ## Request flow
 
 ```
-phone ──POST /api/showrunner {task:"chat"|"showchat"|"strategy"|"assets", input}──▶ api/showrunner.js
+phone ──POST /api/showrunner {task:"chat"|"showchat"|"concept"|"strategy"|"assets", input}──▶ api/showrunner.js
                                                                            │ TASKS[task](input) → prompt   (shared/prompts.js)
                                                                            │ fetch api.anthropic.com/v1/messages
                                                                            │ parseJSON(reply)
@@ -36,10 +46,12 @@ Making one campaign costs 1 strategy call plus ⌈posts / 5⌉ asset calls. A 4-
                    messages: [{ id, role: "user"|"sr", text, cards: [card], at }], createdAt, updatedAt } },  // last 200 messages kept
   shows: { [id]: {
     id, createdAt, showrunner, status: "writing"|"ready",
-    brief: { goal, offer, audience, channels: [..], start, weeks, budget, idea,
+    brief: { goal, offer, audience, channels: [..], start, weeks, budget, idea, pace: "light"|"steady"|"full",
              after: { type: "form"|"link"|"call", url, email, phone, fields: [..], title, thanks } },
     strategy: { name, idea, tagline, audience, insight, message, offer, cta, arc: {hook, show, convert}, voice, visual, offerIdeas },
+    source: "ai"|"demo", status: "writing"|"ready"|"partial", milestones: { idea, creative, posted, live, response },
     assets: [{ id, kind, phase, date, end?, time, order, title, fields: {..}, image, goal, action, done, doneOn,
+               source: "ai"|"demo"|"failed", outcome?: { got, count, at, skipped? }, imageSaved?, gptImage?,
                look?: { photo: "own"|"make", headline, sub, pos, font, size, bg, color },   // only what the owner changed
                hasPhoto? }]                                                                   // the photo itself is in IndexedDB
   }},

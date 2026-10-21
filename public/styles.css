@@ -178,7 +178,7 @@ details.img summary::-webkit-details-marker { display: none; } details.img .ic {
 .when { display: flex; align-items: center; gap: 10px; } .when input { background: var(--well); border-radius: 10px; padding: 8px 10px; min-height: 40px; }
 .todo { display: flex; gap: 8px; align-items: flex-start; font-weight: 500; } .todo .ic { color: var(--go); margin-top: 2px; }
 .fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; } .field .link.sm { font-size: 12.5px; }
-.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: sticky; bottom: -20px; background: var(--bg); padding: 8px 0; }
+.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: sticky; bottom: -20px; background: var(--bg); padding: 8px 0; z-index: 3; }
 .rewrite { display: flex; gap: 8px; } .rewrite input { flex: 1; min-width: 0; background: var(--well); border-radius: 999px; padding: 0 14px; min-height: 40px; outline: 0; font-size: 16px; }
 .plan-card { display: grid; gap: 8px; padding: 14px; border-radius: var(--r); background: var(--raised); box-shadow: var(--shadow); justify-items: start; }
 .plan-card .row { width: 100%; } .plan-card.on { box-shadow: inset 0 0 0 2px var(--go); }
@@ -254,3 +254,93 @@ html[data-pro="yes"] .desk .if-no-pro, html:not([data-pro="yes"]) .desk .if-pro 
 .row-card.talk { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--go) 45%, transparent); }
 .row-card.talk > .ic { color: var(--go); }
 .card.change { border: 1.5px solid color-mix(in srgb, var(--go) 40%, transparent); } .card.change ul { padding-left: 18px; display: grid; gap: 3px; font-size: 14px; }
+
+/* =========================================================
+   v3: mission-first start, the idea reveal, journeys, the Showrunner
+   ========================================================= */
+.btn.big { min-height: 52px; font-size: 16px; padding: 0 22px; font-weight: 600; }
+.chip.sm { min-height: 32px; font-size: 13px; padding: 0 12px; }
+.chip.on { background: var(--go-soft); box-shadow: inset 0 0 0 1.5px var(--go); }
+em.demo, .demo { font-style: normal; color: #b7791f; font-weight: 500; }
+.demo-note { font-size: 13px; color: #8a5a00; background: color-mix(in srgb, #f5b84b 18%, transparent); padding: 8px 12px; border-radius: 10px; display: flex; gap: 6px; align-items: flex-start; }
+:root[data-theme="dark"] .demo-note, :root[data-theme="dark"] em.demo { color: #f5c76b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .demo-note, :root:not([data-theme="light"]) em.demo { color: #f5c76b; } }
+.demo-note .ic { width: 15px; height: 15px; margin-top: 1px; }
+.tag.warn, .pill.warn { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.card.error { border: 1.5px solid color-mix(in srgb, var(--danger) 35%, transparent); } .card.error .kicker .ic { color: var(--danger); }
+
+/* the Showrunner mascot */
+.mascot { position: relative; width: 38px; height: 38px; flex: none; display: inline-block; }
+.mascot svg { width: 100%; height: 100%; overflow: visible; }
+.ms-badge { position: absolute; right: -3px; bottom: -3px; width: 17px; height: 17px; border-radius: 50%; background: var(--bg); box-shadow: 0 0 0 1.5px var(--line-2); display: grid; place-items: center; color: var(--ink); }
+.ms-badge .ic { width: 10px; height: 10px; }
+.ms-eyes { transform-origin: 24px 21px; animation: blink 5.5s infinite; }
+@keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+.ms-think svg { animation: bob 1.4s ease-in-out infinite; } @keyframes bob { 50% { transform: translateY(-2px) rotate(-3deg); } }
+.ms-happy svg { animation: hop .6s cubic-bezier(.3, 1.6, .5, 1) 1; } @keyframes hop { 40% { transform: translateY(-5px) scale(1.06); } }
+.answering .mascot { width: 28px; height: 28px; }
+.chat-h .mascot { width: 34px; height: 34px; }
+
+/* first step: what are we making happen? */
+.missions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(100%, 360px); }
+.mission-b { display: grid; gap: 8px; justify-items: start; text-align: left; padding: 14px; min-height: 84px; border-radius: 16px; background: var(--raised); box-shadow: inset 0 0 0 1px var(--line-2); transition: transform .1s, box-shadow .15s; }
+.mission-b .ic { width: 22px; height: 22px; color: var(--go); } .mission-b b { font: 600 15px/1.2 var(--f-head); }
+.mission-b:active { transform: scale(.97); box-shadow: inset 0 0 0 2px var(--go); }
+
+/* the idea, as a poster */
+.poster { position: relative; display: grid; align-content: end; gap: 8px; min-height: 210px; padding: 18px; border-radius: 18px; overflow: hidden; color: #fff; text-align: left;
+  background: radial-gradient(120% 90% at 100% 0%, var(--p2) 0 22%, transparent 23%), linear-gradient(150deg, var(--p1), color-mix(in srgb, var(--p1) 55%, #000)); isolation: isolate; }
+.poster::after { content: ""; position: absolute; inset: 0; background: radial-gradient(rgba(255, 255, 255, .14) 1px, transparent 1.2px) 0 0 / 14px 14px; z-index: -1; mask: linear-gradient(to bottom, #000, transparent 70%); }
+.p-k { position: absolute; top: 14px; left: 18px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; opacity: .85; }
+.p-brand { position: absolute; top: 14px; right: 18px; font: 600 12px/1 var(--f-head); opacity: .7; }
+.p-name { font: 700 clamp(30px, 9vw, 40px)/.98 var(--f-head); letter-spacing: -.035em; text-wrap: balance; text-shadow: 0 2px 18px rgba(0, 0, 0, .25); }
+.p-hook { font-size: 14.5px; line-height: 1.35; opacity: .92; max-width: 30ch; }
+.poster.sm { min-height: 120px; padding: 14px; border-radius: 14px; } .poster.sm .p-name { font-size: 24px; } .poster.sm .p-hook { display: none; } .poster.sm .p-k { top: 12px; left: 14px; } .poster.sm .p-brand { display: none; }
+
+.card.concept { gap: 12px; padding: 12px; border-radius: 22px; width: min(100%, 380px); }
+.c-idea { font: 600 19px/1.25 var(--f-head); letter-spacing: -.01em; padding: 0 4px; }
+.c-msg { color: var(--muted); padding: 0 4px; } .card.concept .kv { padding: 0 4px; } .card.concept .meta { padding: 0 4px; }
+.c-acts { display: grid; gap: 8px; } .c-acts .row { display: grid; grid-template-columns: 1fr 1fr; } .c-acts .btn.big { width: 100%; }
+.c-style { display: grid; gap: 6px; border-top: 1px solid var(--line); padding: 10px 4px 2px; }
+.pace { display: grid; gap: 8px; padding: 4px; } .pace > b { font: 600 17px var(--f-head); }
+.pace-b { display: grid; text-align: left; padding: 12px 14px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line-2); } .pace-b b { font-weight: 600; } .pace-b span { font-size: 13px; color: var(--muted); }
+.pace-b:first-of-type { box-shadow: inset 0 0 0 2px var(--go); background: var(--go-soft); }
+.pace-b:active { transform: scale(.98); }
+
+/* home: the next mission */
+.hello { display: flex; gap: 12px; align-items: center; } .hello .mascot { width: 44px; height: 44px; }
+.page-h h1 { font-size: 26px; }
+.me-btn { background: var(--well); }
+.card.empty.hero { justify-items: start; gap: 10px; padding: 22px; }
+.card.empty.hero .mascot { width: 52px; height: 52px; }
+.mission { display: grid; gap: 0; background: var(--raised); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+.m-poster { display: block; padding: 8px 8px 0; text-align: left; }
+.m-body { display: grid; gap: 6px; padding: 14px 16px 16px; justify-items: start; } .m-body .h { font-size: 20px; } .m-body .btn { margin-top: 6px; }
+.m-body .h .mascot { width: 26px; height: 26px; vertical-align: middle; margin-right: 4px; }
+.ms-row { display: flex; gap: 6px; margin-top: 10px; width: 100%; }
+.ms-dot { flex: 1; display: grid; gap: 4px; } .ms-dot i { height: 5px; border-radius: 3px; background: var(--well); display: block; } .ms-dot.on i { background: var(--go); }
+.ms-dot small { font-size: 10.5px; color: var(--faint); line-height: 1.2; } .ms-dot.on small { color: var(--muted); }
+.card.outcome { gap: 10px; } .card.outcome b { font-weight: 600; line-height: 1.35; }
+
+/* shows: posters and the journey */
+.show-grid { display: grid; gap: 12px; }
+.show-card .poster { margin: -6px -6px 4px; }
+.stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.stage { display: grid; gap: 2px; text-align: left; padding: 10px 10px 10px 12px; border-radius: 14px; background: var(--well); position: relative; min-height: 64px; border-top: 3px solid transparent; }
+.stage b { font: 600 15px var(--f-head); color: var(--c); } .stage small { font-size: 11.5px; color: var(--muted); line-height: 1.25; padding-right: 26px; }
+.stage .st-n { position: absolute; top: 10px; right: 10px; font-size: 11.5px; color: var(--muted); font-weight: 600; } .stage .st-n .ic { width: 14px; height: 14px; color: var(--good); }
+.stage.on { background: var(--raised); box-shadow: var(--shadow); border-top-color: var(--c); }
+.pill { margin-left: auto; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--well); color: var(--muted); flex: none; }
+.pill.ok { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); } .pill.ready { background: var(--go-soft); color: var(--go); } .pill.late { color: var(--danger); }
+.task-b .m { gap: 6px; } .pad { padding: 14px; }
+
+/* the creative */
+.card.caption p { max-height: 180px; overflow: auto; } .card.caption .btn { justify-self: start; }
+details.more summary { cursor: pointer; list-style: none; display: grid; gap: 2px; } details.more summary::-webkit-details-marker { display: none; }
+details.more summary b { display: flex; gap: 8px; align-items: center; }
+.mk .btn.go { min-width: 150px; }
+
+/* celebrations: small and meaningful */
+.toast.cheer { display: flex; gap: 10px; align-items: center; text-align: left; border-radius: 18px; padding: 10px 16px 10px 10px; background: var(--raised); color: var(--ink); box-shadow: 0 12px 40px rgba(10, 11, 27, .22), 0 0 0 1px var(--line); max-width: 360px; }
+.toast.cheer .mascot { width: 40px; height: 40px; } .toast.cheer b { display: block; font: 600 15px var(--f-head); } .toast.cheer small { font-size: 13px; color: var(--muted); }
+#tabs .tab .ic { width: 22px; height: 22px; }

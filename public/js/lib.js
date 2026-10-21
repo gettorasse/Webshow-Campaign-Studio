@@ -6,7 +6,7 @@ export const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return
 export const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
 
 export function toast(msg, ms = 2600) {
-  const box = $("#toasts"); if (!box) return; box.replaceChildren(); /* one message at a time */ const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; box.append(t);
+  if (typeof document === "undefined") return; const box = $("#toasts"); if (!box) return; box.replaceChildren(); /* one message at a time */ const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; box.append(t);
   setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 300); }, ms);
 }
 /* Synchronous copy, for when the page is about to lose focus (e.g. opening ChatGPT right after). */
@@ -74,3 +74,15 @@ export const IC = {
   desktop: P('<rect x="1.8" y="2.6" width="12.4" height="8.4" rx="1.4"/><path d="M5.6 13.6h4.8M8 11v2.6"/>'),
   clock: P('<circle cx="8" cy="8" r="5.8"/><path d="M8 4.8V8l2.2 1.4"/>'),
 };
+
+/* ---------- the Showrunner: Webshow's little stage manager ----------
+   Moods: "idle", "think", "happy". Original artwork; the style badge shows who's running the show. */
+export function mascot(mood = "idle", badge = "") {
+  const eyes = mood === "happy"
+    ? `<path d="M13.5 22.5q3.5-4.5 7 0M27.5 22.5q3.5-4.5 7 0" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/>`
+    : `<g class="ms-eyes"><ellipse cx="17" cy="21" rx="5" ry="5.8" fill="#fff"/><ellipse cx="31" cy="21" rx="5" ry="5.8" fill="#fff"/><g class="ms-pupils" fill="#15122e">${mood === "think" ? `<circle cx="19" cy="18.6" r="2.5"/><circle cx="33" cy="18.6" r="2.5"/>` : `<circle cx="17.6" cy="21.8" r="2.6"/><circle cx="31.6" cy="21.8" r="2.6"/>`}</g></g>`;
+  const mouth = mood === "happy" ? `<path d="M17 30q7 7 14 0" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/>`
+    : mood === "think" ? `<path d="M21 32h6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`
+    : `<path d="M18.5 30.5q5.5 4 11 0" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/>`;
+  return `<span class="mascot ms-${mood}" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="3" y="5" width="42" height="40" rx="15" fill="var(--go)"/><path d="M9 14q4-7 13-8" stroke="#fff" stroke-opacity=".35" stroke-width="2.4" stroke-linecap="round" fill="none"/>${eyes}${mouth}<path d="M24 5V1.5M19 2.5l1.5 3M29 2.5l-1.5 3" stroke="var(--go)" stroke-width="2" stroke-linecap="round"/></svg>${badge ? `<span class="ms-badge">${IC[badge] || ""}</span>` : ""}</span>`;
+}

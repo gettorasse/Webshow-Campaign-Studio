@@ -20,10 +20,10 @@ export const PROFILE_FIELDS = [
 export function meView() {
   const p = state.profile; const plan = planOf(state.settings.plan); const mode = aiMode();
   return `<section class="page">
-    <header class="page-h"><div><span class="eyebrow">Train your Showrunner</span><h1>Me</h1></div><span class="wordmark">webshow<b>.ai</b></span></header>
+    <header class="page-h"><button class="icon-btn" data-act="tab" data-t="today" aria-label="Back">${IC.back}</button><div class="grow"><span class="eyebrow">Your business and settings</span><h1>Me</h1></div><span class="wordmark">webshow<b>.ai</b></span></header>
     <h2 class="sec">Favourite Showrunner</h2>
-    <p class="muted small">Each chat starts by picking who runs it. Your favourite gives the daily tips.</p>
-    <div class="srs">${SR_KEYS.map(k => `<button class="sr-pick" data-act="setstyle" data-k="${k}" aria-pressed="${p.showrunner === k}"><span class="sr-av sm">${IC[SHOWRUNNERS[k].icon]}</span><b>${SHOWRUNNERS[k].name}</b><span>${esc(SHOWRUNNERS[k].line)}</span></button>`).join("")}</div>
+    <p class="muted small">Your favourite runs new ideas and gives the daily tips. You can switch on any idea, too.</p>
+    <div class="srs">${SR_KEYS.map(k => `<button class="sr-pick" data-act="setstyle" data-k="${k}" aria-pressed="${p.showrunner === k}"><span class="sr-av sm">${IC[SHOWRUNNERS[k].icon]}</span><b>${SHOWRUNNERS[k].role}</b><span>${esc(SHOWRUNNERS[k].blurb)} <em class="muted">${SHOWRUNNERS[k].name} style</em></span></button>`).join("")}</div>
     <h2 class="sec">What it knows about you</h2>
     <p class="muted small">Your Showrunner uses this in every answer. It never makes up facts, so the more you tell it, the better it gets.</p>
     <div class="card form">${PROFILE_FIELDS.map(([k, l, ph, rows]) => `<label class="field"><span>${l}</span>${rows > 1 ? `<textarea rows="${rows}" data-prof="${k}" placeholder="${esc(ph)}">${esc(p[k])}</textarea>` : `<input data-prof="${k}" value="${esc(p[k])}" placeholder="${esc(ph)}">`}</label>`).join("")}</div>

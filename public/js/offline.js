@@ -2,7 +2,7 @@
    Good enough to click through every screen; not a substitute for the AI. */
 import { CHANNELS, GOALS, KINDS, campaignEnd, isVisual } from "../shared/model.js";
 import { srOf } from "../shared/showrunners.js";
-import { clip, fmtDate, slug, str } from "../shared/util.js";
+import { clip, fmtDate, hash, slug, str } from "../shared/util.js";
 
 const GOAL_WORDS = { bookings: /book|varaa|varaus|appointment|class|kurssi|table|sauna|hotel/, sales: /shop|store|kauppa|product|tuote|buy|osta|sale|myy/, event: /event|tapahtuma|concert|festival|webinar|seminar/, signups: /sign.?up|subscri|tilaa|newsletter|member|jäsen/, awareness: /aware|tunnettu|brand|näky/, leads: /lead|b2b|quote|tarjous|contact|yhtey/ };
 export const guessGoal = (t) => Object.keys(GOAL_WORDS).find(k => GOAL_WORDS[k].test(String(t).toLowerCase())) || "";
@@ -73,4 +73,25 @@ export function offlineShowChat({ show, messages }) {
     return { reply: next.length ? `Next up: ${next.map(a => `${a.title || KINDS[a.kind].label} (${fmtDate(a.date)})`).join(", ")}. Want me to change anything in these?` : "Everything is done. Nice work. Want to plan the next show?", cards: next.length ? [{ type: "question", q: "Change something?", options: ["Make them shorter", "Make them funnier", "Move everything a week later"] }] : [], remember: [] };
   }
   return { reply: "Tell me what to change: the tone, the timing, or the idea. I'll show you the change before anything happens.", cards: [{ type: "question", q: "What should change?", options: ["Make the posts shorter", "Move everything a week later", "What's next?"] }], remember: [] };
+}
+
+/* Demo mode: a simple, honest concept built only from what the owner said. Labelled as a demo in the app. */
+const DUOS = [["#6b5bff", "#ffd84d"], ["#0f3d3e", "#f2c14e"], ["#e4568b", "#1b1b3a"], ["#1c8f87", "#f5efe6"], ["#ff5a36", "#1e1e24"], ["#3a5a40", "#f4e9d8"]];
+const ANGLES = [
+  { n: (b) => `The ${b} Moment`, i: (b) => `One moment at ${b} worth showing up for` },
+  { n: (b) => `Behind ${b}`, i: (b) => `Show the people and the craft behind ${b}` },
+  { n: (b) => `Your Turn at ${b}`, i: (b) => `Make ${b} feel like a personal invitation` },
+];
+export function offlineConcept(profile, seed = {}) {
+  const goal = seed.goal || "leads"; const g = GOALS[goal] || GOALS.leads;
+  const biz = clip(str(profile.business) || str(seed.what || profile.what).split(/[,.:–-]/)[0] || "Your business", 28);
+  const offer = str(seed.offer) || str(profile.offer) || str(seed.what || profile.what) || biz;
+  const k = (seed.avoid?.length || 0) % ANGLES.length; const a = ANGLES[k];
+  return { name: clip(a.n(biz), 40), idea: clip(a.i(biz), 80), goal,
+    message: clip(`${offer}. ${g.cta} – it's that simple.`.replace(/\.\./g, "."), 200), audience: str(profile.audience) || "People nearby who'd love this but haven't tried it yet",
+    insight: "People don't need more ads. They need one clear reason, and an easy next step.", why: `Every post stays on one thing people can picture (${clip(offer, 60)}), and the next step is always obvious.`,
+    hook: clip(`${offer}?`, 90), cta: g.cta, offer: str(seed.offer || profile.offer),
+    arc: { hook: "Make people stop and picture it.", show: "Show what it's really like: the people, the details, the result.", convert: `Give a clear reason to ${g.cta.toLowerCase()} now.` },
+    voice: str(profile.voice) || "Warm, direct, a little playful", visual: "Real photos from your place, one subject per picture, natural light",
+    colors: DUOS[(hash(biz) + k) % DUOS.length], channels: GOAL_CHANNELS[goal]?.slice(0, 3) || ["instagram", "email"], weeks: 4, offerIdeas: [] };
 }

@@ -27,18 +27,23 @@ There are no payments in the app and nothing is locked by plan yet. **Plans** in
 - **Webshow Pro is part of Premium and Enterprise.** On a computer (wide screen + mouse, no touch) those plans open straight into Pro (`/pro/`); other plans see the phone app with a "See plans" note, and `/pro/` sends them back to the plans. Testers can force the phone app with `?view=phone`.
 - **Webshow Pro (desktop)** is for power users and our own studio team. It has the canvas, nodes and timeline, like CapCut's desktop version. Today it's the legacy studio in `public/pro/`, and the two share a format: export a show as `campaign.json` from the phone. Pro needs porting (see the roadmap).
 
-## The four screens
+## The app: three tabs
 
 | Tab | What it's for |
 |---|---|
-| **Showrunner** (chats) | The home screen. Every new chat starts with **"Who's running your show?"**: pick Ogilvy, Hormozi or Vaynerchuk, then talk. Chats are kept in a side panel (☰), like ChatGPT. Answers come as cards: a question with tap-able answers, a **campaign plan** you create in one tap, a **ready-to-copy post**, or a **tip**. Lasting facts are remembered across all chats. |
-| **Today** | What to post today, the next 7 days, a tip, and a daily reminder (shown while the app is open). |
-| **Shows** | Your campaigns. Each show has **its own chat** ("Talk about this show", also in the side panel): ask for changes and the Showrunner proposes them as a card (rewrite posts, move dates, shift everything, change the idea), applied only when you tap Apply. Each one has a big idea and a goal, with Hook → Show → Convert spread over 2–8 weeks. Posts are grouped by week; tap one to see the full text, copy it, change the date, mark it done, or ask for a rewrite. Export to text, calendar, spreadsheet or campaign.json. |
-| **Me** | Train your Showrunner: its style, what it knows about the business, what it remembered from chats (you can delete any of it). Also plan (demo), theme, data download and start over. |
+| **Home** | Your current show as a poster, the **one next mission**, quick outcome checks ("Did it get any replies, inquiries or bookings?"), this week, a tip. |
+| **Create** | Talk to your Showrunner. A new chat starts with **"What are we making happen?"**, asks at most two things, then reveals **one campaign idea** to approve (Let's make it / Different angle / Tweak it), then *How much can you post?*. Chats live in the side panel (☰). |
+| **Shows** | Every campaign as a poster. A show is a journey: **Hook → Show → Convert**, each a short list of missions with clear status, five real milestones, and its own chat for changes (proposed as a card, applied only when you tap Apply). |
+
+**Me** (business profile, what the Showrunner remembered, favourite Showrunner, plan, theme, data) sits behind the profile button.
+
+**The post: Create.** Preview of the finished post → add a photo → **Save image** → copy the caption → **I posted it**. Text-on-image settings are folded away; ChatGPT prompts are under *More ways to make it*.
+
+**Honesty rules.** Demo content (no AI connected) is labelled *demo* everywhere. If the AI fails, nothing is faked: the post or idea shows *Try again*. Outcomes are only what the owner tells us.
 
 ## The Showrunner styles
 
-There are three styles, named by surname only: **Ogilvy**, **Hormozi**, **Vaynerchuk**. Each one is a block of instructions added to every AI request, based on that person's *published* marketing principles. They are not separate AI agents. The AI never claims to be the person, never quotes them, and never invents facts, prices, discounts or guarantees in their name. The app says once, in small print, that it isn't affiliated with them.
+There are three styles, shown as **The Strategist** (Ogilvy style), **The Closer** (Hormozi style) and **The Creator** (Vaynerchuk style). The first idea is run by whichever fits the goal; you can switch with one tap on the idea, and set a favourite in Me. Each one is a block of instructions added to every AI request, based on that person's *published* marketing principles. They are not separate AI agents. The AI never claims to be the person, never quotes them, and never invents facts, prices, discounts or guarantees in their name. The app says once, in small print, that it isn't affiliated with them.
 
 ## What's real and what's simulated
 

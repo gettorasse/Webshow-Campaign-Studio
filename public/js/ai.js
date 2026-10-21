@@ -19,4 +19,4 @@ export async function ask(task, input) {
   }
   throw { code: "offline" };
 }
-export const errText = (e) => ({ rate_limited: "Your Showrunner needs a breather. Try again in a minute.", invalid_json: "The answer came back broken. Try again.", not_granted: "AI access wasn't allowed here.", network: "No connection. Check your internet." }[e?.code] || "Something went wrong. Try again.");
+export const errText = (e) => ({ rate_limited: "Your Showrunner needs a breather. Try again in a minute.", invalid_json: "The answer came back broken. Try again.", not_granted: "AI access wasn't allowed here.", network: "No connection. Check your internet.", upstream: "The AI didn't answer this time. Nothing is lost.", no_key: "The AI isn't set up on this server yet." }[e?.code] || "Something went wrong. Nothing is lost.");
