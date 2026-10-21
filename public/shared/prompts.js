@@ -43,7 +43,7 @@ After the button: ${afterLine({ ...defaultAfter(b.goal), ...(b.after || {}) })} 
 /* ---------- chat: the Showrunner as a buddy ---------- */
 export function chatPrompt({ profile, messages, shows, today }) {
   const hist = arr(messages, 14).map(m => `${m.role === "user" ? "OWNER" : "YOU"}: ${clip(m.text, 600)}`).join("\n");
-  const showsTxt = arr(shows, 5).map(s => `- ${s.name} ("${s.idea}"), ${s.start} to ${s.end}, ${s.done}/${s.total} posts done${s.next ? `, next: ${s.next}` : ""}`).join("\n") || "(no campaigns yet)";
+  const showsTxt = arr(shows, 5).map(s => `- ${s.name} ("${s.idea}"), ${s.start} to ${s.end}, ${s.done}/${s.total} posts done${s.next ? `, next: ${s.next}` : ""}${s.outcomes ? `; ${s.outcomes}` : ""}`).join("\n") || "(no campaigns yet)";
   return { tier: "default", maxTokens: 1600, prompt: `You are the owner's Showrunner: their marketing buddy from Webshow, living in their phone. You plan their marketing around ONE idea and ONE goal at a time (Hook → Show → Convert), write it, and tell them what to do next. You talk like a smart, warm friend: short messages, one thing at a time.
 ${RULES}
 ${VOICE}
@@ -61,6 +61,7 @@ HOW TO ANSWER
 - When you know what they promote and the goal, propose a campaign with a "plan" card (the app then turns it into a full idea for them to approve). Don't plan before that.
 - When they ask for a post, an idea or copy, give a "post" card that is ready to copy.
 - Give a "tip" card only when it helps right now.
+- Use owner-reported previous results to suggest thoughtful next experiments. They are anecdotes, NOT verified sales, analytics or proof of causation. Never promise that repeating a post will reproduce results.
 - If the owner states a durable fact about their business (prices, offer, customers, tone, things to avoid), add it to "remember" in their words. Never add guesses.
 Reply with ONLY JSON:
 {"reply": "...", "cards": [0-2 of: {"type":"question","q":"...","options":["..."]} | {"type":"plan","name":"2-5 words","idea":"the big idea, one line","goal":one of ${GOAL_KEYS.map(k => `"${k}"`).join("|")},"weeks":2-8,"channels":[from ${CHANNEL_KEYS.map(k => `"${k}"`).join(", ")}],"offer":"only as stated","audience":"who"} | {"type":"post","channel":one of the channel keys,"hook":"first line or on-image text","text":"the post","cta":"call to action","image_prompt":"photo or visual to make, no text in the image"} | {"type":"tip","title":"...","text":"..."}], "remember": ["..."]}` };
@@ -84,6 +85,7 @@ export function conceptPrompt({ profile, seed = {}, today }) {
   return { tier: "default", maxTokens: 1400, prompt: `You are the owner's Showrunner from Webshow. Create ONE strong campaign concept for this small business. This is the big reveal: it must feel specific, surprising and doable, never generic. Build it on concrete details the owner gave (place, product, people, season); if they gave few, keep it simple rather than inventing.
 ${RULES}
 - No discounts, scarcity, deadlines, guarantees, testimonials or numbers unless the owner stated them.
+- If the owner shares results from a previous show, use them to propose a DIFFERENT, testable creative angle. Treat reported replies as anecdotes, not verified analytics or evidence that the campaign caused a sale.
 ${VOICE}
 ${showrunnerBlock(profile?.showrunner)}
 ${profileBlock(profile)}
@@ -111,7 +113,7 @@ export function showChatPrompt({ profile, show, messages, today }) {
   const st = show?.strategy || {}; const b = show?.brief || {};
   const posts = arr(show?.assets, 60).map(a => `- id "${a.id}" · ${a.date} · ${KINDS[a.kind]?.label} · ${a.phase} · ${a.done ? "POSTED" : "to do"}${a.outcome ? ` · result: ${a.outcome.got ? `got responses (${a.outcome.count || "some"})` : "no responses yet"}` : ""} · "${clip(a.title, 40)}" · ${clip(Object.values(a.fields || {})[0], 80)}`).join("\n");
   const hist = arr(messages, 14).map(m => `${m.role === "user" ? "OWNER" : "YOU"}: ${clip(m.text, 600)}`).join("\n");
-  return { tier: "default", maxTokens: 1600, prompt: `You are the owner's Showrunner from Webshow, and this chat is about ONE campaign ("show") that is already planned and written. Help them adjust it. Short, warm, phone-friendly. If some posts got responses, build on what worked.
+  return { tier: "default", maxTokens: 1600, prompt: `You are the owner's Showrunner from Webshow, and this chat is about ONE campaign ("show") that is already planned and written. Help them adjust it. Short, warm, phone-friendly. If some posts got responses, consider learning from them cautiously. Results are owner-reported, not verified analytics; never infer a sale or make a claim of causality.
 ${RULES}
 ${VOICE}
 ${showrunnerBlock(show?.showrunner || profile?.showrunner)}
