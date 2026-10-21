@@ -9,6 +9,7 @@ import { showsList, sortedAssets, showEnd, failedOf } from "../campaign.js";
 import { afterOf, afterLine, AFTER_TYPES, AFTER_FIELDS } from "../../shared/make.js";
 import { posterHTML } from "./chat.js";
 import { missionCard } from "./today.js";
+import { summarizeOutcomes } from "../../shared/outcomes.js";
 
 const progress = (s) => { const n = s.assets.length; const d = s.assets.filter(a => a.done).length; return { n, d, pct: n ? Math.round(d / n * 100) : 0 }; };
 const range = (s) => `${fmtDate(s.brief.start)} – ${fmtDate(showEnd(s))}`;
@@ -43,9 +44,36 @@ export function showView(s) {
     ${missionCard(s, true)}
     <div class="seg" role="tablist"><button role="tab" aria-selected="${tab === "journey"}" data-act="showtab" data-t="journey">Journey</button><button role="tab" aria-selected="${tab === "plan"}" data-act="showtab" data-t="plan">The idea</button></div>
     ${tab === "plan" ? planTab(s) : journeyTab(s)}
+    ${tab === "journey" ? debriefCard(s) : ""}
     <button class="row-card tap talk" data-act="showchat" data-id="${s.id}">${mascot("idle", r.icon)}<span class="grow"><b>Talk about this show</b><span class="muted small">Ask ${esc(r.role)} to change the tone, the dates or the idea</span></span>${IC.chat}</button>
   </section>`;
 }
+/* Results are self-reported, never presented as social-platform analytics. */
+function debriefCard(s) {
+  const o = summarizeOutcomes(s);
+  if (!o.published) return "";
+  const missing = s.assets.find(a => a.done && a.kind !== "landing" && a.kind !== "search_ad" && (!a.outcome || a.outcome.skipped));
+  const reportAction = missing ? '<button class="btn sm" data-act="openasset" data-s="' + esc(s.id) +
+    '" data-a="' + esc(missing.id) + '">Record a result ' + IC.arrow + '</button>' : '';
+  const headline = o.reviewed ?
+    o.positive + ' of ' + o.reviewed + ' reviewed posts had reported responses' :
+    'You have ' + o.published + ' published ' + (o.published === 1 ? 'post' : 'posts');
+  const line = o.reviewed ?
+    'Useful signal, not a guarantee. Your feedback helps the Showrunner choose the next creative angle.' :
+    'Did anyone reply, inquire or book? Add a quick check to teach your Showrunner what happened.';
+  return `<section class="card debrief">
+    <span class="kicker">${IC.spark} The learning loop</span>
+    <h2 class="h">${headline}</h2>
+    <p class="muted small">${line}</p>
+    <div class="debrief-stats"><span><b>${o.published}</b><small>Marked posted</small></span>
+      <span><b>${o.reviewed}</b><small>Results checked</small></span>
+      <span><b>${o.positive}</b><small>Posts with responses</small></span></div>
+    <p class="fine">Responses are reported by you, not measured or attributed by a connected platform.</p>
+    <div class="debrief-actions">${reportAction}
+      ${o.reviewed ? `<button class="btn go" data-act="followup" data-id="${esc(s.id)}">${IC.spark} Make a smarter next show</button>` : ''}</div>
+  </section>`;
+}
+
 function journeyTab(s) {
   if (!s.assets.length) return `<div class="card quiet"><p>${IC.spark} Your Showrunner is planning the campaign…</p></div>`;
   const all = sortedAssets(s); const t = todayISO();
