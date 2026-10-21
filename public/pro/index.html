@@ -1599,6 +1599,9 @@ function renderPage(page, { imgs = {}, editing = false, live = false, href = "" 
   return page.sections.map((s, i) => { if (s.hidden) return ""; let h = one(s, i) || ""; if (editing) h = h.replace(/^<(section|footer)/, `<$1 data-sec="${i}"`); if (s.css) h = h.replace(/^<(section|footer)/, `<$1 style="${s.css}"`); if (href && !editing) h = h.replace(/<button class="bt" data-go="form">([\s\S]*?)<\/button>/g, `<a class="bt" href="${esc(href)}" target="_blank" rel="noopener">$1</a>`); return h; }).join("");
 }
 
+
+/* Showrunner always takes a short, natural pause before it answers, even when the answer is instant. */
+const minWait = (t0, ms = 1100) => new Promise(ok => setTimeout(ok, Math.max(0, ms - (Date.now() - t0))));
 /* ============================================================
    Store (shared db, with local fallback), people, presence, AI
    ============================================================ */
@@ -2399,6 +2402,7 @@ function typingHTML(label = "is writing a reply") {
   return `<div class="msg ai typing" role="status" aria-live="polite"><div class="mh"><span class="ty-av">${People.avatar("ai")}</span><b>Showrunner</b><span class="ty-l">${label}</span></div><div class="tdots" aria-hidden="true"><i></i><i></i><i></i></div></div>`;
 }
 async function sendInThread(t, text, toAI) {
+  const t0 = Date.now();
   t.messages.push({ id: uid("m"), by: Store.me.id, kind: "msg", text, at: now() });
   if (t.status === "done") t.status = "open"; putThread(t);
   if (toAI) S.typing.add(t.id);
@@ -2413,6 +2417,7 @@ async function sendInThread(t, text, toAI) {
       reply = await AI.text(`You are Showrunner, the production assistant in Webshow Studio, replying in a team thread. Be brief, concrete and helpful. If a change is needed, say exactly what to change on which node.\n${RULES}\n${ctx}\n\nTHREAD:\n${t.messages.slice(-12).map(m => `${m.by === "ai" ? "Showrunner" : "Teammate"}: ${m.text}`).join("\n")}\n\nReply as Showrunner:`);
     } catch (e) { reply = errCopy(e); }
   }
+  await minWait(t0, 1300);
   S.typing.delete(t.id);
   t.messages.push({ id: uid("m"), by: "ai", kind: "ai", text: reply, at: now() }); S.freshMsg = t.messages.at(-1).id; S.inspFor = null; putThread(t); if (S.view === "threads" || S.inspTab === "comments") softRender();
   if (S.view === "threads") { const m = $(".msgs"); if (m) m.scrollTop = m.scrollHeight; }
@@ -2488,7 +2493,7 @@ function graphSummary() {
 }
 const typeCatalog = () => Object.entries(NT).map(([k, d]) => `${k}: inputs ${JSON.stringify(d.inputs.map(i => i.k + ":" + i.t))}, outputs ${JSON.stringify(d.outputs.map(o => o.k + ":" + o.t))}, params ${Object.keys(d.params()).join(",")}`).join("\n");
 async function askCanvas(text) {
-  S.askBusy = true; S.proposal = null; paintAsk();
+  S.askBusy = true; S.proposal = null; paintAsk(); const t0 = Date.now();
   let r = null;
   if (AI.fn) {
     try {
@@ -2502,6 +2507,7 @@ Reuse existing nodes when possible. Wire new blocks to the existing brief/text/i
   }
   if (!r) r = offlineOps(text);
   S.proposal = { text, summary: str(r.summary, "Here's what I'd change"), ops: arr(r.ops, 30) };
+  await minWait(t0);
   S.askBusy = false; S.askText = ""; paintAsk();
 }
 function offlineOps(text) {
@@ -5000,8 +5006,9 @@ function briefOffline(t) {
 A.brieffill = async (b) => {
   const n = S.nodes[b.dataset.id]; const t = str($("#bf_" + n.id)?.value); if (!t) return toast("Describe the business and the campaign first.");
   S.briefBusy = true; S.inspFor = null; paintInspector(); if (S.nodeEd) neRepaint();
-  let r = null;
+  let r = null; const t0 = Date.now();
   if (AI.fn) { try { r = await AI.json(`Fill a marketing campaign brief from the owner's own description.\n${RULES}\n<input>${t}</input>\nReply with ONLY JSON: {"business": string (the business name, or a short description if no name is given), "offer": string (what this campaign promotes, max 30 words), "audience": string (max 20 words), "goal": one of ${JSON.stringify(GOAL_OPTS.map(x => x[0]))}, "cta": string (main action, max 4 words), "facts": string (ONLY concrete facts stated in the input: prices, places, dates, guarantees; empty string if none)}`, { modelTier: "quick" }); } catch (e) { toast(errCopy(e)); } }
+  await minWait(t0);
   if (!r || !r.offer) r = briefOffline(t);
   const p = n.p; ["business", "offer", "audience", "cta", "facts"].forEach(k => { const v = str(r[k]); if (v) p[k] = v.slice(0, 400); }); if (GOAL_OPTS.some(x => x[0] === r.goal)) p.goal = r.goal;
   S.briefBusy = false; hist(n, AI.fn ? "Brief filled by Showrunner" : "Brief filled from a prompt"); commitNode(n); paintNode(n.id); G.edgesFrom(n.id).forEach(e => paintNode(e.to)); S.inspFor = null; paintInspector(); if (S.nodeEd) neRepaint(); toast("Brief filled. Check it, then build your blocks.");
@@ -6328,7 +6335,7 @@ function formatPlan(k, d) {
 async function planSeason() {
   const s = cur(); if (!s) return; const d = dnaOf(s); const k = S.seasonFmt || s.plan?.format || "launch";
   if (!+d.target || !d.start || !d.end) return toast("Set the goal, target and dates first. The plan is built around them.");
-  S.seasonBusy = true; rerenderBody(); let plan = null;
+  S.seasonBusy = true; rerenderBody(); let plan = null; const t0 = Date.now();
   if (AI.fn) {
     try {
       const L = showLen(d); const allowed = ["image", "carousel", "poll", "quiz", "metaad", "ad"].filter(tierAllows);
@@ -6337,6 +6344,7 @@ async function planSeason() {
       if (eps.length >= 3) plan = { format: k, eps, strategy: { who: str(r.strategy?.who), message: str(r.strategy?.message), whyNow: str(r.strategy?.whyNow), oneLiner: str(r.strategy?.oneLiner) }, look: LOOKS[r.look] ? r.look : null, split: r.split && typeof r.split === "object" ? { meta: +r.split.meta || 0, google: +r.split.google || 0, boost: +r.split.boost || 0 } : null };
     } catch (e) { toast(errCopy(e)); }
   }
+  await minWait(t0, 1500);
   if (!plan) plan = formatPlan(k, d);
   plan.eps.sort((a, b) => a.day - b.day || LANE_ORD[a.lane] - LANE_ORD[b.lane]);
   S.season = { showId: S.showId, ...plan }; S.seasonBusy = false; if (S.view === "plan") rerenderBody();
@@ -6385,8 +6393,9 @@ document.addEventListener("change", (e) => { const t = e.target; if (t.dataset?.
 
 /* ---------- one sentence → DNA → season draft ---------- */
 showFromPrompt = async function (text) {
-  S.homeBusy = true; render(); let r = null;
+  S.homeBusy = true; render(); let r = null; const t0 = Date.now();
   if (AI.fn) { try { r = await AI.json(`You are Showrunner in Webshow Studio. A small-business owner describes an idea. Turn it into the DNA of ONE campaign show: one goal, one big idea.\n${RULES}\n<input>${text}</input>\nReply with ONLY JSON: {"name": max 4 words, "tint": one of ${Object.keys(TINTS).filter(k => k !== "slate").map(k => `"${k}"`).join("|")}, "format": one of ${Object.keys(SHOW_FORMATS).map(k => `"${k}"`).join("|")}, "weeks": 2-8, "dna": {"goal": one of ${GOAL_OPTS.map(g => `"${g[0]}"`).join("|")}, "target": a realistic number for a small business or 0 if unknowable, "idea": one sentence big idea, "business": string, "offer": string, "audience": string, "cta": max 4 words, "facts": ONLY facts stated in the input, else ""}}`, { modelTier: AI.tier(S.effort) }); } catch (e) { toast(errCopy(e)); } }
+  await minWait(t0, 1400);
   const dn = r?.dna || {}; const k = SHOW_FORMATS[r?.format] ? r.format : "launch"; const weeks = Math.max(2, Math.min(8, Math.round(+r?.weeks || SHOW_FORMATS[k].weeks))); const st = addDays(todayISO(), 3);
   const s = createShow({ name: str(r?.name) || text.split(/[.,\n]/)[0].slice(0, 32) || "New show", tint: TINTS[r?.tint] ? r.tint : undefined });
   s.dna = { ...DNA_DEF(), goal: GOAL_OPTS.some(g => g[0] === dn.goal) ? dn.goal : "leads", target: Math.max(0, Math.round(+dn.target || 0)), idea: str(dn.idea), business: str(dn.business) || s.name, offer: str(dn.offer) || (r ? "" : text), audience: str(dn.audience), cta: str(dn.cta), facts: str(dn.facts), start: st, end: addDays(st, weeks * 7 - 1) };
@@ -6628,7 +6637,7 @@ async function draftEpisodes({ lane = "hook", arc = "", count = 3, like = null, 
   if (like) lane = laneOf(like);
   const allowed = ["image", "carousel", "poll", "quiz", "metaad", "ad"].filter(tierAllows).filter(t => budget || !["metaad", "ad"].includes(t));
   const taken = new Set([...epList().map(n => n.title.toLowerCase()), ...draftsOf().map(x => str(x.title).toLowerCase())]);
-  let eps = null; S.drBusy = true; paintAsk();
+  let eps = null; S.drBusy = true; paintAsk(); const t0 = Date.now();
   if (AI.fn) {
     try {
       const role = { hook: "Hook episodes wake up interest", show: "Show episodes deepen and prove", convert: "Convert episodes push the main action before the deadline" }[lane];
@@ -6651,6 +6660,7 @@ async function draftEpisodes({ lane = "hook", arc = "", count = 3, like = null, 
   }
   const days = draftDays(lane, eps.length); const left = Math.max(0, budget - spentOf() - epList().reduce((a, n) => a + (+n.p.boost || 0), 0));
   const list = eps.map((e, i) => ({ id: uid("dr"), kind: "episode", type: e.type, lane, arc: e.arc, title: e.title, angle: e.angle, why: why ? clip(why, 200) : e.why, start: days[i], boost: e.type === "metaad" && budget ? Math.max(30, Math.min(150, Math.round(left * .15 / 10) * 10)) : 0, src, like: like?.id || "", ai: !!e.ai, at: now() }));
+  await minWait(t0);
   S.drBusy = false; pushDrafts(list);
   return list;
 }
@@ -6930,7 +6940,7 @@ async function obUnderstand(text) {
 }
 async function obStart(text) {
   S.ob = { ...obBlank(), what: text, showrunner: S.ob?.showrunner || "ogilvy" }; S.view = "onboard"; S.showId = null; render();
-  const p = await obUnderstand(text); const o = S.ob; if (S.view !== "onboard" || !o) return;
+  const t0 = Date.now(); const p = await obUnderstand(text); await minWait(t0, 1400); const o = S.ob; if (S.view !== "onboard" || !o) return;
   Object.assign(o, { what: p.what, business: p.business, audOptions: p.audOptions, goalGuess: p.goalGuess, recommended: p.recommended, format: p.format, ai: p.ai, parsed: true });
   if (p.audience) o.audience = p.audience; if (p.goal) o.goal = p.goal; if (p.target) o.target = p.target; if (p.offer) o.offer = p.offer; if (p.weeks) o.weeks = p.weeks;
   o.channels = p.channels.length ? p.channels : [...p.recommended]; o.chAuto = !p.channels.length;

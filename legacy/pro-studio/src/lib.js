@@ -195,3 +195,6 @@ function renderPage(page, { imgs = {}, editing = false, live = false, href = "" 
   return page.sections.map((s, i) => { if (s.hidden) return ""; let h = one(s, i) || ""; if (editing) h = h.replace(/^<(section|footer)/, `<$1 data-sec="${i}"`); if (s.css) h = h.replace(/^<(section|footer)/, `<$1 style="${s.css}"`); if (href && !editing) h = h.replace(/<button class="bt" data-go="form">([\s\S]*?)<\/button>/g, `<a class="bt" href="${esc(href)}" target="_blank" rel="noopener">$1</a>`); return h; }).join("");
 }
 
+
+/* Showrunner always takes a short, natural pause before it answers, even when the answer is instant. */
+const minWait = (t0, ms = 1100) => new Promise(ok => setTimeout(ok, Math.max(0, ms - (Date.now() - t0))));

@@ -117,6 +117,7 @@ function typingHTML(label = "is writing a reply") {
   return `<div class="msg ai typing" role="status" aria-live="polite"><div class="mh"><span class="ty-av">${People.avatar("ai")}</span><b>Showrunner</b><span class="ty-l">${label}</span></div><div class="tdots" aria-hidden="true"><i></i><i></i><i></i></div></div>`;
 }
 async function sendInThread(t, text, toAI) {
+  const t0 = Date.now();
   t.messages.push({ id: uid("m"), by: Store.me.id, kind: "msg", text, at: now() });
   if (t.status === "done") t.status = "open"; putThread(t);
   if (toAI) S.typing.add(t.id);
@@ -131,6 +132,7 @@ async function sendInThread(t, text, toAI) {
       reply = await AI.text(`You are Showrunner, the production assistant in Webshow Studio, replying in a team thread. Be brief, concrete and helpful. If a change is needed, say exactly what to change on which node.\n${RULES}\n${ctx}\n\nTHREAD:\n${t.messages.slice(-12).map(m => `${m.by === "ai" ? "Showrunner" : "Teammate"}: ${m.text}`).join("\n")}\n\nReply as Showrunner:`);
     } catch (e) { reply = errCopy(e); }
   }
+  await minWait(t0, 1300);
   S.typing.delete(t.id);
   t.messages.push({ id: uid("m"), by: "ai", kind: "ai", text: reply, at: now() }); S.freshMsg = t.messages.at(-1).id; S.inspFor = null; putThread(t); if (S.view === "threads" || S.inspTab === "comments") softRender();
   if (S.view === "threads") { const m = $(".msgs"); if (m) m.scrollTop = m.scrollHeight; }
@@ -206,7 +208,7 @@ function graphSummary() {
 }
 const typeCatalog = () => Object.entries(NT).map(([k, d]) => `${k}: inputs ${JSON.stringify(d.inputs.map(i => i.k + ":" + i.t))}, outputs ${JSON.stringify(d.outputs.map(o => o.k + ":" + o.t))}, params ${Object.keys(d.params()).join(",")}`).join("\n");
 async function askCanvas(text) {
-  S.askBusy = true; S.proposal = null; paintAsk();
+  S.askBusy = true; S.proposal = null; paintAsk(); const t0 = Date.now();
   let r = null;
   if (AI.fn) {
     try {
@@ -220,6 +222,7 @@ Reuse existing nodes when possible. Wire new blocks to the existing brief/text/i
   }
   if (!r) r = offlineOps(text);
   S.proposal = { text, summary: str(r.summary, "Here's what I'd change"), ops: arr(r.ops, 30) };
+  await minWait(t0);
   S.askBusy = false; S.askText = ""; paintAsk();
 }
 function offlineOps(text) {

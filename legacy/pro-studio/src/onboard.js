@@ -99,7 +99,7 @@ async function obUnderstand(text) {
 }
 async function obStart(text) {
   S.ob = { ...obBlank(), what: text, showrunner: S.ob?.showrunner || "ogilvy" }; S.view = "onboard"; S.showId = null; render();
-  const p = await obUnderstand(text); const o = S.ob; if (S.view !== "onboard" || !o) return;
+  const t0 = Date.now(); const p = await obUnderstand(text); await minWait(t0, 1400); const o = S.ob; if (S.view !== "onboard" || !o) return;
   Object.assign(o, { what: p.what, business: p.business, audOptions: p.audOptions, goalGuess: p.goalGuess, recommended: p.recommended, format: p.format, ai: p.ai, parsed: true });
   if (p.audience) o.audience = p.audience; if (p.goal) o.goal = p.goal; if (p.target) o.target = p.target; if (p.offer) o.offer = p.offer; if (p.weeks) o.weeks = p.weeks;
   o.channels = p.channels.length ? p.channels : [...p.recommended]; o.chAuto = !p.channels.length;

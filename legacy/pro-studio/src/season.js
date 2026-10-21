@@ -27,7 +27,7 @@ function formatPlan(k, d) {
 async function planSeason() {
   const s = cur(); if (!s) return; const d = dnaOf(s); const k = S.seasonFmt || s.plan?.format || "launch";
   if (!+d.target || !d.start || !d.end) return toast("Set the goal, target and dates first. The plan is built around them.");
-  S.seasonBusy = true; rerenderBody(); let plan = null;
+  S.seasonBusy = true; rerenderBody(); let plan = null; const t0 = Date.now();
   if (AI.fn) {
     try {
       const L = showLen(d); const allowed = ["image", "carousel", "poll", "quiz", "metaad", "ad"].filter(tierAllows);
@@ -36,6 +36,7 @@ async function planSeason() {
       if (eps.length >= 3) plan = { format: k, eps, strategy: { who: str(r.strategy?.who), message: str(r.strategy?.message), whyNow: str(r.strategy?.whyNow), oneLiner: str(r.strategy?.oneLiner) }, look: LOOKS[r.look] ? r.look : null, split: r.split && typeof r.split === "object" ? { meta: +r.split.meta || 0, google: +r.split.google || 0, boost: +r.split.boost || 0 } : null };
     } catch (e) { toast(errCopy(e)); }
   }
+  await minWait(t0, 1500);
   if (!plan) plan = formatPlan(k, d);
   plan.eps.sort((a, b) => a.day - b.day || LANE_ORD[a.lane] - LANE_ORD[b.lane]);
   S.season = { showId: S.showId, ...plan }; S.seasonBusy = false; if (S.view === "plan") rerenderBody();
@@ -84,8 +85,9 @@ document.addEventListener("change", (e) => { const t = e.target; if (t.dataset?.
 
 /* ---------- one sentence → DNA → season draft ---------- */
 showFromPrompt = async function (text) {
-  S.homeBusy = true; render(); let r = null;
+  S.homeBusy = true; render(); let r = null; const t0 = Date.now();
   if (AI.fn) { try { r = await AI.json(`You are Showrunner in Webshow Studio. A small-business owner describes an idea. Turn it into the DNA of ONE campaign show: one goal, one big idea.\n${RULES}\n<input>${text}</input>\nReply with ONLY JSON: {"name": max 4 words, "tint": one of ${Object.keys(TINTS).filter(k => k !== "slate").map(k => `"${k}"`).join("|")}, "format": one of ${Object.keys(SHOW_FORMATS).map(k => `"${k}"`).join("|")}, "weeks": 2-8, "dna": {"goal": one of ${GOAL_OPTS.map(g => `"${g[0]}"`).join("|")}, "target": a realistic number for a small business or 0 if unknowable, "idea": one sentence big idea, "business": string, "offer": string, "audience": string, "cta": max 4 words, "facts": ONLY facts stated in the input, else ""}}`, { modelTier: AI.tier(S.effort) }); } catch (e) { toast(errCopy(e)); } }
+  await minWait(t0, 1400);
   const dn = r?.dna || {}; const k = SHOW_FORMATS[r?.format] ? r.format : "launch"; const weeks = Math.max(2, Math.min(8, Math.round(+r?.weeks || SHOW_FORMATS[k].weeks))); const st = addDays(todayISO(), 3);
   const s = createShow({ name: str(r?.name) || text.split(/[.,\n]/)[0].slice(0, 32) || "New show", tint: TINTS[r?.tint] ? r.tint : undefined });
   s.dna = { ...DNA_DEF(), goal: GOAL_OPTS.some(g => g[0] === dn.goal) ? dn.goal : "leads", target: Math.max(0, Math.round(+dn.target || 0)), idea: str(dn.idea), business: str(dn.business) || s.name, offer: str(dn.offer) || (r ? "" : text), audience: str(dn.audience), cta: str(dn.cta), facts: str(dn.facts), start: st, end: addDays(st, weeks * 7 - 1) };

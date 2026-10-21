@@ -78,8 +78,9 @@ function briefOffline(t) {
 A.brieffill = async (b) => {
   const n = S.nodes[b.dataset.id]; const t = str($("#bf_" + n.id)?.value); if (!t) return toast("Describe the business and the campaign first.");
   S.briefBusy = true; S.inspFor = null; paintInspector(); if (S.nodeEd) neRepaint();
-  let r = null;
+  let r = null; const t0 = Date.now();
   if (AI.fn) { try { r = await AI.json(`Fill a marketing campaign brief from the owner's own description.\n${RULES}\n<input>${t}</input>\nReply with ONLY JSON: {"business": string (the business name, or a short description if no name is given), "offer": string (what this campaign promotes, max 30 words), "audience": string (max 20 words), "goal": one of ${JSON.stringify(GOAL_OPTS.map(x => x[0]))}, "cta": string (main action, max 4 words), "facts": string (ONLY concrete facts stated in the input: prices, places, dates, guarantees; empty string if none)}`, { modelTier: "quick" }); } catch (e) { toast(errCopy(e)); } }
+  await minWait(t0);
   if (!r || !r.offer) r = briefOffline(t);
   const p = n.p; ["business", "offer", "audience", "cta", "facts"].forEach(k => { const v = str(r[k]); if (v) p[k] = v.slice(0, 400); }); if (GOAL_OPTS.some(x => x[0] === r.goal)) p.goal = r.goal;
   S.briefBusy = false; hist(n, AI.fn ? "Brief filled by Showrunner" : "Brief filled from a prompt"); commitNode(n); paintNode(n.id); G.edgesFrom(n.id).forEach(e => paintNode(e.to)); S.inspFor = null; paintInspector(); if (S.nodeEd) neRepaint(); toast("Brief filled. Check it, then build your blocks.");

@@ -56,7 +56,7 @@ async function draftEpisodes({ lane = "hook", arc = "", count = 3, like = null, 
   if (like) lane = laneOf(like);
   const allowed = ["image", "carousel", "poll", "quiz", "metaad", "ad"].filter(tierAllows).filter(t => budget || !["metaad", "ad"].includes(t));
   const taken = new Set([...epList().map(n => n.title.toLowerCase()), ...draftsOf().map(x => str(x.title).toLowerCase())]);
-  let eps = null; S.drBusy = true; paintAsk();
+  let eps = null; S.drBusy = true; paintAsk(); const t0 = Date.now();
   if (AI.fn) {
     try {
       const role = { hook: "Hook episodes wake up interest", show: "Show episodes deepen and prove", convert: "Convert episodes push the main action before the deadline" }[lane];
@@ -79,6 +79,7 @@ async function draftEpisodes({ lane = "hook", arc = "", count = 3, like = null, 
   }
   const days = draftDays(lane, eps.length); const left = Math.max(0, budget - spentOf() - epList().reduce((a, n) => a + (+n.p.boost || 0), 0));
   const list = eps.map((e, i) => ({ id: uid("dr"), kind: "episode", type: e.type, lane, arc: e.arc, title: e.title, angle: e.angle, why: why ? clip(why, 200) : e.why, start: days[i], boost: e.type === "metaad" && budget ? Math.max(30, Math.min(150, Math.round(left * .15 / 10) * 10)) : 0, src, like: like?.id || "", ai: !!e.ai, at: now() }));
+  await minWait(t0);
   S.drBusy = false; pushDrafts(list);
   return list;
 }

@@ -9,7 +9,7 @@ export const state = {
   chat: [],            // [{ id, role: "user" | "sr", text, cards: [], at }]
   shows: {},           // id → show (see campaign.js)
   settings: { theme: "", nudges: false, lastNudge: "", plan: "starter" },
-  ui: { tab: "chat", showId: null, showTab: "posts", sheet: null, busy: false },
+  ui: { tab: "chat", showId: null, showTab: "posts", sheet: null, busy: false, fresh: null },
 };
 export function load() {
   const d = lsGet(KEY, null); if (!d || d.version !== VERSION) return;

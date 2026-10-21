@@ -32,6 +32,8 @@ export function render() {
   if (tab === "chat") { const m = $("#msg"); if (m) { m.value = draft; grow(m); } const box = $("#msgs"); view.scrollTop = 0; if (box) box.scrollTop = box.scrollHeight; }
   else view.scrollTop = keep;
   lastRoute = route;
+  /* the newest answer animates in once, not on every repaint */
+  const f = state.ui.fresh; if (f) setTimeout(() => { if (state.ui.fresh === f) state.ui.fresh = null; }, 900);
 }
 function renderSheet() { const el = $("#sheet"); const keep = el.querySelector(".sheet")?.scrollTop || 0; el.innerHTML = sheetHTML(); el.querySelectorAll("textarea").forEach(fit); const s = el.querySelector(".sheet"); if (s) s.scrollTop = keep; document.body.classList.toggle("locked", !!state.ui.sheet); }
 const fit = (t) => { if (!CSS.supports("field-sizing", "content")) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; } };
@@ -69,14 +71,17 @@ async function send(text) {
   if (!p.showrunner) p.showrunner = "ogilvy";
   if (!p.what) learnFirst(p, text);
   push("user", text); state.ui.busy = true; if (state.ui.tab !== "chat") go("#/chat"); else render();
-  let r;
+  const t0 = Date.now(); let r;
   try { r = normChat(await ask("chat", { profile: p, messages: state.chat.slice(-14).map(forAI), shows: showsList().slice(0, 5).map(showSummary), today: todayISO() })); }
   catch (e) { if (e?.code !== "offline") toast(errText(e)); r = offlineChat({ profile: p, messages: state.chat }); }
   const cards = [...r.cards];
   const fresh = r.remember.filter(x => !p.memory.some(m => m.text.toLowerCase() === x.toLowerCase()));
   if (fresh.length) { p.memory.push(...fresh.map(text => ({ text, at: Date.now() }))); cards.push({ type: "remembered", items: fresh }); }
-  push("sr", r.reply, cards); state.ui.busy = false; render();
+  /* A short, natural pause while "Showrunner is answering…" shows, even when the answer is instant. */
+  await pause(t0, 900 + Math.min(1300, r.reply.length * 10));
+  const m = push("sr", r.reply, cards); state.ui.fresh = m.id; state.ui.busy = false; render();
 }
+const pause = (t0, ms) => new Promise(ok => setTimeout(ok, Math.max(0, ms - (Date.now() - t0))));
 const cardOf = (d) => state.chat.find(m => m.id === d.m)?.cards?.[+d.c];
 
 /* ---------- actions: every data-act="…" in the views lands here ---------- */
@@ -85,9 +90,11 @@ const A = {
   say: (d) => send(d.t),
   pickstyle(d) {
     const first = !state.profile.showrunner; state.profile.showrunner = d.k; save();
-    if (first) push("sr", `${SHOWRUNNERS[d.k].name} style it is. Now tell me about your business: what you sell, and who buys it?`);
-    else push("sr", `Switched to ${SHOWRUNNERS[d.k].name} style.`);
-    render(); $("#msg")?.focus();
+    state.ui.busy = true; render();
+    setTimeout(() => {
+      const m = push("sr", first ? `${SHOWRUNNERS[d.k].name} style it is. Now tell me about your business: what you sell, and who buys it?` : `Switched to ${SHOWRUNNERS[d.k].name} style.`);
+      state.ui.fresh = m.id; state.ui.busy = false; render(); $("#msg")?.focus();
+    }, 900);
   },
   setstyle(d) { state.profile.showrunner = d.k; save(); render(); toast(`${SHOWRUNNERS[d.k].name} style`); },
   async createplan(d) {

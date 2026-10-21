@@ -10,7 +10,7 @@ export function chatView() {
   const r = srOf(state.profile.showrunner); const busy = state.ui.busy;
   return `<section class="chat">
     <header class="chat-h"><span class="sr-av">${IC[r.icon]}</span><div class="t"><b>Your Showrunner</b><span>${state.profile.showrunner ? `${r.name} style · ` : ""}${aiMode() === "offline" ? "demo mode" : "online"}</span></div></header>
-    <div class="msgs" id="msgs" aria-live="polite">${state.chat.map(msgHTML).join("")}${busy ? `<div class="msg sr"><div class="bubble typing" aria-label="Your Showrunner is typing"><i></i><i></i><i></i></div></div>` : ""}</div>
+    <div class="msgs" id="msgs" aria-live="polite">${state.chat.map(msgHTML).join("")}${busy ? `<div class="msg sr fresh" role="status"><div class="answering"><span class="sr-av sm">${IC[r.icon]}</span><span>Showrunner is answering</span><span class="typing" aria-hidden="true"><i></i><i></i><i></i></span></div></div>` : ""}</div>
     <div class="dock">
       ${state.profile.showrunner && !busy ? `<div class="quick" role="group" aria-label="Suggestions">${QUICK.map(q => `<button class="chip" data-act="say" data-t="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
       <form class="composer" data-form="chat"><textarea id="msg" rows="1" placeholder="Message your Showrunner…" aria-label="Message your Showrunner" ${busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${busy ? "disabled" : ""}>${IC.send}</button></form>
@@ -20,7 +20,7 @@ export function chatView() {
 function msgHTML(m, i) {
   if (m.role === "user") return `<div class="msg me"><div class="bubble">${esc(m.text)}</div></div>`;
   const answered = state.chat.slice(i + 1).some(x => x.role === "user");
-  return `<div class="msg sr">${m.text ? `<div class="bubble">${esc(m.text)}</div>` : ""}${(m.cards || []).map((c, k) => cardHTML(c, m, k, answered)).join("")}</div>`;
+  return `<div class="msg sr${m.id === state.ui.fresh ? " fresh" : ""}">${m.text ? `<div class="bubble">${esc(m.text)}</div>` : ""}${(m.cards || []).map((c, k) => cardHTML(c, m, k, answered)).join("")}</div>`;
 }
 function cardHTML(c, m, k, answered) {
   const id = `data-m="${m.id}" data-c="${k}"`;
