@@ -43,7 +43,7 @@ export function missionCard(s, inShow) {
   const what = {
     writing: [`${mascot("think")} Writing your posts…`, "They appear as they're ready. You can look around meanwhile.", ""],
     retry: [`Some posts didn't get written`, `${n.n} post${n.n > 1 ? "s" : ""} failed. Nothing is lost; try again when the connection's back.`, go(`${IC.redo} Try again`, "retry-show", `data-id="${s.id}"`)],
-    finished: [`Show complete`, "Every post is out. Tell me how it went, then let's plan the next one.", go(`${IC.spark} Plan the next show`, "newshow")],
+    finished: [`Show complete`, "Every post is out. Tell me how it went, then let's plan the next one.", go(`${IC.spark} Make your next show`, "followup", `data-id="${s.id}"`)],
     creative: n.a && [`Make your first post`, `${KINDS[n.a.kind].label} · add a photo and your text goes on it. Ready to post in a minute.`, go(`${IC.image} Make it`, "openasset", `data-s="${s.id}" data-a="${n.a.id}" data-t="make"`)],
     post: n.a && [`${n.a.date <= todayISO() ? "Today" : "Next"}: ${esc(n.a.title || KINDS[n.a.kind].label)}`, `${KINDS[n.a.kind].label} · ${fmtDate(n.a.date, { weekday: "short", day: "numeric", month: "short" })}${n.a.source === "demo" ? " · demo draft" : ""}`, go(`${IC.arrow} Open`, "openasset", `data-s="${s.id}" data-a="${n.a.id}"`)],
   }[n.kind] || ["", "", ""];
