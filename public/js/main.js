@@ -18,6 +18,7 @@ import { sheetHTML, findAsset, previewHTML, promptsHTML } from "./views/sheets.j
 import { buildPrompts, chatPostPrompt, afterOf, afterLine } from "../shared/make.js";
 import { loadPhoto, savePhoto, removePhoto, renderPost, clearPhotos } from "./photos.js";
 import { slug } from "../shared/util.js";
+import { outcomesContext } from "../shared/outcomes.js";
 
 const TABS = [["today", "Home", "home"], ["chat", "Create", "spark"], ["shows", "Shows", "layers"]];
 
@@ -115,9 +116,9 @@ function openShowChat(showId) {
   go("#/chat/" + c.id);
 }
 const showSummary = (s) => { const next = s.assets.filter(a => !a.done && !a.pending).sort((x, y) => x.date.localeCompare(y.date))[0];
-  return { name: s.strategy?.name, idea: s.strategy?.idea, start: s.brief.start, end: showEnd(s), done: s.assets.filter(a => a.done).length, total: s.assets.length, next: next ? `${KINDS[next.kind].label} on ${next.date}` : "" }; };
+  return { name: s.strategy?.name, idea: s.strategy?.idea, start: s.brief.start, end: showEnd(s), done: s.assets.filter(a => a.done).length, total: s.assets.length, next: next ? `${KINDS[next.kind].label} on ${next.date}` : "", outcomes: outcomesContext(s) }; };
 /* What the show chat sends: the show without the long texts. */
-const slimShow = (s) => ({ showrunner: s.showrunner, brief: s.brief, strategy: s.strategy, assets: s.assets.map(a => ({ id: a.id, date: a.date, kind: a.kind, phase: a.phase, done: !!a.done, title: a.title, fields: { first: Object.values(a.fields || {})[0] || "" } })) });
+const slimShow = (s) => ({ showrunner: s.showrunner, brief: s.brief, strategy: s.strategy, assets: s.assets.map(a => ({ id: a.id, date: a.date, kind: a.kind, phase: a.phase, done: !!a.done, outcome: a.outcome, title: a.title, fields: { first: Object.values(a.fields || {})[0] || "" } })) });
 /* What the AI sees of the conversation: the words plus a one-line note of each card. */
 const forAI = (m) => ({ role: m.role, text: [m.text, ...(m.cards || []).map(c => c.type === "plan" ? `[proposed plan: ${c.name}${c.showId ? ", created" : ""}]` : c.type === "post" ? `[post for ${c.channel}: ${c.hook}]` : c.type === "question" ? `[asked: ${c.q}]` : "").filter(Boolean)].filter(Boolean).join(" ") });
 
@@ -234,6 +235,24 @@ const A = {
   copypost: (d) => { const c = cardOf(d); copyText([c.hook, c.text, c.cta].filter(Boolean).join("\n\n"), "Post copied"); },
   gptpost: (d) => toGPT(chatPostPrompt(cardOf(d), state.profile)),
   openme: () => go("#/me"),
+  /* Turn honest feedback from the last show into a fresh, stronger concept. */
+  followup(d) {
+    const previous = state.shows[d.id]; if (!previous || state.ui.busy) return;
+    const sr = previous.showrunner || state.profile.showrunner || "ogilvy";
+    const c = newChat(sr); c.title = "Next show"; c.flow = null;
+    const results = outcomesContext(previous);
+    push(c, "user", "Let's create a fresh campaign building on my last show. My reported results: " + results);
+    state.ui.tab = "chat"; state.ui.chatId = c.id; go("#/chat/" + c.id);
+    genConcept(c, {
+      goal: previous.brief.goal,
+      what: [state.profile.business, state.profile.what].filter(Boolean).join(" – "),
+      offer: previous.brief.offer || state.profile.offer || "",
+      avoid: [previous.strategy?.name || ""].filter(Boolean),
+      note: "Create a fresh direction, not a repeat of the previous campaign. Previous idea: " +
+        (previous.strategy?.idea || "") + ". Self-reported post outcomes: " + results +
+        " Only draw cautious conclusions; a reported reply is not a verified sale."
+    }, sr);
+  },
   newshow() { go("#/chat/new"); },
   toggledone(d) { const { s, a } = findAsset(d.s, d.a); if (!a || a.source === "failed") return; a.done = !a.done; a.doneOn = a.done ? todayISO() : ""; save(); render(); if (state.ui.sheet) renderSheet(); if (a.done) cheer(s); },
   openasset(d) {
