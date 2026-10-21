@@ -1,0 +1,14 @@
+{
+  "name": "webshow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Webshow: your Showrunner, an AI marketing buddy in your pocket. Mobile-first web app plus one serverless AI endpoint.",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test \"tests/*.test.js\"",
+    "eval": "node scripts/eval.mjs",
+    "preview": "node scripts/preview.mjs"
+  },
+  "engines": { "node": ">=20.11" }
+}

@@ -1,0 +1,20 @@
+[
+  { "id": "sauna-fi", "lang": "fi", "showrunner": "hormozi",
+    "profile": { "business": "Saunaravintola Löyly", "what": "Sauna ja ravintola Helsingin rannassa. Yksityissaunat ryhmille ja ravintolan illallinen.", "audience": "Helsinkiläiset työporukat ja kaveriporukat, 25–55 v.", "offer": "Pikkujoulupaketti: 2 h yksityissauna + kolmen ruokalajin illallinen, 89 €/hlö, min. 10 hlö.", "voice": "Lämmin, rento, vähän leikkisä", "facts": "Avattu 2016. Merinäköala. Kaksi puulämmitteistä saunaa.", "avoid": "Älä lupaa alennuksia." },
+    "open": "Haluan lisää pikkujoulu­varauksia marras–joulukuulle.", "brief": { "goal": "bookings", "channels": ["instagram", "facebook", "email", "website"], "weeks": 4, "budget": 300 } },
+  { "id": "accounting-en", "lang": "en", "showrunner": "ogilvy",
+    "profile": { "business": "Numera Accounting", "what": "Bookkeeping and payroll for small companies in Tampere, fixed monthly price.", "audience": "Founders of 1–20 person companies who hate paperwork", "offer": "Monthly packages from 290 € + VAT. We never give discounts.", "voice": "Calm, clear, no jargon", "facts": "12 accountants. Clients since 2009." },
+    "open": "I need more leads from small business owners this autumn.", "brief": { "goal": "leads", "channels": ["linkedin", "email", "google", "website"], "weeks": 6, "budget": 500 } },
+  { "id": "yoga-fi", "lang": "fi", "showrunner": "vaynerchuk",
+    "profile": { "business": "Studio Hetki", "what": "Pieni joogastudio Turussa. Aloittelijaystävälliset tunnit.", "audience": "Kiireiset 30–50-vuotiaat, jotka eivät ole jooganeet ennen", "offer": "Tammikuun alkeiskurssi, 6 kertaa, 120 €", "voice": "Rauhallinen ja ystävällinen" },
+    "open": "Miten saisin alkeiskurssin täyteen?", "brief": { "goal": "signups", "channels": ["instagram", "tiktok", "email"], "weeks": 3, "budget": 0 } },
+  { "id": "ceramics-en", "lang": "en", "showrunner": "vaynerchuk",
+    "profile": { "business": "Kivi Ceramics", "what": "Handmade stoneware mugs and bowls, sold online.", "audience": "People who buy gifts and care about handmade things", "offer": "Christmas gift sets", "voice": "Honest, crafty, a bit dry humour" },
+    "open": "What should I post today?", "brief": { "goal": "sales", "channels": ["instagram", "facebook", "email", "website"], "weeks": 4, "budget": 200 } },
+  { "id": "salon-thin", "lang": "en", "showrunner": "hormozi",
+    "profile": { "what": "hair salon" },
+    "open": "make me a campaign", "brief": { "goal": "bookings", "channels": ["instagram", "facebook"], "weeks": 2, "budget": 0 } },
+  { "id": "jazz-fi", "lang": "fi", "showrunner": "ogilvy",
+    "profile": { "business": "Klubi Sininen", "what": "Jazzklubi Tampereella, livemusiikkia torstaista lauantaihin.", "audience": "Musiikin ystävät 30+", "offer": "Uudenvuoden konsertti 31.12., liput 45 €" },
+    "open": "Uudenvuoden konsertti pitäisi myydä loppuun.", "brief": { "goal": "event", "channels": ["instagram", "facebook", "email"], "weeks": 5, "budget": 400 } }
+]

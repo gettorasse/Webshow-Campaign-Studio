@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Webshow</title>
+<meta name="description" content="Your Showrunner: an AI marketing buddy that plans your campaigns, writes every post and tells you what to do today.">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400..700&family=Geist:wght@400..600&family=Geist+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<aside class="desk" aria-label="About this view">
+  <span class="wordmark">webshow<b>.ai</b></span>
+  <p>This is the phone app. Open it on your phone for the real feel, or add it to your home screen.</p>
+  <p>On a computer, Webshow Pro gives you the full canvas with nodes.</p>
+  <a class="btn sm" href="pro/" target="_blank" rel="noopener">Open Webshow Pro</a>
+</aside>
+<div class="app">
+  <main id="view"></main>
+  <nav id="tabs" aria-label="Main"></nav>
+</div>
+<div id="sheet"></div>
+<div id="toasts" role="status" aria-live="polite"></div>
+<noscript>Webshow needs JavaScript.</noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
