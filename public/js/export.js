@@ -5,13 +5,15 @@ import { srOf } from "../shared/showrunners.js";
 import { fmtDay, slug } from "../shared/util.js";
 import { sortedAssets } from "./campaign.js";
 import { toast } from "./lib.js";
+import { state } from "./store.js";
+import { buildPrompts, afterOf, afterLine } from "../shared/make.js";
 
 const when = (a) => KINDS[a.kind].evergreen ? `Ready by ${fmtDay(a.date)}, runs until ${fmtDay(a.end)}` : a.end ? `${fmtDay(a.date)} – ${fmtDay(a.end)}` : `${fmtDay(a.date)}${a.time ? ", " + a.time : ""}`;
 export function showMD(s) {
   const st = s.strategy, b = s.brief;
   const assets = sortedAssets(s).map((a, i) => { const K = KINDS[a.kind];
-    return [`### ${String(i + 1).padStart(2, "0")} · ${a.title}`, `*${K.label} · ${PHASES[a.phase].label} · ${when(a)}*`, "", ...K.fields.filter(([k]) => a.fields?.[k]).flatMap(([k, l]) => [`**${l}**`, a.fields[k], ""]), ...(a.image ? ["**Image prompt (not a finished image)**", "```", a.image, "```", ""] : []), `**What to do:** ${a.action}`, ""].join("\n"); }).join("\n");
-  return `# ${st.name}\n\n> Made with your Webshow Showrunner (${srOf(s.showrunner).name}).\n\n**Big idea:** ${st.idea}\n**Goal:** ${(GOALS[b.goal] || GOALS.leads).label} · **Runs:** ${b.start} to ${campaignEnd(b)} · **Channels:** ${b.channels.map(k => CHANNELS[k].label).join(", ")}\n\n**Audience:** ${st.audience}\n**Message:** ${st.message}\n**Offer:** ${st.offer}\n**Call to action:** ${st.cta}\n\n**Hook:** ${st.arc.hook}\n**Show:** ${st.arc.show}\n**Convert:** ${st.arc.convert}\n\n## Posts and assets\n\n${assets}`;
+    return [`### ${String(i + 1).padStart(2, "0")} · ${a.title}`, `*${K.label} · ${PHASES[a.phase].label} · ${when(a)}*`, "", ...K.fields.filter(([k]) => a.fields?.[k]).flatMap(([k, l]) => [`**${l}**`, a.fields[k], ""]), ...buildPrompts(a, s, state.profile).flatMap(p => [`**ChatGPT: ${p.label}**${p.photo ? " (attach your photo)" : ""}`, "```", p.text, "```", ""]), `**What to do:** ${a.action}`, ""].join("\n"); }).join("\n");
+  return `# ${st.name}\n\n> Made with your Webshow Showrunner (${srOf(s.showrunner).name}).\n\n**Big idea:** ${st.idea}\n**Goal:** ${(GOALS[b.goal] || GOALS.leads).label} · **Runs:** ${b.start} to ${campaignEnd(b)} · **Channels:** ${b.channels.map(k => CHANNELS[k].label).join(", ")}\n\n**Audience:** ${st.audience}\n**Message:** ${st.message}\n**Offer:** ${st.offer}\n**Call to action:** ${st.cta}\n**After the button:** ${afterLine(afterOf(s, state.profile))}\n\n**Hook:** ${st.arc.hook}\n**Show:** ${st.arc.show}\n**Convert:** ${st.arc.convert}\n\n## Posts and assets\n\n${assets}`;
 }
 const cell = (v) => { v = String(v ?? ""); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
 export function showCSV(s) { return "\uFEFF" + [["Date", "Time", "Until", "Channel", "Type", "Phase", "Title", "What to do", "Done"], ...sortedAssets(s).map(a => [a.date, a.time || "", a.end || "", CHANNELS[KINDS[a.kind].ch].label, KINDS[a.kind].label, PHASES[a.phase].label, a.title, a.action, a.done ? "yes" : ""])].map(r => r.map(cell).join(",")).join("\r\n"); }

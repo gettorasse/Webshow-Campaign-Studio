@@ -6,8 +6,14 @@ export const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return
 export const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
 
 export function toast(msg, ms = 2600) {
-  const box = $("#toasts"); if (!box) return; const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; box.append(t);
+  const box = $("#toasts"); if (!box) return; box.replaceChildren(); /* one message at a time */ const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; box.append(t);
   setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 300); }, ms);
+}
+/* Synchronous copy, for when the page is about to lose focus (e.g. opening ChatGPT right after). */
+export function copyNow(text) {
+  const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px"; document.body.append(ta);
+  ta.select(); ta.setSelectionRange(0, text.length); let ok = false; try { ok = document.execCommand("copy"); } catch {} ta.remove();
+  if (!ok) navigator.clipboard?.writeText(text).catch(() => {}); return ok;
 }
 /* Must be called inside the click handler. Falls back to a select-and-copy box. */
 export async function copyText(text, label = "Copied") {

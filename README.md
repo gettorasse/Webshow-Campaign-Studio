@@ -31,6 +31,10 @@ npm run dev                 # → http://localhost:5173
 
 > ⚠️ The endpoint is open to anyone who has the URL. The per-IP daily limit (`SHOWRUNNER_DAILY_LIMIT`, default 80 calls) only slows people down; it is not real protection. Before sharing the link outside the team, add Vercel password protection or a real limiter (see docs/ARCHITECTURE.md).
 
+## ChatGPT button logo
+
+Every post has **Copy to ChatGPT** buttons. To show the official ChatGPT logo on them, download it from OpenAI's brand page and save it as `public/brand/chatgpt.svg`. The app picks it up automatically; without it, a neutral chat icon is shown.
+
 ## Test
 
 ```bash
@@ -52,6 +56,7 @@ public/                 the app (static, served as-is)
     showrunners.js      the three styles (Ogilvy, Hormozi, Vaynerchuk)
     model.js            channels, post types, and the day-by-day publishing plan
     plans.js            prices (demo)
+    make.js             ← the ChatGPT prompts for every post type, text-on-image settings, "after the button"
     util.js             dates, JSON parsing
   js/
     main.js             render, routing and every button action
@@ -60,6 +65,7 @@ public/                 the app (static, served as-is)
     campaign.js         create a show, write posts, rewrite one
     offline.js          demo-mode answers
     export.js           Markdown, calendar (.ics), CSV, campaign.json
+    photos.js           photos from the phone (IndexedDB) + drawing the finished post
     views/              chat, today, shows, me, sheets: pure HTML strings
   pro/index.html        Webshow Pro (legacy desktop studio, built file)
 api/showrunner.js       the only server code: builds the prompt, calls Claude, returns JSON

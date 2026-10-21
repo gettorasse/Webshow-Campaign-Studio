@@ -35,9 +35,12 @@ Making one campaign costs 1 strategy call plus ⌈posts / 5⌉ asset calls. A 4-
   chat: [{ id, role: "user"|"sr", text, cards: [card], at }],       // last 200 kept
   shows: { [id]: {
     id, createdAt, showrunner, status: "writing"|"ready",
-    brief: { goal, offer, audience, channels: [..], start, weeks, budget, idea },
+    brief: { goal, offer, audience, channels: [..], start, weeks, budget, idea,
+             after: { type: "form"|"link"|"call", url, email, phone, fields: [..], title, thanks } },
     strategy: { name, idea, tagline, audience, insight, message, offer, cta, arc: {hook, show, convert}, voice, visual, offerIdeas },
-    assets: [{ id, kind, phase, date, end?, time, order, title, fields: {..}, image, goal, action, done, doneOn }]
+    assets: [{ id, kind, phase, date, end?, time, order, title, fields: {..}, image, goal, action, done, doneOn,
+               look?: { photo: "own"|"make", headline, sub, pos, font, size, bg, color },   // only what the owner changed
+               hasPhoto? }]                                                                   // the photo itself is in IndexedDB
   }},
   settings: { theme, nudges, lastNudge, plan }
 }
@@ -45,6 +48,12 @@ Making one campaign costs 1 strategy call plus ⌈posts / 5⌉ asset calls. A 4-
 
 Card types in chat: `style`, `question`, `plan` (+ `showId` once created), `post`, `tip`, `remembered`, `open`.
 If you change this shape, bump `VERSION` in `store.js` and add a migration in `load()`.
+
+## "Make it": prompts for ChatGPT
+
+`shared/make.js` builds, in code, one or more ready-to-paste prompts for every post (`buildPrompts(asset, show, profile)`): the image with exact text-on-image settings (photo of your own or generated), carousel and story sets, reel cover + shoot plan, the full HTML email, the **whole landing page as one HTML file including what happens after the button** (form via FormSubmit to the owner's email, a link, or a call), and Google Ads set-up help. Changing a setting rebuilds the prompt instantly; nothing is sent to the AI.
+
+Photos from the phone are stored per post in IndexedDB (`js/photos.js`), shrunk to 1600 px. **Save image** draws the finished post (photo + text) on a canvas at the exact format size, matching the CSS preview, and shares it to Photos on phones or downloads it on computers. Photos are not in exports and don't leave the device.
 
 ## campaign.json (phone ↔ Pro ↔ anything)
 

@@ -5,6 +5,7 @@ import { CHANNELS, GOALS, KINDS, PHASES } from "../../shared/model.js";
 import { srOf } from "../../shared/showrunners.js";
 import { daysBetween, fmtDate, todayISO } from "../../shared/util.js";
 import { showsList, sortedAssets, showEnd } from "../campaign.js";
+import { afterOf, afterLine, AFTER_TYPES, AFTER_FIELDS } from "../../shared/make.js";
 
 const progress = (s) => { const n = s.assets.length; const d = s.assets.filter(a => a.done).length; return { n, d, pct: n ? Math.round(d / n * 100) : 0 }; };
 const range = (s) => `${fmtDate(s.brief.start)} – ${fmtDate(showEnd(s))}`;
@@ -59,6 +60,22 @@ function planTab(s) {
     <h2 class="sec">The arc</h2>
     <div class="arc">${["hook", "show", "convert"].map(k => `<div class="arc-step" style="--c:${PHASES[k].c}"><b>${PHASES[k].label}</b><span class="muted small">${PHASES[k].d}</span><p>${esc(st.arc?.[k] || "")}</p></div>`).join("")}</div>
     <div class="card">${row("Voice", st.voice)}${row("Look", st.visual)}</div>
+    ${afterCard(s)}
     ${st.offerIdeas?.length ? `<div class="card tip"><span class="kicker">${IC.spark} Ideas to make the offer stronger</span><ul>${st.offerIdeas.map(x => `<li>${esc(x)}</li>`).join("")}</ul><p class="muted small">Suggestions only. Nothing here is used in your posts unless you say so.</p></div>` : ""}
     <button class="btn danger ghost" data-act="deleteshow" data-id="${s.id}">${IC.trash} Delete this show</button>`;
+}
+
+/* What happens after someone taps the button: used by the landing page, emails and every prompt. */
+function afterCard(s) {
+  const af = afterOf(s, state.profile); const inp = (k, l, ph, type = "text") => `<label class="field"><span>${l}</span><input type="${type}" data-after="${k}" data-s="${s.id}" value="${esc(af[k] || "")}" placeholder="${esc(ph)}"></label>`;
+  return `<h2 class="sec" id="after">After the button</h2>
+  <div class="card form">
+    <p class="muted small">What happens when someone taps “${esc(s.strategy?.cta || "the button")}”. Your landing page, emails and ChatGPT prompts all use this.</p>
+    <div class="seg sm">${AFTER_TYPES.map(([v, l]) => `<button aria-pressed="${af.type === v}" data-act="aftertype" data-v="${v}" data-s="${s.id}">${l}</button>`).join("")}</div>
+    ${af.type === "link" ? inp("url", "Link", "https://… booking page, shop or website", "url") : ""}
+    ${af.type === "call" ? inp("phone", "Phone number", "+358 …", "tel") : ""}
+    ${af.type === "form" ? `${inp("title", "Form title", "Book your spot")}<span class="lbl">Fields</span><div class="chips">${AFTER_FIELDS.map(([k, l]) => `<button class="chip" aria-pressed="${af.fields.includes(k)}" data-act="afterfield" data-f="${k}" data-s="${s.id}">${l}</button>`).join("")}</div>${inp("thanks", "Thank-you message", "Thanks! We'll be in touch.")}` : ""}
+    ${af.type !== "link" ? inp("email", af.type === "form" ? "Send answers to" : "Email (optional)", "you@business.fi", "email") : ""}
+    <p class="small muted" data-afterline>${esc(afterLine(af))}</p>
+  </div>`;
 }

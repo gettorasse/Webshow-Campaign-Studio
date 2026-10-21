@@ -14,6 +14,8 @@ export const PROFILE_FIELDS = [
   ["facts", "Facts it may use", "Opening hours, awards, numbers – only true ones", 2],
   ["avoid", "Never say", "Words, claims or topics to stay away from", 1],
   ["website", "Website", "https://", 1],
+  ["email", "Email for leads", "Where form answers go", 1],
+  ["phone", "Phone", "+358 …", 1],
 ];
 export function meView() {
   const p = state.profile; const plan = planOf(state.settings.plan); const mode = aiMode();

@@ -4,6 +4,7 @@ import { esc, IC } from "../lib.js";
 import { CHANNELS, GOALS } from "../../shared/model.js";
 import { SHOWRUNNERS, SR_KEYS, srOf } from "../../shared/showrunners.js";
 import { aiMode } from "../ai.js";
+import { gptMark } from "./sheets.js";
 
 const QUICK = ["Plan a campaign", "What should I post today?", "Write a post", "Give me a tip"];
 export function chatView() {
@@ -31,8 +32,8 @@ function cardHTML(c, m, k, answered) {
       <div class="meta"><span class="tag">${IC.target}${esc(GOALS[c.goal]?.label || "")}</span><span class="tag">${IC.cal}${c.weeks} weeks</span>${c.channels.map(k => `<span class="tag"><i class="dot" style="--c:${CHANNELS[k].c}"></i>${CHANNELS[k].label}</span>`).join("")}</div>
       ${c.showId ? `<button class="btn" data-act="openshow" data-id="${c.showId}">Open the show ${IC.arrow}</button>` : `<button class="btn go" data-act="createplan" ${id}>${IC.spark} Create this show</button>`}</div>`;
     case "post": return `<div class="card post"><span class="kicker"><i class="dot" style="--c:${CHANNELS[c.channel].c}"></i>${CHANNELS[c.channel].label} post</span>${c.hook ? `<b class="h">${esc(c.hook)}</b>` : ""}<p class="pre">${esc(c.text)}</p>${c.cta ? `<p class="cta">${esc(c.cta)}</p>` : ""}
-      ${c.image_prompt ? `<details class="img"><summary>${IC.image} Image prompt <span class="muted">· not a finished image</span></summary><p class="pre mono">${esc(c.image_prompt)}</p></details>` : ""}
-      <div class="row"><button class="btn sm go" data-act="copypost" ${id}>${IC.copy} Copy text</button>${c.image_prompt ? `<button class="btn sm" data-act="copyprompt" ${id}>Copy prompt</button>` : ""}</div></div>`;
+      ${c.image_prompt ? `<details class="img"><summary>${IC.image} Picture idea</summary><p class="pre">${esc(c.image_prompt)}</p></details>` : ""}
+      <div class="row"><button class="btn sm go" data-act="copypost" ${id}>${IC.copy} Copy text</button><button class="btn sm gpt" data-act="gptpost" ${id}>${gptMark()} Image in ChatGPT</button></div></div>`;
     case "tip": return `<div class="card tip"><span class="kicker">${IC.spark} ${esc(c.title || "Tip")}</span><p>${esc(c.text)}</p></div>`;
     case "remembered": return `<div class="mem">${IC.brain}<span>Remembered: ${c.items.map(esc).join("; ")}</span><button class="link" data-act="openme">Edit</button></div>`;
     case "open": return `<button class="btn" data-act="openshow" data-id="${c.showId}">Open “${esc(c.name)}” ${IC.arrow}</button>`;

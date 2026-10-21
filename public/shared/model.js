@@ -104,6 +104,6 @@ export function copyOf(a) { const K = KINDS[a.kind]; return K.copy.map(k => str(
 
 
 /* What the owner teaches their Showrunner. Sent with every AI request. */
-export const blankProfile = () => ({ business: "", what: "", audience: "", offer: "", voice: "", facts: "", avoid: "", website: "", showrunner: "", memory: [] });
+export const blankProfile = () => ({ business: "", what: "", audience: "", offer: "", voice: "", facts: "", avoid: "", website: "", email: "", phone: "", showrunner: "", memory: [] });
 export const GOAL_KEYS = Object.keys(GOALS);
 export const CHANNEL_KEYS = Object.keys(CHANNELS);

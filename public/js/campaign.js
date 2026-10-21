@@ -8,6 +8,7 @@ import { actionOf, campaignEnd, planSlots } from "../shared/model.js";
 import { uid, addDays, todayISO } from "../shared/util.js";
 import { offlineAsset, offlineStrategy, GOAL_CHANNELS } from "./offline.js";
 import { toast } from "./lib.js";
+import { defaultAfter } from "../shared/make.js";
 
 export const showsList = () => Object.values(state.shows).sort((a, b) => b.createdAt - a.createdAt);
 export const sortedAssets = (s) => s.assets.slice().sort((x, y) => x.date.localeCompare(y.date) || x.order - y.order);
@@ -16,6 +17,7 @@ export const sortedAssets = (s) => s.assets.slice().sort((x, y) => x.date.locale
 export async function createShow(plan, onChange) {
   const p = state.profile;
   const brief = { goal: plan.goal, offer: plan.offer || p.offer, audience: plan.audience || p.audience, channels: plan.channels?.length ? plan.channels : GOAL_CHANNELS[plan.goal] || ["instagram", "email"], start: plan.start || addDays(todayISO(), 1), weeks: plan.weeks || 4, budget: plan.budget || 0, idea: plan.idea };
+  brief.after = defaultAfter(brief.goal, p);
   const show = { id: uid("s"), createdAt: Date.now(), showrunner: p.showrunner, brief, strategy: null, assets: [], status: "writing" };
   state.shows[show.id] = show; save(); onChange?.(show);
   try { show.strategy = normStrategy(await ask("strategy", { profile: p, brief }), brief); }

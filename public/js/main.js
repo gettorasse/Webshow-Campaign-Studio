@@ -1,7 +1,7 @@
 /* Webshow – the phone app. One state object (store.js), one render(), one action table.
    Screens: Chat (default) · Today · Shows · Me. Sheets slide up from the bottom. */
 import { state, load, save, resetAll, exportAll } from "./store.js";
-import { $, IC, toast, copyText } from "./lib.js";
+import { $, IC, toast, copyText, copyNow } from "./lib.js";
 import { ask, initAI, errText } from "./ai.js";
 import { normChat } from "../shared/prompts.js";
 import { srOf, SHOWRUNNERS } from "../shared/showrunners.js";
@@ -14,7 +14,10 @@ import { chatView } from "./views/chat.js";
 import { todayView, dueToday } from "./views/today.js";
 import { showsView, showView } from "./views/shows.js";
 import { meView } from "./views/me.js";
-import { sheetHTML, findAsset } from "./views/sheets.js";
+import { sheetHTML, findAsset, previewHTML, promptsHTML } from "./views/sheets.js";
+import { buildPrompts, chatPostPrompt, afterOf, afterLine } from "../shared/make.js";
+import { loadPhoto, savePhoto, removePhoto, renderPost, clearPhotos } from "./photos.js";
+import { slug } from "../shared/util.js";
 
 const TABS = [["chat", "Showrunner", "chat"], ["today", "Today", "home"], ["shows", "Shows", "layers"], ["me", "Me", "user"]];
 
@@ -82,6 +85,12 @@ async function send(text) {
   const m = push("sr", r.reply, cards); state.ui.fresh = m.id; state.ui.busy = false; render();
 }
 const pause = (t0, ms) => new Promise(ok => setTimeout(ok, Math.max(0, ms - (Date.now() - t0))));
+/* Copy a prompt and open ChatGPT (the app on phones, the site on computers). */
+function toGPT(text, photo) {
+  copyNow(text); toast(photo ? "Prompt copied. In ChatGPT: add your photo, then paste." : "Prompt copied. Paste it in ChatGPT.", 4000);
+  window.open("https://chatgpt.com/", "_blank", "noopener");
+}
+function setAfter(sid, patch) { const s = state.shows[sid]; if (!s) return; s.brief.after = { ...afterOf(s, state.profile), ...patch }; save(); }
 const cardOf = (d) => state.chat.find(m => m.id === d.m)?.cards?.[+d.c];
 
 /* ---------- actions: every data-act="…" in the views lands here ---------- */
@@ -106,11 +115,29 @@ const A = {
   },
   openshow: (d) => { state.ui.showTab = "posts"; go("#/show/" + d.id); },
   copypost: (d) => { const c = cardOf(d); copyText([c.hook, c.text, c.cta].filter(Boolean).join("\n\n"), "Post copied"); },
-  copyprompt: (d) => copyText(cardOf(d).image_prompt, "Prompt copied"),
+  gptpost: (d) => toGPT(chatPostPrompt(cardOf(d), state.profile)),
   openme: () => go("#/me"),
   newshow: () => send("Plan a campaign"),
   toggledone(d) { const { a } = findAsset(d.s, d.a); if (!a) return; a.done = !a.done; a.doneOn = a.done ? todayISO() : ""; save(); render(); },
-  openasset: (d) => { state.ui.sheet = { k: "asset", s: d.s, a: d.a }; renderSheet(); },
+  openasset(d) {
+    state.ui.sheet = { k: "asset", s: d.s, a: d.a }; renderSheet();
+    const { a } = findAsset(d.s, d.a); if (a?.hasPhoto) loadPhoto(a.id).then(u => { if (u && state.ui.sheet?.a === a.id) renderSheet(); });
+  },
+  sheettab: (d) => { state.ui.sheet.t = d.t; renderSheet(); },
+  setlook(d) { const { a } = findAsset(d.s, d.a); if (!a) return; a.look = { ...(a.look || {}), [d.k]: d.v }; state.ui.lookOpen = true; save(); renderSheet(); },
+  gpt(d) { const { s, a } = findAsset(d.s, d.a); const p = buildPrompts(a, s, state.profile)[+d.i]; if (p) toGPT(p.text, p.photo); },
+  copyp(d) { const { s, a } = findAsset(d.s, d.a); const p = buildPrompts(a, s, state.profile)[+d.i]; if (p) copyText(p.text, "Prompt copied"); },
+  async saveimage(d) {
+    const { s, a } = findAsset(d.s, d.a); if (!a) return; toast("Making your image…");
+    const blob = await renderPost(a); const name = `${slug(s.strategy?.name || "post")}-${slug(a.title || a.kind)}.jpg`;
+    const file = new File([blob], name, { type: "image/jpeg" });
+    if (navigator.canShare?.({ files: [file] }) && matchMedia("(pointer: coarse)").matches) { try { await navigator.share({ files: [file] }); return; } catch (e) { if (e?.name === "AbortError") return; } }
+    saveFile(name, blob, "image/jpeg");
+  },
+  async rmphoto(d) { const { a } = findAsset(d.s, d.a); if (!a) return; await removePhoto(a.id); a.hasPhoto = false; save(); renderSheet(); },
+  editafter() { const sid = state.ui.sheet?.s; state.ui.sheet = null; state.ui.showTab = "plan"; go("#/show/" + sid); setTimeout(() => $("#after")?.scrollIntoView({ block: "start" }), 50); },
+  aftertype(d) { setAfter(d.s, { type: d.v }); render(); },
+  afterfield(d) { const af = afterOf(state.shows[d.s], state.profile); const f = af.fields.includes(d.f) ? af.fields.filter(x => x !== d.f) : [...af.fields, d.f]; setAfter(d.s, { fields: f }); render(); },
   sheet: (d) => { state.ui.sheet = { k: d.k }; renderSheet(); },
   closesheet: () => { state.ui.sheet = null; render(); },
   showtab: (d) => { state.ui.showTab = d.t; render(); },
@@ -119,7 +146,6 @@ const A = {
     el.dataset.armed = 1; el.innerHTML = `${IC.trash} Tap again to delete`;
   },
   copyfield: (d) => copyText(findAsset(d.s, d.a).a?.fields[d.f]),
-  copyimage: (d) => copyText(findAsset(d.s, d.a).a?.image, "Prompt copied"),
   copyasset: (d) => copyText(copyOf(findAsset(d.s, d.a).a), "Text copied"),
   export(d) {
     const s = state.shows[state.ui.showId]; if (!s) return; const n = fileBase(s);
@@ -135,7 +161,7 @@ const A = {
   },
   forget(d) { state.profile.memory.splice(+d.i, 1); save(); render(); },
   exportall: () => saveFile("webshow-my-data.json", exportAll(), "application/json"),
-  reset() { if (state.ui.confirmReset) return resetAll(); state.ui.confirmReset = true; render(); },
+  async reset() { if (state.ui.confirmReset) { await clearPhotos(); return resetAll(); } state.ui.confirmReset = true; render(); },
 };
 
 /* ---------- reminders (while the app is open) ---------- */
@@ -163,10 +189,15 @@ function wire() {
     const t = e.target;
     if (t.id === "msg") grow(t);
     if (t.dataset.prof) { state.profile[t.dataset.prof] = t.value; save(); }
+    if (t.dataset.look) { const { s, a } = findAsset(t.dataset.s, t.dataset.a); if (a) { a.look = { ...(a.look || {}), [t.dataset.look]: t.value }; save(); const pv = $("#mk-prev"), pr = $("#mk-prompts"); if (pv) pv.innerHTML = previewHTML(a); if (pr) pr.innerHTML = promptsHTML(s, a); } }
+    if (t.dataset.after) { const s = state.shows[t.dataset.s]; if (s) { setAfter(s.id, { [t.dataset.after]: t.value }); const l = $("[data-afterline]"); if (l) l.textContent = afterLine(afterOf(s, state.profile)); } }
     if (t.dataset.field) { fit(t); const { a } = findAsset(t.dataset.s, t.dataset.a); if (a) { a.fields[t.dataset.field] = t.value; save(); } }
   });
   document.addEventListener("change", (e) => {
-    const t = e.target; if (t.dataset.actChange !== "movedate" || !isISO(t.value)) return;
+    const t = e.target;
+    if (t.dataset.actChange === "photo" && t.files?.[0]) { const { a } = findAsset(t.dataset.s, t.dataset.a); if (!a) return; toast("Adding your photo…");
+      savePhoto(a.id, t.files[0]).then(() => { a.hasPhoto = true; a.look = { ...(a.look || {}), photo: "own" }; save(); renderSheet(); }).catch(() => toast("That photo couldn't be read. Try a JPG or PNG.")); return; }
+    if (t.dataset.actChange !== "movedate" || !isISO(t.value)) return;
     const { a } = findAsset(t.dataset.s, t.dataset.a); if (a) { moveAsset(a, t.value); render(); toast("Moved"); }
   });
   document.addEventListener("keydown", (e) => {
@@ -180,6 +211,8 @@ function wire() {
 
 async function start() {
   load(); applyTheme(); greet(); wire(); route();
+  /* Optional: put the official ChatGPT logo at public/brand/chatgpt.svg and the buttons use it. */
+  fetch("brand/chatgpt.svg", { method: "HEAD" }).then(r => { if (r.ok && /svg/.test(r.headers.get("content-type") || "")) { state.ui.gptLogo = true; render(); } }).catch(() => {});
   await initAI(); render();
   nudge();
 }

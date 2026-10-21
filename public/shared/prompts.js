@@ -4,6 +4,7 @@
 import { arr, clip, str } from "./util.js";
 import { CHANNELS, CHANNEL_KEYS, GOALS, GOAL_KEYS, KINDS, FORMATS, campaignEnd, isVisual } from "./model.js";
 import { srOf } from "./showrunners.js";
+import { afterLine, defaultAfter } from "./make.js";
 
 export const RULES = `RULES
 - Never invent facts, numbers, prices, discounts, reviews, testimonials, awards or guarantees. Use only what the owner told you. If something is unknown, ask or write around it.
@@ -23,6 +24,7 @@ Voice: ${str(p.voice) || "(not set)"}
 Facts you may use: ${str(p.facts) || "(none yet)"}
 Never say: ${str(p.avoid) || "(nothing listed)"}
 Website: ${str(p.website) || "(none)"}
+Contact: ${[str(p.email), str(p.phone)].filter(Boolean).join(", ") || "(none)"}
 Remembered: ${arr(p.memory, 30).map(m => str(m.text || m)).join("; ") || "(nothing yet)"}
 </owner>`;
 const briefBlock = (b) => `CAMPAIGN BRIEF
@@ -33,6 +35,7 @@ Audience: ${str(b.audience) || "(use the customers above)"}
 Channels: ${arr(b.channels).map(k => CHANNELS[k]?.label).filter(Boolean).join(", ")}
 Runs: ${b.start} to ${campaignEnd(b)} (${b.weeks} weeks)
 Ad budget: ${+b.budget ? b.budget + " €" : "none, organic only"}
+After the button: ${afterLine({ ...defaultAfter(b.goal), ...(b.after || {}) })} Every call to action must match this.
 </owner>`;
 
 /* ---------- chat: the Showrunner as a buddy ---------- */
