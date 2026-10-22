@@ -1,4 +1,4 @@
-<title>Webshow Campaign Studio</title>
+<title>Webshow Pro</title><link rel="icon" type="image/png" href="../favicon.png"><link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1438,6 +1438,204 @@ button.sp-ep{grid-template-columns:110px 28px minmax(0,1fr) auto auto auto}
 [data-theme="dark"] .tl-sub.ph-hook{background:#1d2447}[data-theme="dark"] .tl-sub.ph-show{background:#2a1f3d}[data-theme="dark"] .tl-sub.ph-convert{background:#3a2318}
 .srp-av{position:relative;background:none!important}.srp-av img{width:34px;height:34px;object-fit:contain}.srp-av i{position:absolute;right:-4px;bottom:-4px;width:16px;height:16px;border-radius:50%;background:var(--panel);display:grid;place-items:center;color:var(--ink);box-shadow:0 0 0 1px var(--line-2)}.srp-av i .icon{width:10px;height:10px}
 .srp-empty img{width:72px;height:72px;object-fit:contain}
+/* ============ Webshow Pro, playful look (v6) ============ */
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --canvas:#F3F5FC; --chrome:#F3F5FC; --panel:#ffffff; --tint:#4b5cf6; --brand:#4b5cf6; --live:#4b5cf6; --lav:#4b5cf6; --good:#4b5cf6; --select:#E6E9FF; --glow:none; } }
+:root[data-theme="light"]{ --canvas:#F3F5FC; --chrome:#F3F5FC; --panel:#ffffff; --tint:#4b5cf6; --brand:#4b5cf6; --live:#4b5cf6; --lav:#4b5cf6; --good:#4b5cf6; --select:#E6E9FF; --glow:none; }
+:root{ --tint:#7c8bff; --brand:#7c8bff; --live:#7c8bff; --pl-card:var(--raised); --pl-sh:0 1px 2px rgba(20,24,70,.05),0 14px 34px -18px rgba(20,24,70,.22); --pl-r:24px; }
+:root:not([data-theme="light"]) { --pl-sh: 0 0 0 1px var(--line); }
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --pl-sh:0 1px 2px rgba(20,24,70,.05),0 14px 34px -18px rgba(20,24,70,.22); } }
+:root[data-theme="light"]{ --pl-sh:0 1px 2px rgba(20,24,70,.05),0 14px 34px -18px rgba(20,24,70,.22); }
+
+/* buttons: rounder, chunkier */
+.btn{border-radius:999px;font-weight:600}
+.btn.primary{background:linear-gradient(180deg,#5b6cff,var(--tint));box-shadow:0 2px 0 #3442c9}
+.btn.primary:active{transform:translateY(1px);box-shadow:none}
+
+/* sidebar: a white floating card with the logo, nav and Show characters */
+@media (min-width: 761px){
+  .app{grid-template-columns:260px minmax(0,1fr)}
+  .sb{margin:12px 0 12px 12px;border:0;border-radius:var(--pl-r);background:var(--panel);box-shadow:var(--pl-sh)}
+  .main.has-srp .body{margin-right:384px}
+  .srp{top:56px;right:12px;bottom:12px;width:360px;border:0;border-radius:var(--pl-r);box-shadow:var(--pl-sh);overflow:hidden}
+}
+.bar{background:transparent;border-bottom:0;height:52px}
+.pl-logo{display:flex;align-items:center;gap:9px;font:700 18px/1 var(--f-pixel)!important;letter-spacing:-.03em;color:var(--ink)}
+.pl-logo img{width:32px;height:32px;object-fit:contain}
+.pl-logo b{font-weight:700;color:var(--tint)}
+.sb .srow{height:36px;border-radius:12px;padding:0 10px;font-size:13.5px;gap:10px}
+.sb .srow .ic .icon{width:17px;height:17px}
+.sb .srow[aria-current="true"]{background:var(--select);color:var(--tint);font-weight:600}
+.sb .srow[aria-current="true"] .ic{color:var(--tint)!important}
+.sb .sb-new{background:linear-gradient(180deg,#5b6cff,var(--tint));color:#fff!important;justify-content:center;font-weight:700;height:40px;box-shadow:0 2px 0 #3442c9;margin-bottom:6px}
+.sb .sb-new .ic{color:#fff!important}
+.sb .sb-search{border-radius:12px}
+.sb .av.art{width:28px;height:28px;border-radius:9px;background:var(--well)!important;padding:2px}
+.sb-show{border-radius:18px;background:color-mix(in srgb,var(--pbg,transparent) 70%,transparent);padding:4px;margin:2px 0}
+.sb-show .sb-head{height:40px;border-radius:14px;color:#101014}
+:root:not([data-theme="light"]) .sb-show .sb-head{color:var(--ink)}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .sb-show .sb-head{color:#101014} }
+.sb-show .sb-head .av.art{width:32px;height:32px;background:rgba(255,255,255,.75)!important}
+.sb-show .srow[aria-current="true"]{background:rgba(255,255,255,.85);color:var(--pink,var(--tint))}
+.sb-show .srow[aria-current="true"] .ic{color:var(--pink,var(--tint))!important}
+.sb-label{font-weight:700!important;letter-spacing:.02em}
+
+/* the Show Timeline page */
+.pl-home{background:var(--canvas)!important}
+.pl-in{max-width:1500px!important;padding:8px 28px 60px!important;gap:16px!important}
+.pl-hero{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:stretch;min-height:220px;border-radius:30px;background:var(--pbg);color:#101014;padding:26px 30px;box-shadow:inset 0 -5px 0 rgba(20,24,70,.06)}
+.pl-hero-t{display:grid;gap:10px;align-content:start;max-width:62%;z-index:1}
+.pl-pill{justify-self:start;background:rgba(255,255,255,.85);color:var(--pink);font-weight:700;font-size:12.5px;padding:5px 12px;border-radius:999px}
+.pl-hero h1{font:800 clamp(34px,4.2vw,54px)/.95 var(--f-pixel);letter-spacing:-.045em;margin:0}
+.pl-hero p{font-size:15px;color:#3a3a46;margin:0;max-width:640px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pl-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pl-stats>span{display:grid;grid-template-columns:auto auto;column-gap:7px;align-items:center;background:rgba(255,255,255,.8);border-radius:16px;padding:7px 12px 7px 9px}
+.pl-stats .icon{grid-row:span 2;width:18px;height:18px;color:var(--pink)}
+.pl-stats b{font-size:13.5px;font-variant-numeric:tabular-nums}.pl-stats small{font-size:11.5px;color:#55555f}
+.pl-hero-art{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:min(34%,280px);aspect-ratio:1;z-index:0}
+.pl-hero-art img{position:absolute;inset:10%;width:80%;height:80%;object-fit:contain;transform:rotate(-6deg);animation:plfloat 6s ease-in-out infinite;filter:drop-shadow(0 12px 16px rgba(20,24,70,.18))}
+.pl-doodles{position:absolute;inset:0;width:100%;height:100%}
+@keyframes plfloat{50%{transform:rotate(-3deg) translateY(-6px)}}
+@media (prefers-reduced-motion: reduce){ .pl-hero-art img{animation:none} }
+.pl-tabs{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pl-tabs button{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:999px;font-weight:600;font-size:13.5px;color:var(--muted)}
+.pl-tabs button .icon{width:16px;height:16px}
+.pl-tabs button:hover{background:var(--hover);color:var(--ink)}
+.pl-tabs button[aria-current="true"]{background:var(--ink);color:var(--canvas)}
+.pl-tabs .pl-switch{margin-left:auto;background:var(--raised);box-shadow:var(--pl-sh);color:var(--ink)}
+.pl-detail-wrap{display:contents}
+
+.pl-card{background:var(--pl-card);border-radius:var(--pl-r);box-shadow:var(--pl-sh);padding:18px}
+.pl-tl{display:grid;gap:14px}
+.pl-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pl-tools h2{font:700 19px var(--f-pixel);letter-spacing:-.02em;margin:0 6px 0 0}
+.pl-range{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:var(--well);box-shadow:inset 0 0 0 1px var(--line);font-weight:600;font-size:12.5px;font-variant-numeric:tabular-nums}
+.pl-range .icon{width:14px;height:14px}
+.pl-grow{flex:1}
+.pl-seg{display:flex;background:var(--well);border-radius:999px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
+.pl-seg button{height:28px;padding:0 12px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.pl-seg button[aria-pressed="true"]{background:var(--raised);color:var(--ink);box-shadow:var(--ring)}
+.pl-ib{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--well)}
+.pl-ib .icon{width:15px;height:15px}
+.pl-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 13px;border-radius:999px;background:var(--ink);color:var(--canvas);font-weight:700;font-size:12.5px}
+.pl-btn .icon{width:14px;height:14px}
+.pl-btn.ghost{background:var(--well);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+
+.pl-phgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pl-ph{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;color:var(--ink);min-width:0;overflow:hidden}
+.pl-lane .pl-ph{position:absolute;top:0;height:64px}
+.pl-ph>span:last-child{display:grid;min-width:0}
+.pl-ph b{font:700 15px/1.1 var(--f-pixel)}
+.pl-ph small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-ph .pl-ph-d{font-weight:700;font-variant-numeric:tabular-nums}
+.pl-ph-hook{background:#DCE6FF}.pl-ph-show{background:#EDDDF9}.pl-ph-convert{background:#FFE0D3}
+.pl-ph-hook .pl-ph-d{color:#3f55d9}.pl-ph-show .pl-ph-d{color:#8a4fc4}.pl-ph-convert .pl-ph-d{color:#d2622e}
+:root:not([data-theme="light"]) .pl-ph-hook{background:#1d2447}:root:not([data-theme="light"]) .pl-ph-show{background:#2a1f3d}:root:not([data-theme="light"]) .pl-ph-convert{background:#3a2318}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .pl-ph-hook{background:#DCE6FF} :root:not([data-theme="dark"]) .pl-ph-show{background:#EDDDF9} :root:not([data-theme="dark"]) .pl-ph-convert{background:#FFE0D3} }
+.pl-ph-ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.pl-ph-ic .icon{width:18px;height:18px}
+.pl-ph-hook .pl-ph-ic{background:linear-gradient(135deg,#6f84ff,#3f55d9)}.pl-ph-show .pl-ph-ic{background:linear-gradient(135deg,#b77cf0,#8a4fc4)}.pl-ph-convert .pl-ph-ic{background:linear-gradient(135deg,#ffa36b,#e4672e)}
+
+.pl-grid{display:grid;position:relative}
+.pl-row{display:grid;grid-template-columns:var(--lw) auto;column-gap:12px;align-items:start}
+.pl-phrow{height:72px}
+.pl-lane{position:relative}
+.pl-axis{height:52px;border-bottom:1px solid var(--line)}
+.pl-mo{position:absolute;top:0;font:700 12.5px var(--f-ui);color:var(--ink);white-space:nowrap;padding-left:4px}
+.pl-day{position:absolute;top:18px;height:32px;display:grid;justify-items:center;align-content:center;font-size:11.5px;color:var(--muted);line-height:1.1;font-variant-numeric:tabular-nums}
+.pl-day small{font-size:9.5px;color:var(--faint)}
+.pl-day span{font-weight:600;color:var(--ink)}
+.pl-day.we span{color:var(--faint)}
+.pl-day.today{z-index:3;overflow:visible}
+.pl-day.today b{background:var(--ink);color:var(--canvas);font-size:11px;font-weight:800;padding:5px 9px;border-radius:999px;white-space:nowrap}
+.pl-body{position:relative}
+.pl-shade{position:absolute;top:0;bottom:0;pointer-events:none}
+.pl-shade i{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--ink) 3%,transparent)}
+.pl-shade .pl-band{background:color-mix(in srgb,var(--tint) 6%,transparent);border-left:1.5px dashed color-mix(in srgb,var(--tint) 35%,transparent);border-right:1.5px dashed color-mix(in srgb,var(--tint) 35%,transparent)}
+.pl-trk{border-bottom:1px dashed var(--line);padding:6px 0}
+.pl-l{display:flex;align-items:center;gap:10px;min-width:0;padding-top:12px}
+.pl-l>span:last-child{display:grid;min-width:0}
+.pl-l b{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-l small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-tile{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 2px 0 rgba(0,0,0,.14)}
+.pl-tile .icon{width:18px;height:18px}
+.pl-tile.ms{background:linear-gradient(135deg,#ffd75e,#ffb020)}
+.pl-clip.tl-bar{position:absolute;height:44px;display:flex;align-items:center;gap:7px;padding:0 10px 0 6px;border-radius:14px;background:var(--clip);color:#101014;box-shadow:inset 0 -3px 0 rgba(20,24,70,.08);overflow:hidden;font-size:12px;cursor:grab;-webkit-mask-image:none;mask-image:none;transition:box-shadow .12s}
+.pl-clip.tl-bar:hover{box-shadow:inset 0 -3px 0 rgba(20,24,70,.08),0 6px 16px -8px rgba(20,24,70,.35);z-index:4}
+.pl-clip.tl-bar.sel{box-shadow:0 0 0 2.5px var(--ink);z-index:4}
+.pl-clip.tl-bar.drag{box-shadow:0 0 0 2.5px var(--tint),0 12px 28px rgba(20,24,70,.3)}
+.pl-ci{width:28px;height:28px;border-radius:10px;background:rgba(255,255,255,.9);display:grid;place-items:center;flex:none}
+.pl-ci .icon{width:15px;height:15px}
+.pl-ct{display:grid;min-width:0;line-height:1.2}
+.pl-ct b{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#101014}
+.pl-ct small{font-size:10.5px;color:#55555f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.pl-clip.span{box-shadow:inset 0 -4px 0 color-mix(in srgb,var(--clip) 55%,#101014)}
+.pl-clip.st2-scheduled,.pl-clip.st2-posted,.pl-clip.st2-running,.pl-clip.st2-live{box-shadow:inset 0 0 0 2px var(--tint)}
+.pl-clip.st2-ended{opacity:.6}
+.pl-clip.st2-posted .pl-ci,.pl-clip.st2-ended .pl-ci{background:#2f9e6b;color:#fff}
+.pl-clip.st2-missed,.pl-clip.st2-due{box-shadow:inset 0 0 0 2px var(--cta)}
+.pl-clip.st2-draft{background:repeating-linear-gradient(-45deg,var(--clip) 0 8px,color-mix(in srgb,var(--clip) 60%,#fff) 8px 16px)}
+.pl-clip .h{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize}.pl-clip .h[data-edge="s"]{left:0}.pl-clip .h[data-edge="e"]{right:0}
+.pl-clip.ghost{position:absolute;height:40px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border-radius:14px;border:1.5px dashed var(--line-2);background:var(--raised);font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+.pl-clip.ghost .icon{width:14px;height:14px}
+.pl-clip.ghost:hover{color:var(--ink);border-color:var(--tint)}
+:root:not([data-theme="light"]) .pl-clip.tl-bar{background:color-mix(in srgb,var(--clip) 22%,#15161e);color:var(--ink)}
+:root:not([data-theme="light"]) .pl-ct b{color:var(--ink)} :root:not([data-theme="light"]) .pl-ct small{color:var(--muted)} :root:not([data-theme="light"]) .pl-ci{background:rgba(255,255,255,.1)}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .pl-clip.tl-bar{background:var(--clip);color:#101014} :root:not([data-theme="dark"]) .pl-ct b{color:#101014} :root:not([data-theme="dark"]) .pl-ct small{color:#55555f} :root:not([data-theme="dark"]) .pl-ci{background:rgba(255,255,255,.9)} :root:not([data-theme="dark"]) .pl-clip.st2-draft{background:repeating-linear-gradient(-45deg,var(--clip) 0 8px,color-mix(in srgb,var(--clip) 60%,#fff) 8px 16px)} }
+.pl-now{position:absolute;top:-6px;bottom:0;width:2px;background:var(--ink);border-radius:2px;z-index:3;pointer-events:none}
+.pl-now::after{content:"";position:absolute;bottom:-4px;left:-4px;width:10px;height:10px;border-radius:50%;background:var(--ink)}
+.pl-msrow{border-bottom:0}
+.pl-ms{position:absolute;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 4px;border-radius:999px;background:var(--raised);box-shadow:inset 0 0 0 1.5px var(--line-2);font-size:11.5px;white-space:nowrap;z-index:2}
+.pl-ms i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#ffd75e,#ffb020);color:#101014}
+.pl-ms i .icon{width:12px;height:12px}
+.pl-ms b{font-weight:700}.pl-ms small{color:var(--muted);font-variant-numeric:tabular-nums}
+.pl-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin:0}
+.pl-legend span{display:inline-flex;align-items:center;gap:6px}
+.lg{width:22px;height:12px;border-radius:4px;background:#E3ECFF;display:inline-block}
+.lg.span{box-shadow:inset 0 -3px 0 #8ba3e0}.lg.ready{box-shadow:inset 0 0 0 2px var(--tint)}.lg.late{box-shadow:inset 0 0 0 2px var(--cta)}
+.pl-empty{display:flex;gap:20px;align-items:center;padding:24px;border-radius:20px;background:var(--well)}
+.pl-empty img{width:110px;height:110px;object-fit:contain}
+.pl-empty p{color:var(--muted);margin:4px 0 12px}
+.pl-insp{display:grid;gap:10px}
+.pl-insp .tl-detail{border-radius:var(--pl-r);box-shadow:var(--pl-sh)}
+.pl-nudge{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:600}
+.pl-nudge>span{color:var(--muted);font-size:12.5px;margin-right:4px}
+
+/* the Showrunner panel */
+.srp-h{border-bottom:0;padding:16px 14px 6px 18px}
+.srp-t b{font:700 17px var(--f-pixel);letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.srp-beta{font:800 9.5px var(--f-ui);font-style:normal;letter-spacing:.06em;padding:3px 7px;border-radius:999px;background:var(--select);color:var(--tint)!important}
+.srp-msgs{padding:8px 14px 14px;gap:12px}
+.srp-hero{display:grid;justify-items:center;gap:0;margin-bottom:2px}
+.srp-hero img{width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(60,40,140,.2));animation:plfloat 6s ease-in-out infinite}
+.srp-hi{position:relative;background:var(--select);border-radius:20px;padding:12px 14px;font-size:13.5px;line-height:1.45;width:100%}
+.srp-hi::before{content:"";position:absolute;top:-7px;left:50%;margin-left:-8px;border:8px solid transparent;border-top:0;border-bottom-color:var(--select)}
+.srp-hi b{font:700 15px var(--f-pixel)}.srp-hi p{margin:2px 0 0;color:var(--ink)}
+.srp-lbl{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin-top:4px}
+.srp-sugs{display:grid;gap:8px}
+.srp-sug{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:center;padding:12px;border-radius:18px;background:var(--raised);box-shadow:inset 0 0 0 1px var(--line)}
+.srp-sug .btn{grid-column:2;justify-self:start;height:30px}
+.srp-sic{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:var(--select);color:var(--tint);grid-row:span 2}
+.srp-sic .icon{width:17px;height:17px}
+.srp-st{display:grid}.srp-st b{font-size:13px}.srp-st small{font-size:12px;color:var(--muted)}
+.srp-form{padding:8px 12px 6px}
+.srp-form textarea{border-radius:18px;padding:11px 14px;background:var(--well)}
+.srp-form .send{width:40px;height:40px;background:linear-gradient(180deg,#5b6cff,var(--tint))}
+.srp-quick{padding:0 12px 14px}
+.srp-quick .chip{height:30px;border-radius:999px;font-weight:600;background:var(--select);color:var(--tint);box-shadow:none}
+.srp-note{border-bottom:0;text-align:center}
+.srp-b{border-radius:18px}
+
+/* dark: tinted, not pastel */
+:root:not([data-theme="light"]) .sb-show{background:color-mix(in srgb,var(--pbg,transparent) 12%,transparent)}
+:root:not([data-theme="light"]) .sb-show .srow[aria-current="true"]{background:var(--select);color:var(--ink)}
+:root:not([data-theme="light"]) .sb-show .srow[aria-current="true"] .ic{color:var(--tint)!important}
+:root:not([data-theme="light"]) .sb-show .sb-head .av.art{background:var(--well)!important}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]) .sb-show{background:color-mix(in srgb,var(--pbg,transparent) 70%,transparent)}
+  :root:not([data-theme="dark"]) .sb-show .srow[aria-current="true"]{background:rgba(255,255,255,.85);color:var(--pink,var(--tint))}
+  :root:not([data-theme="dark"]) .sb-show .srow[aria-current="true"] .ic{color:var(--pink,var(--tint))!important}
+  :root:not([data-theme="dark"]) .sb-show .sb-head .av.art{background:rgba(255,255,255,.75)!important}
+}
 </style>
 <div id="app"></div><div id="layer"></div><div id="toastbox"></div>
 <script>
@@ -7086,12 +7284,16 @@ const MASCOT_IC = P('<rect x="2" y="3" width="12" height="11" rx="4"/><circle cx
   /* each Show's character, the same as in Webshow Play */
   h = h.replace(/(data-id="([^"]+)"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/g, (m, pre, id) => `${pre}${artAv(S.shows[id] || playData()?.shows?.[id] || { id })}`);
   if (cur()) h = h.replace(/(<button class="sb-head srow"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/, (m, pre) => `${pre}${artAv(cur())}`);
+  /* the Webshow Pro logo, and the open Show tinted with its own colour */
+  h = h.replace(/<button class="wordmark"[^>]*>[\s\S]*?<\/button>/, `<button class="wordmark pl-logo" data-act="home" aria-label="Webshow Pro home"><img src="../art/logo-sm.png" alt=""><span>Webshow <b>Pro</b></span></button>`);
+  if (cur()) h = h.replace(/<div class="sb-show" style="/, `<div class="sb-show" style="--pbg:${(PL_ART[artOf(cur())] || PL_ART.starburst).bg};--pink:${(PL_ART[artOf(cur())] || PL_ART.starburst).ink};`);
   /* switch experiences */
   h = h.replace(/(<div class="sb-foot">)/, `$1<a class="srow brand" href="../?view=play"><span class="ic">${PHONE_IC}</span><span class="lbl">Webshow Play</span><span class="ct">phone</span></a>`);
   return h;
 }; }
 
 const ART_KEYS = ["starburst", "snowflake", "leaf", "sun"];
+const PL_ART = { starburst: { bg: "#DCE6FF", ink: "#2a3bb7" }, snowflake: { bg: "#EDDDF9", ink: "#6a3aa6" }, leaf: { bg: "#DEF2E4", ink: "#2c7a48" }, sun: { bg: "#FFF0C8", ink: "#9a6a00" } };
 const artOf = (s) => ART_KEYS.includes(s?.art) ? s.art : ART_KEYS[hash(s?.id || s?.name || "") % ART_KEYS.length];
 const artAv = (s) => `<span class="av art"><img src="../art/${artOf(s)}.webp" alt="" draggable="false"></span>`;
 /* the Showrunner panel is part of every Show on a big screen */
@@ -7125,15 +7327,20 @@ function paintSRP() {
   const k = s.showrunner || "ogilvy"; const r = SHOWRUNNERS[k] || SHOWRUNNERS.ogilvy; const role = { ogilvy: "The Strategist", hormozi: "The Closer", vaynerchuk: "The Creator" }[k] || "Showrunner";
   const c = srpChat(); const msgs = c?.messages || [];
   const scroll = el.querySelector(".srp-msgs")?.scrollTop;
-  const html = `<div class="srp-h"><span class="srp-av"><img src="../art/showrunner.webp" alt=""><i>${ICON[r.icon] || ""}</i></span><span class="srp-t"><b>${esc(role)}</b><small>${esc(r.name)} style · ${esc(s.name)}</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
-    <div class="srp-note">${BR.ai === false ? "Demo answers: the AI isn't set up on this server." : BR.ai ? "Shared with Webshow Play: the same conversation on your phone." : "Shared with Webshow Play."}</div>
-    <div class="srp-msgs">${msgs.length ? msgs.map((m, i) => srpMsg(m, i, msgs)).join("") : `<div class="srp-empty"><img src="../art/showrunner.webp" alt=""><p>This is ${esc(s.name)}'s Showrunner. Ask for changes, ideas or what to do next. Every change is shown before it happens.</p></div>`}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
-    ${BR.busy ? "" : `<div class="srp-quick">${["What's next?", "Make the posts shorter", "Move everything a week later"].map(q => `<button class="chip" data-act="srsay" data-t="${esc(q)}">${esc(q)}</button>`).join("")}</div>`}
-    <form class="srp-form" data-srp-form><textarea id="srp-in" rows="2" placeholder="Ask ${esc(role)} about this show…" ${BR.busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${BR.busy ? "disabled" : ""}>${ICON.send || "→"}</button></form>`;
+  const sug = typeof plSuggest === "function" ? plSuggest() : [];
+  const QUICK = [["Improve timeline", "Look at my timeline. What would you move or change so the show works better?"], ["Generate ideas", "Give me three new episode ideas for this show."], ["Check risks", "What could go wrong with this show, and what should I fix first?"]];
+  const html = `<div class="srp-h"><span class="srp-t"><b>Showrunner <i class="srp-beta">BETA</i></b><small>${esc(role)} · ${esc(r.name)} style</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
+    <div class="srp-msgs">
+      <div class="srp-hero"><img src="../art/showrunner.webp" alt="" draggable="false"><div class="srp-hi"><b>Hi! I'm ${esc(role)}.</b><p>${esc(typeof plGreeting === "function" ? plGreeting() : s.name)}</p></div></div>
+      ${sug.length ? `<div class="srp-sugs"><span class="srp-lbl">Suggestions</span>${sug.map(x => `<div class="srp-sug"><span class="srp-sic">${ICON[x.ic] || ICON.spark}</span><span class="srp-st"><b>${esc(x.t)}</b><small>${esc(x.d)}</small></span>${x.btn}</div>`).join("")}</div>` : ""}
+      ${msgs.length ? `<span class="srp-lbl">Conversation · shared with Webshow Play</span>${msgs.map((m, i) => srpMsg(m, i, msgs)).join("")}` : ""}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
+    ${BR.ai === false ? `<div class="srp-note">Demo answers: the AI isn't set up on this server.</div>` : ""}
+    <form class="srp-form" data-srp-form><textarea id="srp-in" rows="2" placeholder="Ask Showrunner anything…" ${BR.busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${BR.busy ? "disabled" : ""}>${ICON.send || "→"}</button></form>
+    <div class="srp-quick">${QUICK.map(([l, q]) => `<button class="chip" data-act="srsay" data-t="${esc(q)}" ${BR.busy ? "disabled" : ""}>${esc(l)}</button>`).join("")}</div>`;
   /* the studio re-renders often while it builds; only repaint when the conversation changed */
   if (el.dataset.sig === html) return; const draft = el.querySelector("#srp-in")?.value || ""; const focused = document.activeElement?.id === "srp-in";
   el.innerHTML = html; el.dataset.sig = html; const inp = el.querySelector("#srp-in"); if (inp) { inp.value = draft; if (focused) inp.focus(); }
-  const box = el.querySelector(".srp-msgs"); if (box) box.scrollTop = scroll == null || BR.stick ? box.scrollHeight : scroll; BR.stick = false;
+  const box = el.querySelector(".srp-msgs"); if (box) box.scrollTop = scroll == null ? (msgs.length ? box.scrollHeight : 0) : BR.stick ? box.scrollHeight : scroll; BR.stick = false;
 }
 const PRO_OPS = new Set(["move", "shift", "strategy", "rewrite"]);
 function srpMsg(m, i, all) {
@@ -7240,4 +7447,206 @@ window.addEventListener("storage", (e) => { if (e.key === "webshow.v1") { render
   const m = location.hash.match(/^#show=([\w-]+)/); if (!m) return; history.replaceState(null, "", location.pathname + location.search);
   if (S.shows[m[1]]) openShow(m[1], "canvas"); else if (playData()?.shows?.[m[1]]) fromPlay(m[1]);
 }, 0); }; }
+/* ============================================================
+   Webshow Pro, playful look (v6): the Show Timeline as the studio's home.
+   - A big pastel hero for the Show (its character, name, idea, real numbers) with tabs
+     into the real views: Timeline, Build, Assets, Results, Plan, Settings.
+   - A channel-track timeline: Hook / Show / Convert phase cards, a day axis with a Today pill
+     and line, one track per channel with pastel clips, and the Show's milestones.
+     Clips are the same rows the detailed schedule uses (onairRows), so dates, delivery states
+     and drag-to-reschedule are real. Click a clip to inspect it; drag it to move it.
+   - "Detailed schedule" switches to the original timeline (results column, edges, triggers).
+   Phones keep the original list. Nothing here invents numbers: every figure comes from the
+   Show's nodes, its dates and its leads.
+   ============================================================ */
+const PL_DOODLES = `<svg class="pl-doodles" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="#141418" stroke-width="3.2" stroke-linecap="round"><path d="M40 34l-8-14M58 26l-2-16M24 52l-14-6" stroke="#ff7a3d"/><path d="M160 30l10-16M176 46l14-8"/><path d="M150 18l4-10"/><path d="M34 150c-10-6-18 6-8 12s20-10 28-2"/><path d="M162 160c8 2 12 12 4 16"/><circle cx="170" cy="178" r="5"/></svg>`;
+ICON.camera = ICON.camera || P('<rect x="2" y="4" width="12" height="9.5" rx="2.6"/><circle cx="8" cy="8.7" r="2.5"/><path d="M5.6 4l1-1.5h2.8l1 1.5"/>');
+ICON.megaphone = ICON.megaphone || P('<path d="M2.5 6.4v3.2h2.2l5.3 3V3.4L4.7 6.4z"/><path d="M12.2 6a2.6 2.6 0 0 1 0 4"/>');
+ICON.people = ICON.people || P('<circle cx="6" cy="5.6" r="2.2"/><path d="M2 13c.4-2.2 2-3.4 4-3.4s3.6 1.2 4 3.4"/><circle cx="11.4" cy="6.2" r="1.7"/><path d="M11 9.6c1.6 0 2.8 1 3.1 2.8"/>');
+ICON.flag = ICON.flag || P('<path d="M3.5 14.2V2.4M3.5 3h8.4l-1.7 2.7 1.7 2.8H3.5"/>');
+ICON.cal = ICON.cal || P('<rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.8v2.4M10.5 1.8v2.4"/>');
+ICON.bolt = ICON.bolt || P('<path d="M9 1.6 3.6 9h4l-1 5.4L12.4 7h-4z"/>');
+
+const PL_TRACKS = {
+  instagram: ["Instagram", "camera", "linear-gradient(135deg,#ff6aa2,#ff9a4d)", "#FCE3EE"],
+  facebook: ["Facebook", "people", "linear-gradient(135deg,#5b8cff,#3f66f0)", "#E3ECFF"],
+  tiktok: ["TikTok", "play", "linear-gradient(135deg,#2b2b33,#55556a)", "#ECECF2"],
+  linkedin: ["LinkedIn", "people", "linear-gradient(135deg,#2bb3a6,#1c8f87)", "#DDF3F0"],
+  youtube: ["YouTube", "video", "linear-gradient(135deg,#ff6b6b,#e5484d)", "#FFE3E3"],
+  social: ["Social posts", "image", "linear-gradient(135deg,#a77bff,#7c5cf0)", "#EFE5FF"],
+  quiz: ["Quizzes & polls", "quiz", "linear-gradient(135deg,#3fd0b5,#1fa38d)", "#D9F5EE"],
+  ads: ["Ads", "megaphone", "linear-gradient(135deg,#ffc94d,#ff8a3d)", "#FFF0D6"],
+  landing: ["Landing Page", "layout", "linear-gradient(135deg,#55b2ff,#3b8cf0)", "#E1F0FF"],
+  popups: ["Popups & forms", "popup", "linear-gradient(135deg,#ff8fc0,#e35d9c)", "#FDE4F0"],
+  booking: ["Bookings", "cal", "linear-gradient(135deg,#7bd36b,#3f9e3a)", "#E2F4DD"],
+  chatbot: ["Chatbot", "bot", "linear-gradient(135deg,#8f9bff,#5b6cff)", "#E6E9FF"],
+};
+const PL_ORDER = Object.keys(PL_TRACKS);
+function plTrack(n) {
+  const t = n.type;
+  if (t === "metaad" || t === "ad" || t === "adchannel") return "ads";
+  if (t === "quiz" || t === "poll") return "quiz";
+  if (t === "publish" || t === "page") return "landing";
+  if (t === "popup" || t === "cookie") return "popups";
+  if (t === "scheduler") return "booking";
+  if (t === "chatbot") return "chatbot";
+  const ch = String((n.p.channels || [])[0] || n.p.platform || "").toLowerCase();
+  return /insta/.test(ch) ? "instagram" : /face/.test(ch) ? "facebook" : /tiktok/.test(ch) ? "tiktok" : /linkedin/.test(ch) ? "linkedin" : /youtube/.test(ch) ? "youtube" : "social";
+}
+const plTile = (k, cls = "") => { const T = PL_TRACKS[k]; return `<span class="pl-tile ${cls}" style="background:${T[2]}">${ICON[T[1]] || ICON.spark}</span>`; };
+const PL_PH = [["hook", "Hook", "Get attention", "eye"], ["show", "Show", "Tell the story", "megaphone"], ["convert", "Convert", "Drive action", "target"]];
+const PL_LIFE = { draft: "Draft show", scheduled: "Starting soon", live: "Active Show", paused: "Paused", ended: "Ended", results: "Ended" };
+S.pl = S.pl || { len: null, start: null, detail: false };
+TL_ZOOM.pl = [28, 30];
+
+function plHero() {
+  const s = cur(); const d = dnaOf(); const k = artOf(s); const A = PL_ART[k]; const life = lifeOf(); const pr = progressOf(); const t = todayIx();
+  const ds = dayIx(d.start), de = dayIx(d.end); const eps = epList(); const out = eps.filter(n => ["posted", "running", "live", "ended"].includes(deliveryOf(n).k)).length;
+  const day = ds == null ? "No dates yet" : t < ds ? `Starts ${fmtDay(ds, { weekday: "short", day: "numeric", month: "short" })}` : de != null && t > de ? "Show ended" : `Day ${t - ds + 1}${de != null ? ` of ${de - ds + 1}` : ""}`;
+  const tab = (v, ic, l, on, act = "view") => `<button data-act="${act}" ${act === "view" ? `data-v="${v}"` : ""} aria-current="${on}">${ICON[ic]}${l}</button>`;
+  return `<section class="pl-hero" style="--pbg:${A.bg};--pink:${A.ink}">
+    <div class="pl-hero-t"><span class="pl-pill">${esc(PL_LIFE[life] || "Show")}</span>
+      <h1>${esc(s.name)}</h1><p>${esc(d.idea || d.offer || "Give this show its one big idea in Plan.")}</p>
+      <div class="pl-stats"><span>${ICON.cal}<b>${esc(day)}</b>${ds != null ? `<small>${fmtDay(ds)} – ${de != null ? fmtDay(de) : "open"}</small>` : ""}</span>
+        <span>${ICON.target}${+d.target ? `<b>${num(pr.res)} / ${num(+d.target)}</b><small>${esc(unitOf(d.goal, 2))}${pr.sample ? " · sample" : ""}</small>` : `<b>No goal yet</b><small>set it in Plan</small>`}</span>
+        <span>${ICON.share}<b>${out} of ${eps.length}</b><small>episodes out</small></span></div></div>
+    <div class="pl-hero-art">${PL_DOODLES}<img src="../art/${k}.webp" alt="" draggable="false"></div>
+  </section>
+  <nav class="pl-tabs" aria-label="Show">${tab("timeline", "timeline", "Timeline", S.view === "timeline")}${tab("canvas", "nodes", "Build", false)}${tab("assets", "image", "Assets", false)}${tab("live", "trophy", "Results", false)}${tab("plan", "target", "Plan", false)}${tab("", "sliders", "Settings", false, "settings")}</nav>`;
+}
+
+/* the visible window: the whole show when it fits, otherwise 2 or 6 weeks around today */
+function plRange(ds, de) {
+  const t = todayIx(); const showLen = ds != null && de != null ? de - ds + 1 : null;
+  const len = S.pl.len === "show" ? Math.min(98, (showLen || 42) + 4) : S.pl.len || (showLen && showLen <= 63 ? Math.min(98, showLen + 4) : 42);
+  const r0 = S.pl.start ?? (S.pl.len !== 14 && showLen && showLen + 4 <= len ? ds - 2 : t - Math.min(3, Math.round(len / 6)));
+  return [r0, len];
+}
+function plPhases(rows, ds, de) {
+  const eps = rows.filter(r => r.ep && r.win?.s != null);
+  const out = PL_PH.map(([k, l, dsc, ic]) => { const rs = eps.filter(r => r.stage === k); return { k, l, dsc, ic, n: rs.length, s: rs.length ? Math.min(...rs.map(r => r.win.s)) : null, e: rs.length ? Math.max(...rs.map(r => r.win.e ?? r.win.s)) : null }; });
+  if (ds != null && de != null) { const L = de - ds + 1; out.forEach((p, i) => { if (p.s == null) { p.s = ds + Math.round(L * i / 3); p.e = ds + Math.round(L * (i + 1) / 3) - 1; p.est = true; } }); }
+  return out;
+}
+
+const _plTV = timelineView;
+timelineView = function () {
+  if (innerWidth <= 760 || !cur()) return _plTV();
+  if (S.pl.detail) { if (S.tl.zoom === "pl") S.tl.zoom = "6w"; const hero = plHero().replace("</nav>", `<button class="pl-switch" data-act="pldetail">${ICON.timeline} Back to the Show Timeline</button></nav>`); return _plTV().replace(/<div class="home-in"[^>]*>/, (m) => m + hero); }
+  if (!S.live || S.liveFor !== S.showId) loadTLData();
+  const t = todayIx(); const d = dnaOf(); const ds = dayIx(d.start), de = dayIx(d.end);
+  const [r0, len] = plRange(ds, de); const r1 = r0 + len - 1;
+  const avail = ($("#body")?.clientWidth || innerWidth - 300) - 2 * 28 - 2 * 18; const LW = avail < 760 ? 148 : 188; const bw = avail - LW - 12;
+  const px = Math.max(9, Math.floor(bw / len)); const W = len * px; TL_ZOOM.pl = [len, px]; S.tl.zoom = "pl";
+  const X = (x) => (x - r0) * px;
+  const rows = onairRows(r0, r1); const eps = rows.filter(r => r.ep);
+
+  /* phases: on the axis when they fit side by side, otherwise as three cards */
+  const ph = plPhases(rows, ds, de);
+  const pos = ph.filter(p => p.s != null).map(p => ({ ...p, L: X(Math.max(p.s, r0)), w: (Math.min(p.e, r1) - Math.max(p.s, r0) + 1) * px }));
+  const fits = pos.length === 3 && pos.every((p, i) => p.w >= 150 && (i === 0 || p.L >= pos[i - 1].L + pos[i - 1].w - 1));
+  const phCard = (p, style = "") => `<div class="pl-ph pl-ph-${p.k}" style="${style}"><span class="pl-ph-ic">${ICON[p.ic]}</span><span><b>${p.l}</b><small>${p.dsc}</small><small class="pl-ph-d">${p.s != null ? `${fmtDay(p.s)} – ${fmtDay(p.e)}` : "No dates"}${p.est ? " · planned" : ` · ${p.n} ep${p.n === 1 ? "" : "s"}`}</small></span></div>`;
+  const phases = fits ? `<div class="pl-row pl-phrow"><div class="pl-l"></div><div class="pl-lane" style="width:${W}px">${pos.map(p => phCard(p, `left:${p.L}px;width:${p.w - 6}px`)).join("")}</div></div>` : `<div class="pl-phgrid">${ph.map(p => phCard(p)).join("")}</div>`;
+
+  /* axis: months and days, weekends shaded, today as a black pill */
+  const step = px >= 26 ? 1 : px >= 15 ? 2 : 7;
+  const days = Array.from({ length: len }, (_, i) => { const dd = r0 + i; const dt = new Date(dd * DAY); const wk = dt.getUTCDay(); const near = Math.abs(dd - t) * px < 34 && dd !== t; const show = dd === t || (!near && (step === 7 ? wk === 1 : (dd - r0) % step === 0));
+    return `<div class="pl-day${wk === 0 || wk === 6 ? " we" : ""}${dd === t ? " today" : ""}" style="left:${i * px}px;width:${px}px">${dd === t ? `<b>Today</b>` : show ? `${px >= 30 ? `<small>${fmtDay(dd, { weekday: "short" }).slice(0, 2)}</small>` : ""}<span>${dt.getUTCDate()}</span>` : ""}</div>`; }).join("");
+  const months = []; for (let i = 0; i < len; i++) { const dt = new Date((r0 + i) * DAY); if (i === 0 || dt.getUTCDate() === 1) months.push(`<b class="pl-mo" style="left:${i * px}px">${fmtDay(r0 + i, { month: "long" })}</b>`); }
+  const shade = Array.from({ length: len }, (_, i) => { const wk = new Date((r0 + i) * DAY).getUTCDay(); return wk === 0 || wk === 6 ? `<i style="left:${i * px}px;width:${px}px"></i>` : ""; }).join("");
+  const band = ds != null && de != null && de >= r0 && ds <= r1 ? `<i class="pl-band" style="left:${X(Math.max(ds, r0))}px;width:${(Math.min(de, r1) - Math.max(ds, r0) + 1) * px}px"></i>` : "";
+
+  /* tracks: one per channel used, clips packed into lines so nothing overlaps */
+  const groups = new Map(); rows.forEach(r => { const k = plTrack(r.n); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+  const MIN = Math.min(150, Math.max(116, px * 3));
+  const clipHTML = (r, k, line, L, w) => {
+    const n = r.n, wn = r.win; const T = PL_TRACKS[k]; const one = r.ep && wn.e === wn.s; const st = r.ep ? r.dv.k : wn.state || "draft";
+    const title = r.ep ? `Ep ${epNo(n)} · ${n.title}` : rowTitle(r);
+    const when = wn.e == null ? `From ${fmtDay(wn.s)}` : one ? fmtDay(wn.s, { weekday: "short", day: "numeric", month: "short" }) : `${fmtDay(wn.s)} – ${fmtDay(wn.e)}`;
+    const status = r.ep ? dlvLabel(r.dv) : r.kind === "engine" ? engineLabel(r) : r.kind === "trigger" ? "Fires on a trigger" : { live: "Running", scheduled: "Scheduled", ended: "Ended", due: "Not launched yet" }[wn.state] || "";
+    const edges = !one && wn.e != null;
+    return `<div class="pl-clip tl-bar st2-${st}${S.tl.sel === n.id ? " sel" : ""}${one ? "" : " span"}" data-id="${n.id}" style="left:${L}px;width:${w}px;top:${6 + line * 50}px;--clip:${T[3]}" title="${esc(title)}: ${esc(when)}${status ? " · " + esc(status) : ""}. Drag to move${edges ? ", drag the ends to change the window" : ""}." role="button" aria-label="${esc(title)}, ${esc(when)}, ${esc(status)}">${edges ? `<span class="h" data-edge="s"></span>` : ""}<span class="pl-ci">${st === "posted" || st === "ended" ? ICON.check : ICON[T[1]] || ICON.spark}</span><span class="pl-ct"><b>${esc(r.ep ? n.title : title)}</b><small>${r.ep ? `Ep ${epNo(n)} · ` : ""}${esc(when)}${status ? ` · ${esc(status)}` : ""}</small></span>${edges ? `<span class="h" data-edge="e"></span>` : ""}</div>`;
+  };
+  const tracks = [...groups.keys()].sort((a, b) => PL_ORDER.indexOf(a) - PL_ORDER.indexOf(b)).map(k => {
+    const rs = groups.get(k); const T = PL_TRACKS[k]; const lines = []; let html = "", later = 0, undated = 0;
+    rs.slice().sort((a, b) => (a.win?.s ?? 1e9) - (b.win?.s ?? 1e9)).forEach(r => {
+      const w = r.win;
+      if (!w || w.s == null) {
+        if (r.kind === "trigger") { html += `<button class="pl-clip ghost" data-act="tlsel" data-id="${r.n.id}" style="left:${X(Math.max(t, r0))}px;top:${6 + lines.length * 50}px">${ICON.bolt} ${esc(rowTitle(r))} · ${esc(trigRule(r.n))}</button>`; lines.push(1e9); }
+        else { undated++; if (undated === 1) { html += `<button class="pl-clip ghost" data-act="tlplan" data-id="${r.n.id}" style="left:${X(Math.min(r1 - 6, Math.max(t, ds ?? t, r0)))}px;top:${6 + lines.length * 50}px">${ICON.plus} ${r.ep ? `Date Ep ${epNo(r.n)}` : `Schedule ${esc(rowTitle(r))}`}</button>`; lines.push(1e9); } }
+        return;
+      }
+      const e = w.e == null ? r1 : w.e; if (w.s > r1 || e < r0) { later++; return; }
+      const L = X(Math.max(w.s, r0)); const wd = Math.min(W - L, Math.max((Math.min(e, r1) - Math.max(w.s, r0) + 1) * px, MIN));
+      let line = lines.findIndex(end => end + 6 <= L); if (line < 0) { line = lines.length; lines.push(0); } lines[line] = L + wd;
+      html += clipHTML(r, k, line, L, wd);
+    });
+    const n = rs.length; const h = Math.max(1, lines.length) * 50 + 8;
+    return `<div class="pl-row pl-trk"><div class="pl-l">${plTile(k)}<span><b>${T[0]}</b><small>${n} item${n === 1 ? "" : "s"}${undated > 1 ? ` · ${undated} undated` : ""}${later ? ` · ${later} outside view` : ""}</small></span></div><div class="pl-lane" style="width:${W}px;height:${h}px">${html}</div></div>`;
+  }).join("");
+
+  /* milestones: the Show's real dates and its goal */
+  const ms = [];
+  if (ds != null) ms.push([ds, "Show starts", "flag"]);
+  ph.forEach(p => { if (p.k !== "hook" && p.s != null && !p.est) ms.push([p.s, `${p.l} phase`, p.ic]); });
+  const firstOut = eps.map(r => r.marks.filter(m => m.done).map(m => m.d)).flat().sort((a, b) => a - b)[0]; if (firstOut != null) ms.push([firstOut, "First post out", "check"]);
+  if (de != null) ms.push([de, +d.target ? `Goal: ${num(+d.target)} ${unitOf(d.goal, 2)}` : "Show ends", "trophy"]);
+  const msLines = []; const msHTML = ms.filter(([x]) => x >= r0 && x <= r1).sort((a, b) => a[0] - b[0]).map(([x, l, ic]) => { const est = 40 + (l.length + 7) * 6.4; const L = Math.max(0, Math.min(X(x) + px / 2 - 9, W - est)); let line = msLines.findIndex(end => end + 8 <= L); if (line < 0) { line = msLines.length; msLines.push(0); } msLines[line] = L + est;
+    return `<span class="pl-ms" style="left:${L}px;top:${8 + line * 34}px"><i>${ICON[ic] || ICON.flag}</i><b>${esc(l)}</b><small>${fmtDay(x)}</small></span>`; }).join("");
+  const milestones = ms.length ? `<div class="pl-row pl-trk pl-msrow"><div class="pl-l"><span class="pl-tile ms">${ICON.flag}</span><span><b>Show Milestones</b><small>${ms.length} dates</small></span></div><div class="pl-lane" style="width:${W}px;height:${Math.max(1, msLines.length) * 34 + 14}px">${msHTML}</div></div>` : "";
+
+  const zoom = [[14, "2 weeks"], [42, "6 weeks"], ["show", "Whole show"]];
+  const curLen = S.pl.len || (ds != null && de != null && de - ds + 1 <= 63 ? "show" : 42);
+  const tools = `<div class="pl-tools"><h2>Show Timeline</h2><span class="pl-range">${ICON.cal} ${fmtDay(r0, { day: "numeric", month: "short" })} – ${fmtDay(r1, { day: "numeric", month: "short", year: "numeric" })}</span><span class="pl-grow"></span>
+    <div class="pl-seg">${zoom.map(([v, l]) => `<button data-act="plzoom" data-v="${v}" aria-pressed="${curLen === v}">${l}</button>`).join("")}</div>
+    <button class="pl-ib" data-act="plnav" data-d="-1" aria-label="Earlier">${ICON.back}</button><button class="pl-btn" data-act="pltoday">Today</button><button class="pl-ib" data-act="plnav" data-d="1" aria-label="Later">${ICON.chev}</button>
+    <button class="pl-btn ghost" data-act="pldetail" title="The full schedule with results, triggers and windows">${ICON.timeline} Detailed schedule</button></div>`;
+  const selR = rows.find(r => r.n.id === S.tl.sel);
+  const nudge = selR && selR.win?.s != null ? `<div class="pl-nudge"><span>Move it</span><button class="pl-btn" data-act="plnudge" data-d="-1">${ICON.back} 1 day earlier</button><button class="pl-btn" data-act="plnudge" data-d="1">1 day later ${ICON.chev}</button><button class="pl-btn" data-act="plnudge" data-d="7">A week later</button></div>` : "";
+  const today = t >= r0 && t <= r1 ? `<i class="pl-now" style="left:${LW + 12 + X(t) + px / 2 - 1}px"></i>` : "";
+  return `<div class="home pl-home"><div class="home-in pl-in">${plHero()}
+    <section class="pl-card pl-tl">${tools}
+      ${rows.length ? `${fits ? "" : phases}<div class="pl-grid" style="--lw:${LW}px">
+        ${fits ? phases : ""}
+        <div class="pl-row pl-axis"><div class="pl-l"></div><div class="pl-lane" style="width:${W}px">${months.join("")}${days}</div></div>
+        <div class="pl-body"><div class="pl-shade" style="left:${LW + 12}px;width:${W}px">${band}${shade}</div>${tracks}${milestones}${today}</div>
+      </div>
+      <p class="pl-legend"><span><i class="lg one"></i>One-off post</span><span><i class="lg span"></i>Runs for days</span><span><i class="lg ready"></i>Queued or posted</span><span><i class="lg late"></i>Date passed, not sent</span><span>Drag a clip to move it. Click it for details.</span></p>`
+      : `<div class="pl-empty"><img src="../art/showrunner.webp" alt=""><div><b>Nothing on the timeline yet</b><p>Plan the season and your Showrunner lays the episodes out here by channel, or add posts, ads and quizzes in Build.</p><div class="swrow"><button class="btn primary" data-act="view" data-v="plan">${ICON.target} Plan the season</button><button class="btn" data-act="view" data-v="canvas">${ICON.nodes} Build</button></div></div></div>`}
+    </section>
+    ${selR ? `<div class="pl-insp">${nudge}${tlDetail(selR)}</div>` : ""}
+  </div></div>`;
+};
+
+Object.assign(A, {
+  plzoom(b) { const v = b.dataset.v; S.pl.len = v === "show" ? "show" : +v; S.pl.start = null; repaintTL(); },
+  plnav(b) { const d = dnaOf(); const [r0, len] = plRange(dayIx(d.start), dayIx(d.end)); S.pl.start = r0 + (+b.dataset.d) * Math.max(7, Math.round(len / 2)); repaintTL(); },
+  pltoday() { S.pl.start = null; if (S.pl.len === "show") S.pl.len = 42; repaintTL(); },
+  pldetail() { S.pl.detail = !S.pl.detail; S.tl.zoom = S.pl.detail ? "6w" : "pl"; S.tl.start = null; repaintTL(); },
+  plnudge(b) { const n = S.nodes[S.tl.sel]; if (!n) return; const w = isEpisode(n) ? epWin(n) : winOf(n); if (w.s == null) return; const dd = +b.dataset.d; setDates(n, w.s + dd, w.e != null && !(isEpisode(n) && !n.p.end) ? w.e + dd : null, `Moved ${Math.abs(dd)} day${Math.abs(dd) > 1 ? "s" : ""} ${dd > 0 ? "later" : "earlier"} on the timeline`); repaintTL(); toast(`Moved to ${fmtDay(w.s + dd, { weekday: "short", day: "numeric", month: "short" })}`); },
+  plopen(b) { S.pl.detail = false; S.tl.sel = b.dataset.id; if (S.view !== "timeline") { S.view = "timeline"; render(); } else repaintTL(); setTimeout(() => $(".tl-detail")?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60); },
+  plspread() { const d = dnaOf(); const und = epList().filter(n => !n.p.start); if (!und.length) return; const a = Math.max(todayIx() + 1, dayIx(d.start) ?? todayIx() + 1), z = Math.max(a, (dayIx(d.end) ?? a + 27) - 1);
+    und.forEach((n, i) => { n.p.start = isoOf(Math.round(a + (z - a) * (i + 1) / (und.length + 1))); hist(n, "Dated by Showrunner"); commitNode(n); }); toast(`${und.length} episode${und.length > 1 ? "s" : ""} dated. Drag them to the right days.`); if (S.view === "timeline") repaintTL(); paintSRP(); },
+  plresched(b) { const n = S.nodes[b.dataset.id]; if (!n) return; const s = todayIx() + 1; const w = epWin(n); setDates(n, s, n.p.end ? s + Math.max(0, (w.e ?? w.s) - w.s) : null, "Moved to tomorrow by Showrunner"); toast(`Moved to ${fmtDay(s, { weekday: "short", day: "numeric", month: "short" })}`); if (S.view === "timeline") repaintTL(); paintSRP(); },
+  plask(b) { if (!S.srOpen) A.srpanel(); srpSend(b.dataset.t); },
+});
+{ let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (S.view === "timeline" && !S.pl.detail) repaintTL(); }, 120); }); }
+
+/* What the Showrunner suggests right now, from the Show's real state. Each one has a working button. */
+function plSuggest() {
+  if (!cur()) return []; const out = []; const t = todayIx(); const eps = epList(); const d = dnaOf();
+  const und = eps.filter(n => !n.p.start); if (und.length) out.push({ ic: "cal", t: `${und.length} episode${und.length > 1 ? "s have" : " has"} no date`, d: "Spread them across the show so nothing gets forgotten.", btn: `<button class="btn sm primary" data-act="plspread">Give them dates</button>` });
+  const missed = eps.filter(n => deliveryOf(n).k === "missed"); if (missed.length) out.push({ ic: "flag", t: `${missed.length} episode${missed.length > 1 ? "s" : ""} didn't go out`, d: `Ep ${epNo(missed[0])} · ${missed[0].title} passed its date.`, btn: `<button class="btn sm primary" data-act="plresched" data-id="${missed[0].id}">Move to tomorrow</button>` });
+  const due = eps.filter(n => deliveryOf(n).k === "due"); if (due.length) out.push({ ic: "spark", t: `Ep ${epNo(due[0])} goes out today`, d: due[0].title, btn: `<button class="btn sm primary" data-act="plopen" data-id="${due[0].id}">Open it</button>` });
+  const pg = mainPage(); const pub = pg && pubFor(pg); if (pg && !pub?.p.live) out.push({ ic: "layout", t: "Your page isn't live yet", d: "Every episode sends people to it.", btn: `<button class="btn sm" data-act="view" data-v="canvas">Open in Build</button>` });
+  if (!+d.target) out.push({ ic: "target", t: "No goal yet", d: "Say how many bookings or leads this show is for.", btn: `<button class="btn sm" data-act="view" data-v="plan">Set the goal</button>` });
+  const soon = eps.filter(n => { const w = epWin(n); return w.s != null && w.s > t && w.s <= t + 3; })[0]; if (soon) out.push({ ic: "eye", t: `Coming up: Ep ${epNo(soon)}`, d: `${soon.title} · ${fmtDay(epWin(soon).s, { weekday: "short", day: "numeric", month: "short" })}`, btn: `<button class="btn sm" data-act="plopen" data-id="${soon.id}">Check it</button>` });
+  return out.slice(0, 3);
+}
+function plGreeting() {
+  const s = cur(); const d = dnaOf(); const t = todayIx(); const ds = dayIx(d.start), de = dayIx(d.end); const eps = epList();
+  const out = eps.filter(n => ["posted", "running", "live", "ended"].includes(deliveryOf(n).k)).length; const next = eps.filter(n => { const w = epWin(n); return w.s != null && w.s >= t; }).length;
+  const when = ds == null ? "It has no dates yet." : t < ds ? `It starts ${fmtDay(ds, { weekday: "long", day: "numeric", month: "short" })}.` : de != null && t > de ? "It has ended." : `It's day ${t - ds + 1}${de != null ? ` of ${de - ds + 1}` : ""}.`;
+  return `${s.name}: ${when} ${eps.length ? `${out} of ${eps.length} episodes are out, ${next} still to come.` : "No episodes yet."}`;
+}
 </script>

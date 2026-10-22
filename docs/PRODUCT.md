@@ -36,17 +36,19 @@ There are no payments in the app and nothing is locked by plan yet. **Plans** in
 
 - **The phone app is the product.** It's light and fast, and mostly a conversation with the Showrunner. Everything it makes is meant to be copied and posted from a phone.
 - **On a computer Webshow opens as Pro** (wide screen + mouse, no touch) for everyone in the demo. Phones and tablets get Play. `?view=play` / `?view=pro` switch and are remembered.
-- **Webshow Pro (desktop)** is for power users and our own studio team. It has the canvas, nodes and timeline, like CapCut's desktop version. Today it's the legacy studio in `public/pro/`, and the two share a format: export a show as `campaign.json` from the phone. Pro needs porting (see the roadmap).
+- **Webshow Pro (desktop)** is for power users and our own studio team. It has the canvas, nodes and timeline, like CapCut's desktop version. Every Show opens on its **Show Timeline**: a pastel hero with the Show's character and real numbers, tabs into Timeline / Build / Assets / Results / Plan / Settings, phase cards, a day axis with a Today pill, one track per channel with pastel clips you can drag to reschedule, and the Show's milestones. *Detailed schedule* switches to the full studio timeline (results, triggers, windows). The Showrunner panel on the right greets you with the Show's real status, suggests the next fixes with working buttons (date undated episodes, move a missed one to tomorrow, publish the page, set the goal) and has quick asks: Improve timeline, Generate ideas, Check risks. Today it's the legacy studio in `public/pro/`, and the two share a format: export a show as `campaign.json` from the phone. Pro needs porting (see the roadmap).
 
-## The app: three tabs
+## The app: five tabs (Play)
+
+The look is playful on purpose, like a friendly little game: a soft periwinkle page, big rounded white cards, each Show's own pastel character, chunky buttons and one blue-violet accent. The W logo is the app icon.
 
 | Tab | What it's for |
 |---|---|
-| **Home** | Your current show as a poster, the **one next mission**, quick outcome checks ("Did it get any replies, inquiries or bookings?"), this week, a tip. |
-| **Create** | Talk to your Showrunner. A new chat starts with **"What are we making happen?"**, asks at most two things, then reveals **one campaign idea** to approve (Let's make it / Different angle / Tweak it), then *How much can you post?*. Chats live in the side panel (☰). |
-| **Shows** | Every campaign as a poster. A show is a journey: **Hook → Show → Convert**, each a short list of missions with clear status, five real milestones, and its own chat for changes (proposed as a card, applied only when you tap Apply). |
-
-**Me** (business profile, what the Showrunner remembered, favourite Showrunner, plan, theme, data) sits behind the profile button.
+| **Home** | Logo, the **bell** (what's due now, or what's next) and your avatar. The **Active Show** hero with its character and real progress ring, the **Campaign Timeline** card (Hook / Show / Convert phase cards with real dates, then this week as channel tracks), **Next up today** with one big Start button, outcome checks, and **Your Shows** with their progress. |
+| **Shows** | Every campaign as a pastel card: its character, dates, next step, progress, and its own Showrunner chat. A show is a journey: **Hook → Show → Convert**, five real milestones, changes proposed as a card and applied only on Apply. |
+| **Timeline** | The active Show's whole timeline, week by week, with a switcher when you have several Shows, and what's coming up. |
+| **Chat** | Talk to your Showrunner. A new chat starts with **"What are we making happen?"**, asks at most two things, then reveals **one campaign idea** to approve (Let's make it / Different angle / Tweak it), then *How much can you post?*. Chats live in the side panel (☰). |
+| **Profile** | Business profile, what the Showrunner remembered, favourite Showrunner, plan, theme, data. |
 
 **The post: Create.** Preview of the finished post → add a photo → **Save image** → copy the caption → **I posted it**. Text-on-image settings are folded away; ChatGPT prompts are under *More ways to make it*.
 

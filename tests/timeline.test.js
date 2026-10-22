@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planSlots, blankProfile } from "../public/shared/model.js";
 import { offlineAsset, offlineStrategy } from "../public/js/offline.js";
-import { mondayOf, phaseRanges, phaseOn, weekTimeline } from "../public/js/views/timeline.js";
+import { mondayOf, phaseRanges, phaseOn, weekTimeline, phaseCards } from "../public/js/views/timeline.js";
 import { artFor, ART_KEYS, playToPro } from "../public/shared/bridge.js";
 
 const profile = { ...blankProfile(), business: "Löyly" };
@@ -20,13 +20,25 @@ test("phase bands follow the posts and cover the whole Show in order", () => {
 test("one week shows events on their day, intervals across days, evergreen as always on", () => {
   const s = mk(); const ad = s.assets.find(a => a.kind === "meta_ad"); const wk = mondayOf(ad.date);
   const html = weekTimeline(s, { week: wk });
-  assert.match(html, /wt-el interval/, "the ad runs over several days");
-  assert.match(html, /wt-el evergreen[^>]*grid-column:1 \/ 8/, "the landing page is always on, no invented dates");
+  assert.match(html, /clip interval/, "the ad runs over several days");
+  assert.match(html, /clip evergreen[^>]*grid-column:1 \/ 8/, "the landing page is always on, no invented dates");
   const ev = s.assets.filter(a => !a.end && a.kind !== "landing" && a.date >= wk && a.date <= "2026-11-08");
-  assert.equal((html.match(/wt-el event/g) || []).length, ev.length);
+  assert.equal((html.match(/clip event/g) || []).length, ev.length);
   assert.match(html, /Week 1 of 5/); assert.doesNotMatch(html, /Google Ads/, "only channels this Show uses");
 });
 test("a Show keeps its character across Play and Pro", () => {
   const s = mk(); s.art = "leaf"; assert.equal(artFor(s), "leaf"); assert.equal(playToPro(s, profile).show.art, "leaf");
   assert.ok(ART_KEYS.includes(artFor({ id: "anything" }))); assert.equal(artFor({ id: "x1" }), artFor({ id: "x1" }));
+});
+test("phase cards show Hook, Show and Convert with their real dates", () => {
+  const s = mk(); const html = phaseCards(s); const r = phaseRanges(s);
+  assert.equal((html.match(/class="ph-card ph-/g) || []).length, 3);
+  for (const k of ["Hook", "Show", "Convert"]) assert.match(html, new RegExp(`<b>${k}</b>`));
+  assert.match(html, /4 Nov/, "Hook starts on the Show's first day"); assert.equal(r[0][1], "2026-11-04");
+});
+test("Play episodes keep their channel when the Show opens in Pro", () => {
+  const s = mk(); const t = playToPro(s, profile);
+  const ig = t.season.eps.find(e => s.assets.find(a => a.id === e.from)?.kind === "ig_post");
+  assert.deepEqual(ig.channels, ["instagram"]);
+  const ad = t.season.eps.find(e => e.type === "metaad"); if (ad) assert.deepEqual(ad.channels, ["meta"]);
 });

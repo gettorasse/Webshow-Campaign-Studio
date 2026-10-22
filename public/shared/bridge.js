@@ -48,6 +48,8 @@ const FORMAT_FOR = { bookings: "booking", event: "countdown" };
 /* Pro has episode nodes for images, carousels, polls, quizzes, Meta ads and search ads.
    Emails, reels and stories have no node type yet; they're listed as "not on the canvas yet". */
 export const KIND_TO_PRO = { ig_post: "image", fb_post: "image", li_post: "image", ig_carousel: "carousel", meta_ad: "metaad", search_ad: "ad" };
+/* which channel an episode is meant for (shown as its timeline track; posting still needs a connected account) */
+const CH_FOR = { ig_post: ["instagram"], ig_carousel: ["instagram"], fb_post: ["facebook"], li_post: ["linkedinpage"], meta_ad: ["meta"], search_ad: ["gads"] };
 const PRO_TO_KIND = { image: "ig_post", carousel: "ig_carousel", poll: "ig_story", quiz: "ig_story", metaad: "meta_ad", ad: "search_ad" };
 const HOOKLINE = (a) => String(a.fields?.hook || a.fields?.subject || a.fields?.headlines || a.title || "").split("\n")[0].slice(0, 120);
 
@@ -60,7 +62,7 @@ export function playToPro(s, profile = {}) {
     const type = KIND_TO_PRO[a.kind];
     if (!type) { skipped.push(KINDS[a.kind]?.label || a.kind); continue; }
     const day = Math.max(0, Math.round((new Date(a.date) - new Date(b.start)) / 864e5));
-    eps.push({ lane: a.phase === "always" ? "hook" : a.phase, arc: a.phase === "convert" ? "urgency" : a.phase === "show" ? "proof" : "teaser", type, day, title: (a.title || KINDS[a.kind]?.label || "Episode").slice(0, 40), angle: HOOKLINE(a), channels: [], boost: 0, on: true, from: a.id });
+    eps.push({ lane: a.phase === "always" ? "hook" : a.phase, arc: a.phase === "convert" ? "urgency" : a.phase === "show" ? "proof" : "teaser", type, day, title: (a.title || KINDS[a.kind]?.label || "Episode").slice(0, 40), angle: HOOKLINE(a), channels: CH_FOR[a.kind] || [], boost: 0, on: true, from: a.id });
   }
   return {
     show: { id: s.id, name: (st.name || "New show").slice(0, 48), showrunner: s.showrunner || "ogilvy", art: artFor(s), play: { id: s.id, at: Date.now() } },

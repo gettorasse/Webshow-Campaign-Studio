@@ -72,6 +72,15 @@ export const IC = {
   send: P('<path d="M8 12.6V3.6M4.4 7.2 8 3.6l3.6 3.6"/>'),
   layers: P('<path d="m8 2.4 5.6 3-5.6 3-5.6-3z"/><path d="m2.4 8.4 5.6 3 5.6-3"/><path d="m2.4 11.2 5.6 3 5.6-3" opacity=".5"/>'),
   desktop: P('<rect x="1.8" y="2.6" width="12.4" height="8.4" rx="1.4"/><path d="M5.6 13.6h4.8M8 11v2.6"/>'),
+  eye: P('<path d="M1.6 8s2.4-4.4 6.4-4.4S14.4 8 14.4 8 12 12.4 8 12.4 1.6 8 1.6 8z"/><circle cx="8" cy="8" r="2"/>'),
+  mail: P('<rect x="1.8" y="3.2" width="12.4" height="9.6" rx="2"/><path d="m2.4 4.2 5.6 4.4 5.6-4.4"/>'),
+  link: P('<path d="M6.6 9.4a2.8 2.8 0 0 0 4 0l2-2a2.8 2.8 0 0 0-4-4l-.7.7"/><path d="M9.4 6.6a2.8 2.8 0 0 0-4 0l-2 2a2.8 2.8 0 0 0 4 4l.7-.7"/>'),
+  camera: P('<rect x="2" y="2" width="12" height="12" rx="3.6"/><circle cx="8" cy="8" r="2.8"/><circle cx="11.6" cy="4.4" r=".5" fill="currentColor"/>'),
+  play: P('<rect x="2" y="3" width="12" height="10" rx="2.6"/><path d="m6.6 6 3.4 2-3.4 2z" fill="currentColor"/>'),
+  bars: P('<path d="M4 13V8M8 13V3M12 13V6"/>'),
+  folder2: P('<path d="M2 4.6a1.2 1.2 0 0 1 1.2-1.2h3.1l1.4 1.6h5.1A1.2 1.2 0 0 1 14 6.2v6a1.2 1.2 0 0 1-1.2 1.2H3.2A1.2 1.2 0 0 1 2 12.2z"/>'),
+  sparkle: P('<path d="M8 1.5c.4 3.3 1.7 4.6 5 5-3.3.4-4.6 1.7-5 5-.4-3.3-1.7-4.6-5-5 3.3-.4 4.6-1.7 5-5z" fill="currentColor" stroke="none"/><path d="M13 11.2c.15 1 .55 1.4 1.5 1.5-.95.1-1.35.5-1.5 1.5-.15-1-.55-1.4-1.5-1.5.95-.1 1.35-.5 1.5-1.5z" fill="currentColor" stroke="none"/>'),
+  chev: P('<path d="m4.5 6.2 3.5 3.6 3.5-3.6"/>'),
   clock: P('<circle cx="8" cy="8" r="5.8"/><path d="M8 4.8V8l2.2 1.4"/>'),
 };
 
@@ -80,3 +89,6 @@ export const IC = {
 export function mascot(mood = "idle", badge = "") {
   return `<span class="mascot ms-${mood}" aria-hidden="true"><img src="art/showrunner.webp" alt="" draggable="false">${badge ? `<span class="ms-badge">${IC[badge] || ""}</span>` : ""}</span>`;
 }
+
+/* playful doodles around a character (original strokes, not part of the art files) */
+export const doodles = () => `<svg class="doodles" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="#141418" stroke-width="3.2" stroke-linecap="round"><path d="M40 34l-8-14M58 26l-2-16M24 52l-14-6" stroke="#ff7a3d"/><path d="M160 30l10-16M176 46l14-8" /><path d="M150 18l4-10" /><path d="M34 150c-10-6-18 6-8 12s20-10 28-2" /><path d="M162 160c8 2 12 12 4 16" /><circle cx="170" cy="178" r="5"/></svg>`;

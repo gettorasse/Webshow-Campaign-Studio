@@ -1,15 +1,16 @@
 /* Shows (campaigns): the list as posters, and one show as a journey: Hook → Show → Convert,
    each stage a short list of missions, with the next one up front. */
 import { state } from "../store.js";
-import { esc, IC, mascot } from "../lib.js";
+import { esc, IC, mascot, doodles } from "../lib.js";
+import { ART, artFor } from "../../shared/bridge.js";
 import { CHANNELS, GOALS, KINDS, PHASES } from "../../shared/model.js";
 import { srOf } from "../../shared/showrunners.js";
 import { fmtDate, todayISO } from "../../shared/util.js";
 import { showsList, sortedAssets, showEnd, failedOf } from "../campaign.js";
 import { afterOf, afterLine, AFTER_TYPES, AFTER_FIELDS } from "../../shared/make.js";
 import { posterHTML } from "./chat.js";
-import { missionCard } from "./today.js";
-import { weekTimeline } from "./timeline.js";
+import { missionCard, heroCard, appHead } from "./today.js";
+import { weekTimeline, phaseCards } from "./timeline.js";
 import { proOnlyShows, proShow } from "../pro.js";
 import { nextMission } from "../campaign.js";
 
@@ -21,32 +22,34 @@ const stageOf = (a) => a.phase === "always" ? "hook" : a.phase;
 export function showsView() {
   const list = showsList(); const pro = proOnlyShows(state.shows);
   return `<section class="page">
-    <header class="page-h"><div><span class="eyebrow">Your productions</span><h1>Shows</h1></div><div class="row"><button class="btn go sm" data-act="newshow">${IC.plus} New Show</button><button class="icon-btn me-btn" data-act="tab" data-t="me" aria-label="Your business and settings">${IC.user}</button></div></header>
+    ${appHead("Shows")}
+    <div class="title-row"><div><h1 class="big-t">Your Shows</h1><span class="muted small">One Show = one campaign, one goal.</span></div><button class="btn go" data-act="newshow">${IC.plus} New Show</button></div>
     ${list.length || pro.length ? `<div class="show-grid">${list.map(showCard).join("")}${pro.map(proCard).join("")}</div>` : `<div class="card empty hero">${mascot("idle")}<b class="h">No shows yet</b><p>A show is one campaign: one big idea, one goal, and posts you can actually keep up with.</p><button class="btn go big" data-act="newshow">${IC.spark} Start a campaign</button></div>`}
   </section>`;
 }
 const NEXT_LABEL = (s) => { const n = nextMission(s); return { writing: "Writing posts…", retry: `${n.n} to retry`, finished: "Complete", creative: "Next: make your first post", post: n.a ? `Next: ${n.a.title || KINDS[n.a.kind].label}` : "" }[n.kind] || ""; };
 function showCard(s) {
   const p = progress(s); const st = s.strategy || {}; const active = state.settings.activeShow === s.id; const r = srOf(s.showrunner);
-  return `<div class="show-card${active ? " active" : ""}">
-    <button class="sc-open" data-act="openshow" data-id="${s.id}" aria-label="Open ${esc(st.name || "show")}">${posterHTML({ ...st, goal: s.brief.goal, name: st.name || "New campaign", id: s.id, art: s.art }, true)}</button>
-    <div class="sc-body">
-      <span class="row between"><b class="sc-next">${esc(NEXT_LABEL(s))}</b>${active ? `<span class="tag live">Active</span>` : s.source === "demo" ? `<em class="demo">demo</em>` : ""}</span>
-      <span class="meta"><span>${p.d} of ${p.n} posted</span><span>${esc(range(s))}</span>${s.inPro ? `<span title="Also on the Webshow Pro canvas">${IC.desktop}</span>` : ""}</span>
-      <span class="bar"><i style="width:${p.pct}%"></i></span>
-      <div class="sc-acts"><button class="btn sm go" data-act="openshow" data-id="${s.id}">Open</button><button class="btn sm" data-act="showchat" data-id="${s.id}">${mascot("idle")} ${esc(r.role)}</button></div>
-    </div>
+  const k = artFor(s); const A = ART[k];
+  return `<div class="show-card${active ? " active" : ""}" style="--pbg:${A.bg};--pink:${A.ink}">
+    <button class="sc-open" data-act="openshow" data-id="${s.id}" aria-label="Open ${esc(st.name || "show")}">
+      <span class="sc-art">${doodles()}<img src="art/${k}.webp" alt=""></span>
+      <span class="sc-txt">${active ? `<span class="pill-k">Active Show</span>` : s.source === "demo" ? `<span class="pill-k">Demo</span>` : ""}<b class="sc-name">${esc(st.name || "New campaign")}</b><small>${esc(range(s))}</small><small class="sc-next">${esc(NEXT_LABEL(s))}</small></span>
+    </button>
+    <span class="ms-p"><span class="bar"><i style="width:${p.pct}%"></i></span><small><b>${p.pct}%</b> · ${p.d}/${p.n}</small>${s.inPro ? `<span title="Also on the Webshow Pro canvas">${IC.desktop}</span>` : ""}</span>
+    <div class="sc-acts"><button class="btn sm ink" data-act="openshow" data-id="${s.id}">Open ${IC.arrow}</button><button class="btn sm" data-act="showchat" data-id="${s.id}">${mascot("idle")} ${esc(r.role)}</button></div>
   </div>`;
 }
 /* A Show made in Webshow Pro: visible and discussable here, built on the canvas there */
 function proCard(p) {
   const r = srOf(p.showrunner);
-  return `<div class="show-card">
-    <button class="sc-open" data-act="openshow" data-id="${p.id}" aria-label="Open ${esc(p.name)}">${posterHTML({ name: p.name, goal: p.goal, id: p.id, art: p.art }, true)}</button>
-    <div class="sc-body">
-      <span class="row between"><b class="sc-next">${p.slim.assets.length} episode${p.slim.assets.length === 1 ? "" : "s"} on the canvas</b><span class="tag">${IC.desktop} Made in Pro</span></span>
-      <div class="sc-acts"><button class="btn sm" data-act="openshow" data-id="${p.id}">See the plan</button><button class="btn sm" data-act="showchat" data-id="${p.id}">${mascot("idle")} ${esc(r.role)}</button></div>
-    </div>
+  const k = artFor(p); const A = ART[k];
+  return `<div class="show-card" style="--pbg:${A.bg};--pink:${A.ink}">
+    <button class="sc-open" data-act="openshow" data-id="${p.id}" aria-label="Open ${esc(p.name)}">
+      <span class="sc-art">${doodles()}<img src="art/${k}.webp" alt=""></span>
+      <span class="sc-txt"><span class="pill-k">${IC.desktop} Made in Pro</span><b class="sc-name">${esc(p.name)}</b><small class="sc-next">${p.slim.assets.length} episode${p.slim.assets.length === 1 ? "" : "s"} on the canvas</small></span>
+    </button>
+    <div class="sc-acts"><button class="btn sm ink" data-act="openshow" data-id="${p.id}">See the plan</button><button class="btn sm" data-act="showchat" data-id="${p.id}">${mascot("idle")} ${esc(r.role)}</button></div>
   </div>`;
 }
 
@@ -56,11 +59,11 @@ export function showView(s, id) {
   const st = s.strategy || {}; const tab = ["plan", "assets"].includes(state.ui.showTab) ? state.ui.showTab : "timeline"; const r = srOf(s.showrunner);
   return `<section class="page">
     <header class="page-h sticky"><button class="icon-btn" data-act="tab" data-t="shows" aria-label="Back to shows">${IC.back}</button><div class="grow"><span class="eyebrow">${esc(range(s))}</span><h1 class="sm">${esc(st.name || "New campaign")}</h1></div><button class="icon-btn" data-act="sheet" data-k="export" aria-label="Export">${IC.down}</button></header>
-    ${posterHTML({ ...st, goal: s.brief.goal, name: st.name || "New campaign", id: s.id, art: s.art })}
+    ${heroCard(s, true)}
     ${s.source === "demo" ? `<p class="demo-note">${IC.spark} Demo show: the idea and posts were written without AI. Connect the AI for real copy.</p>` : ""}
     ${missionCard(s, true)}
     <div class="seg show-tabs" role="tablist"><button role="tab" aria-selected="${tab === "timeline"}" data-act="showtab" data-t="timeline">${IC.cal} Timeline</button><button role="tab" aria-selected="${tab === "assets"}" data-act="showtab" data-t="assets">${IC.layers} Assets</button><button role="tab" aria-selected="false" data-act="showchat" data-id="${s.id}">${IC.chat} Chat</button></div>
-    ${tab === "plan" ? `<button class="link sm" data-act="showtab" data-t="timeline">${IC.back} Back to the timeline</button>${planTab(s)}` : tab === "assets" ? journeyTab(s) : weekTimeline(s)}
+    ${tab === "plan" ? `<button class="link sm" data-act="showtab" data-t="timeline">${IC.back} Back to the timeline</button>${planTab(s)}` : tab === "assets" ? journeyTab(s) : `<div class="card tl-card">${phaseCards(s)}${weekTimeline(s)}</div>`}
     ${tab !== "plan" ? `<button class="row-card tap" data-act="showtab" data-t="plan"><span class="ic-round">${IC.target}</span><span class="grow"><b>The idea</b><span class="muted small">${esc(st.idea || "Message, audience and what happens after the button")}</span></span>${IC.arrow}</button>` : ""}
     <button class="row-card tap talk" data-act="showchat" data-id="${s.id}">${mascot("idle", r.icon)}<span class="grow"><b>Talk to ${esc(r.role)}</b><span class="muted small">This Show's own Showrunner: change the tone, the dates or the idea</span></span>${IC.chat}</button>
     <a class="row-card tap" href="./?view=pro#/show/${s.id}"><span class="ic-round">${IC.desktop}</span><span class="grow"><b>${s.inPro ? "Open the canvas in Webshow Pro" : "Open in Webshow Pro"}</b><span class="muted small">${s.inPro ? "Same Show and Showrunner. The canvas was built from this Show once; later post edits don't sync yet." : "Builds this Show's canvas, same id and Showrunner. Best on a computer."}</span></span>${IC.arrow}</a>

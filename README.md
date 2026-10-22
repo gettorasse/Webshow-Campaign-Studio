@@ -50,7 +50,7 @@ How to grade the eval report: **docs/AI-TESTING.md**. This is the next big step.
 ```
 public/                 the app (static, served as-is)
   index.html            shell: one screen + bottom tabs
-  styles.css            the whole design: white / black-toned dark, purple accent
+  styles.css            the whole design: playful pastel look, soft page, blue-violet accent, dark mode
   shared/               code used by BOTH the app and the server
     prompts.js          ← every AI prompt and every reply check. Tune the AI here.
     showrunners.js      the three styles (Ogilvy, Hormozi, Vaynerchuk)
@@ -73,7 +73,7 @@ scripts/dev.mjs         local server (static files + the API)
 scripts/eval.mjs        AI test run
 scripts/preview.mjs     one-file build for trying it inside Claude
 tests/                  node --test suites + eval briefs
-legacy/pro-studio/      source of Webshow Pro (36 concatenated files)
+legacy/pro-studio/      source of Webshow Pro (concatenated files; playful.js/.css = the Show Timeline look)
 docs/                   product, architecture, AI testing
 ```
 

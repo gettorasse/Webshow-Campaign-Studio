@@ -37,12 +37,16 @@ const MASCOT_IC = P('<rect x="2" y="3" width="12" height="11" rx="4"/><circle cx
   /* each Show's character, the same as in Webshow Play */
   h = h.replace(/(data-id="([^"]+)"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/g, (m, pre, id) => `${pre}${artAv(S.shows[id] || playData()?.shows?.[id] || { id })}`);
   if (cur()) h = h.replace(/(<button class="sb-head srow"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/, (m, pre) => `${pre}${artAv(cur())}`);
+  /* the Webshow Pro logo, and the open Show tinted with its own colour */
+  h = h.replace(/<button class="wordmark"[^>]*>[\s\S]*?<\/button>/, `<button class="wordmark pl-logo" data-act="home" aria-label="Webshow Pro home"><img src="../art/logo-sm.png" alt=""><span>Webshow <b>Pro</b></span></button>`);
+  if (cur()) h = h.replace(/<div class="sb-show" style="/, `<div class="sb-show" style="--pbg:${(PL_ART[artOf(cur())] || PL_ART.starburst).bg};--pink:${(PL_ART[artOf(cur())] || PL_ART.starburst).ink};`);
   /* switch experiences */
   h = h.replace(/(<div class="sb-foot">)/, `$1<a class="srow brand" href="../?view=play"><span class="ic">${PHONE_IC}</span><span class="lbl">Webshow Play</span><span class="ct">phone</span></a>`);
   return h;
 }; }
 
 const ART_KEYS = ["starburst", "snowflake", "leaf", "sun"];
+const PL_ART = { starburst: { bg: "#DCE6FF", ink: "#2a3bb7" }, snowflake: { bg: "#EDDDF9", ink: "#6a3aa6" }, leaf: { bg: "#DEF2E4", ink: "#2c7a48" }, sun: { bg: "#FFF0C8", ink: "#9a6a00" } };
 const artOf = (s) => ART_KEYS.includes(s?.art) ? s.art : ART_KEYS[hash(s?.id || s?.name || "") % ART_KEYS.length];
 const artAv = (s) => `<span class="av art"><img src="../art/${artOf(s)}.webp" alt="" draggable="false"></span>`;
 /* the Showrunner panel is part of every Show on a big screen */
@@ -76,15 +80,20 @@ function paintSRP() {
   const k = s.showrunner || "ogilvy"; const r = SHOWRUNNERS[k] || SHOWRUNNERS.ogilvy; const role = { ogilvy: "The Strategist", hormozi: "The Closer", vaynerchuk: "The Creator" }[k] || "Showrunner";
   const c = srpChat(); const msgs = c?.messages || [];
   const scroll = el.querySelector(".srp-msgs")?.scrollTop;
-  const html = `<div class="srp-h"><span class="srp-av"><img src="../art/showrunner.webp" alt=""><i>${ICON[r.icon] || ""}</i></span><span class="srp-t"><b>${esc(role)}</b><small>${esc(r.name)} style · ${esc(s.name)}</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
-    <div class="srp-note">${BR.ai === false ? "Demo answers: the AI isn't set up on this server." : BR.ai ? "Shared with Webshow Play: the same conversation on your phone." : "Shared with Webshow Play."}</div>
-    <div class="srp-msgs">${msgs.length ? msgs.map((m, i) => srpMsg(m, i, msgs)).join("") : `<div class="srp-empty"><img src="../art/showrunner.webp" alt=""><p>This is ${esc(s.name)}'s Showrunner. Ask for changes, ideas or what to do next. Every change is shown before it happens.</p></div>`}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
-    ${BR.busy ? "" : `<div class="srp-quick">${["What's next?", "Make the posts shorter", "Move everything a week later"].map(q => `<button class="chip" data-act="srsay" data-t="${esc(q)}">${esc(q)}</button>`).join("")}</div>`}
-    <form class="srp-form" data-srp-form><textarea id="srp-in" rows="2" placeholder="Ask ${esc(role)} about this show…" ${BR.busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${BR.busy ? "disabled" : ""}>${ICON.send || "→"}</button></form>`;
+  const sug = typeof plSuggest === "function" ? plSuggest() : [];
+  const QUICK = [["Improve timeline", "Look at my timeline. What would you move or change so the show works better?"], ["Generate ideas", "Give me three new episode ideas for this show."], ["Check risks", "What could go wrong with this show, and what should I fix first?"]];
+  const html = `<div class="srp-h"><span class="srp-t"><b>Showrunner <i class="srp-beta">BETA</i></b><small>${esc(role)} · ${esc(r.name)} style</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
+    <div class="srp-msgs">
+      <div class="srp-hero"><img src="../art/showrunner.webp" alt="" draggable="false"><div class="srp-hi"><b>Hi! I'm ${esc(role)}.</b><p>${esc(typeof plGreeting === "function" ? plGreeting() : s.name)}</p></div></div>
+      ${sug.length ? `<div class="srp-sugs"><span class="srp-lbl">Suggestions</span>${sug.map(x => `<div class="srp-sug"><span class="srp-sic">${ICON[x.ic] || ICON.spark}</span><span class="srp-st"><b>${esc(x.t)}</b><small>${esc(x.d)}</small></span>${x.btn}</div>`).join("")}</div>` : ""}
+      ${msgs.length ? `<span class="srp-lbl">Conversation · shared with Webshow Play</span>${msgs.map((m, i) => srpMsg(m, i, msgs)).join("")}` : ""}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
+    ${BR.ai === false ? `<div class="srp-note">Demo answers: the AI isn't set up on this server.</div>` : ""}
+    <form class="srp-form" data-srp-form><textarea id="srp-in" rows="2" placeholder="Ask Showrunner anything…" ${BR.busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${BR.busy ? "disabled" : ""}>${ICON.send || "→"}</button></form>
+    <div class="srp-quick">${QUICK.map(([l, q]) => `<button class="chip" data-act="srsay" data-t="${esc(q)}" ${BR.busy ? "disabled" : ""}>${esc(l)}</button>`).join("")}</div>`;
   /* the studio re-renders often while it builds; only repaint when the conversation changed */
   if (el.dataset.sig === html) return; const draft = el.querySelector("#srp-in")?.value || ""; const focused = document.activeElement?.id === "srp-in";
   el.innerHTML = html; el.dataset.sig = html; const inp = el.querySelector("#srp-in"); if (inp) { inp.value = draft; if (focused) inp.focus(); }
-  const box = el.querySelector(".srp-msgs"); if (box) box.scrollTop = scroll == null || BR.stick ? box.scrollHeight : scroll; BR.stick = false;
+  const box = el.querySelector(".srp-msgs"); if (box) box.scrollTop = scroll == null ? (msgs.length ? box.scrollHeight : 0) : BR.stick ? box.scrollHeight : scroll; BR.stick = false;
 }
 const PRO_OPS = new Set(["move", "shift", "strategy", "rewrite"]);
 function srpMsg(m, i, all) {

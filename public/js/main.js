@@ -12,7 +12,7 @@ import { offlineChat, offlineShowChat, guessGoal } from "./offline.js";
 import { rewriteAsset, moveAsset, showsList, showEnd, applyChange, makeConcept, createShowFromConcept, checkMilestones, MILESTONES, setOutcome, retryFailed, writeAssets } from "./campaign.js";
 import { showMD, showCSV, showICS, showJSON, fileBase, saveFile } from "./export.js";
 import { chatView, drawerHTML, currentChat, stageHTML } from "./views/chat.js";
-import { todayView, dueToday } from "./views/today.js";
+import { todayView, dueToday, timelinePage } from "./views/today.js";
 import { showsView, showView } from "./views/shows.js";
 import { meView } from "./views/me.js";
 import { sheetHTML, findAsset, previewHTML, promptsHTML } from "./views/sheets.js";
@@ -22,7 +22,7 @@ import { proShow } from "./pro.js";
 import { newShowChat } from "../shared/bridge.js";
 import { slug } from "../shared/util.js";
 
-const TABS = [["today", "Home", "home"], ["shows", "Shows", "layers"], ["chat", "Create", "spark"]];
+const TABS = [["today", "Home", "home"], ["shows", "Shows", "layers"], ["timeline", "Timeline", "cal"], ["chat", "Chat", "chat"], ["me", "Profile", "user"]];
 
 /* ---------- render ---------- */
 let lastRoute = "";
@@ -30,7 +30,7 @@ export function render() {
   const route = state.ui.tab + (state.ui.showId || "") + (state.ui.tab === "chat" ? state.ui.chatId : "");
   const view = $("#view"); const keep = route === lastRoute ? view.scrollTop : 0; const draft = $("#msg")?.value || "";
   const tab = state.ui.tab;
-  view.innerHTML = tab === "chat" ? chatView() : tab === "today" ? todayView() : tab === "show" ? showView(state.shows[state.ui.showId], state.ui.showId) : tab === "me" ? meView() : showsView();
+  view.innerHTML = tab === "chat" ? chatView() : tab === "today" ? todayView() : tab === "show" ? showView(state.shows[state.ui.showId], state.ui.showId) : tab === "me" ? meView() : tab === "timeline" ? timelinePage() : showsView();
   view.dataset.tab = tab;
   $("#tabs").innerHTML = TABS.map(([k, l, ic]) => { const on = k === tab || (k === "shows" && tab === "show"); const n = k === "today" ? dueToday().length : 0;
     return `<a href="#/${k}" class="tab" ${on ? 'aria-current="page"' : ""}>${IC[ic]}<span>${l}</span>${n ? `<i class="badge">${n}</i>` : ""}</a>`; }).join("");
@@ -50,7 +50,7 @@ const grow = (t) => { t.style.height = "auto"; t.style.height = Math.min(t.scrol
 function route() {
   const [, tab0, id] = location.hash.split("/");
   const tab = tab0 || (Object.keys(state.shows).length ? "today" : "chat");
-  state.ui.tab = ["chat", "today", "shows", "show", "me"].includes(tab) ? tab : "chat";
+  state.ui.tab = ["chat", "today", "shows", "show", "me", "timeline"].includes(tab) ? tab : "chat";
   state.ui.showId = tab === "show" ? id : null; state.ui.sheet = null; state.ui.confirmReset = false; state.ui.drawer = false;
   if (state.ui.tab === "chat") {
     state.ui.chatId = id !== "new" && state.chats[id] ? id : id !== "new" && state.chats[state.ui.chatId] ? state.ui.chatId : id !== "new" && chatsList()[0]?.id || freshChat().id;
@@ -182,6 +182,7 @@ function cheer(s) {
 /* ---------- actions: every data-act="…" in the views lands here ---------- */
 const A = {
   tab: (d) => go("#/" + d.t),
+  activeshow(d) { state.settings.activeShow = d.id; save(); render(); },
   say: (d) => send(d.t),
   /* The guided start */
   async goal(d) {

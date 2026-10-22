@@ -2,16 +2,24 @@
 import { state } from "../store.js";
 import { esc, IC } from "../lib.js";
 import { CHANNELS, FORMATS, KINDS, PHASES, copyOf } from "../../shared/model.js";
-import { fmtDate } from "../../shared/util.js";
+import { fmtDate, todayISO } from "../../shared/util.js";
+import { dueToday, tasks, taskRow } from "./today.js";
 import { APP_PLANS, STUDIO_PLANS, euro, priceText } from "../../shared/plans.js";
 import { buildPrompts, lookOf, fmtOf, afterOf, afterLine, VISUAL_KINDS, LOOK_POS, LOOK_FONT, LOOK_SIZE, LOOK_BG, LOOK_COLORS } from "../../shared/make.js";
 import { photoURL, FONT_CSS, SIZE_K, isLight } from "../photos.js";
 
 export function sheetHTML() {
   const sh = state.ui.sheet; if (!sh) return "";
-  const body = sh.k === "asset" ? assetSheet(sh) : sh.k === "export" ? exportSheet() : sh.k === "plans" ? plansSheet() : "";
+  const body = sh.k === "asset" ? assetSheet(sh) : sh.k === "export" ? exportSheet() : sh.k === "plans" ? plansSheet() : sh.k === "due" ? dueSheet() : "";
   if (!body) return "";
   return `<div class="scrim" data-act="closesheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(sh.k)}"><div class="grab"></div>${body}</div>`;
+}
+/* The bell: what's due now (late first), or what's next when you're all caught up. Real tasks only. */
+function dueSheet() {
+  const due = dueToday(); const t = todayISO(); const soon = tasks().filter(({ a }) => !a.done && a.date > t).slice(0, 3);
+  return `<header class="sheet-h"><div class="grow"><span class="kicker">${IC.bell} Reminders</span><h2>${due.length ? `${due.length} thing${due.length > 1 ? "s" : ""} to post` : "You're all caught up"}</h2></div><button class="icon-btn" data-act="closesheet" aria-label="Close">${IC.x}</button></header>
+    ${due.length ? `<div class="card list">${due.map(taskRow).join("")}</div>` : ""}
+    ${soon.length ? `<span class="kicker">Coming up</span><div class="card list">${soon.map(taskRow).join("")}</div>` : due.length ? "" : `<p class="muted">Nothing is scheduled. Start a Show and its posts show up here on the day.</p>`}`;
 }
 export const findAsset = (sid, aid) => { const s = state.shows[sid]; return { s, a: s?.assets.find(x => x.id === aid) }; };
 

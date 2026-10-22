@@ -4,6 +4,7 @@ import { esc, IC } from "../lib.js";
 import { SHOWRUNNERS, SR_KEYS } from "../../shared/showrunners.js";
 import { planOf, priceText } from "../../shared/plans.js";
 import { aiMode } from "../ai.js";
+import { appHead } from "./today.js";
 
 export const PROFILE_FIELDS = [
   ["business", "Business name", "e.g. Saunaravintola Löyly", 1],
@@ -20,7 +21,8 @@ export const PROFILE_FIELDS = [
 export function meView() {
   const p = state.profile; const plan = planOf(state.settings.plan); const mode = aiMode();
   return `<section class="page">
-    <header class="page-h"><button class="icon-btn" data-act="tab" data-t="today" aria-label="Back">${IC.back}</button><div class="grow"><span class="eyebrow">Your business and settings</span><h1>Me</h1></div><span class="wordmark">webshow<b>.ai</b></span></header>
+    ${appHead("Profile")}
+    <div class="title-row"><div><h1 class="big-t">${esc(p.business || "Your business")}</h1><span class="muted small">What your Showrunner knows, your plan and settings</span></div></div>
     <h2 class="sec">Favourite Showrunner</h2>
     <p class="muted small">Your favourite runs new ideas and gives the daily tips. You can switch on any idea, too.</p>
     <div class="srs">${SR_KEYS.map(k => `<button class="sr-pick" data-act="setstyle" data-k="${k}" aria-pressed="${p.showrunner === k}"><span class="sr-av sm">${IC[SHOWRUNNERS[k].icon]}</span><b>${SHOWRUNNERS[k].role}</b><span>${esc(SHOWRUNNERS[k].blurb)} <em class="muted">${SHOWRUNNERS[k].name} style</em></span></button>`).join("")}</div>
