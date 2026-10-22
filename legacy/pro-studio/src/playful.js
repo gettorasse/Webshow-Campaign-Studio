@@ -50,12 +50,12 @@ const PL_LIFE = { draft: "Draft show", scheduled: "Starting soon", live: "Active
 S.pl = S.pl || { len: null, start: null, detail: false };
 TL_ZOOM.pl = [28, 30];
 
-function plHero() {
+function plHero(mini = false) {
   const s = cur(); const d = dnaOf(); const k = artOf(s); const A = PL_ART[k]; const life = lifeOf(); const pr = progressOf(); const t = todayIx();
   const ds = dayIx(d.start), de = dayIx(d.end); const eps = epList(); const out = eps.filter(n => ["posted", "running", "live", "ended"].includes(deliveryOf(n).k)).length;
   const day = ds == null ? "No dates yet" : t < ds ? `Starts ${fmtDay(ds, { weekday: "short", day: "numeric", month: "short" })}` : de != null && t > de ? "Show ended" : `Day ${t - ds + 1}${de != null ? ` of ${de - ds + 1}` : ""}`;
   const tab = (v, ic, l, on, act = "view") => `<button data-act="${act}" ${act === "view" ? `data-v="${v}"` : ""} aria-current="${on}">${ICON[ic]}${l}</button>`;
-  return `<section class="pl-hero" style="--pbg:${A.bg};--pink:${A.ink}">
+  return `<section class="pl-hero${mini ? " mini" : ""}" style="--pbg:${A.bg};--pink:${A.ink}">
     <div class="pl-hero-t"><span class="pl-pill">${esc(PL_LIFE[life] || "Show")}</span>
       <h1>${esc(s.name)}</h1><p>${esc(d.idea || d.offer || "Give this show its one big idea in Plan.")}</p>
       <div class="pl-stats"><span>${ICON.cal}<b>${esc(day)}</b>${ds != null ? `<small>${fmtDay(ds)} – ${de != null ? fmtDay(de) : "open"}</small>` : ""}</span>
@@ -63,7 +63,7 @@ function plHero() {
         <span>${ICON.share}<b>${out} of ${eps.length}</b><small>episodes out</small></span></div></div>
     <div class="pl-hero-art">${PL_DOODLES}<img src="../art/${k}.webp" alt="" draggable="false"></div>
   </section>
-  <nav class="pl-tabs" aria-label="Show">${tab("timeline", "timeline", "Timeline", S.view === "timeline")}${tab("canvas", "nodes", "Build", false)}${tab("assets", "image", "Assets", false)}${tab("live", "trophy", "Results", false)}${tab("plan", "target", "Plan", false)}${tab("", "sliders", "Settings", false, "settings")}</nav>`;
+  <nav class="pl-tabs" aria-label="Show">${tab("timeline", "timeline", "Timeline", S.view === "timeline")}${tab("canvas", "nodes", "Build", false)}${tab("assets", "image", "Assets", S.view === "assets")}${tab("live", "trophy", "Results", S.view === "live")}${tab("plan", "target", "Plan", S.view === "plan")}${tab("", "sliders", "Settings", false, "settings")}</nav>`;
 }
 
 /* the visible window: the whole show when it fits, otherwise 2 or 6 weeks around today */
@@ -200,3 +200,77 @@ function plGreeting() {
   const when = ds == null ? "It has no dates yet." : t < ds ? `It starts ${fmtDay(ds, { weekday: "long", day: "numeric", month: "short" })}.` : de != null && t > de ? "It has ended." : `It's day ${t - ds + 1}${de != null ? ` of ${de - ds + 1}` : ""}.`;
   return `${s.name}: ${when} ${eps.length ? `${out} of ${eps.length} episodes are out, ${next} still to come.` : "No episodes yet."}`;
 }
+
+/* ---------- canvas: the node look of the reference (white cards, colour tiles, coloured ports) ---------- */
+ICON.dots = ICON.dots || `<svg class="icon" viewBox="0 0 16 16" style="fill:currentColor;stroke:none"><circle cx="8" cy="3.4" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="12.6" r="1.4"/></svg>`;
+const PL_NODE_C = { brief: "#5b6cff", text: "#8b5cf6", image: "#ff7a3d", style: "#22b07d", palette: "#22b07d", page: "#7c5cf0", popup: "#ec4899", carousel: "#f59e0b", ad: "#f59e0b", publish: "#3b82f6", quiz: "#14b8a6", poll: "#14b8a6", metaad: "#6366f1", chatbot: "#3b82f6", scheduler: "#22c55e", social: "#ec4899", adchannel: "#f97316", cookie: "#d97706", link: "#8b5cf6" };
+Object.entries(PL_NODE_C).forEach(([k, c]) => { if (NT[k]) NT[k].color = c; });
+{ const _nh = nodeHTML; nodeHTML = function (n) {
+  const d = NT[n.type]; const h = _nh(n); if (!d) return h;
+  return h.replace(/<div class="nh" data-drag="1"><span class="nico"([^>]*)>([\s\S]*?)<\/span><span class="ty">[\s\S]*?<\/span>([\s\S]*?)<\/div>\s*<div class="nt" data-drag="1">([\s\S]*?)<\/div>/,
+    (m, at, ic, status, title) => `<div class="nh pl-nh" data-drag="1"><span class="nico"${at}>${ic}</span><span class="pl-nhd"><b>${title}</b><small>${esc(d.label)}</small></span><button class="pl-kebab" data-act="nodemenu" data-id="${n.id}" aria-label="Edit ${esc(n.title)}" title="Edit">${ICON.dots}</button></div>${status.trim() ? `<div class="pl-nst">${status}</div>` : ""}`);
+}; }
+A.nodemenu = (b) => selectNode(b.dataset.id, "settings");
+
+/* ---------- ready-made concept images: joyful, colourful, with a friendly face now and then ---------- */
+const JOY = ["#ff8a3d", "#ff6aa2", "#ffc94d", "#7c5cf0", "#3fd0b5", "#5b8cff", "#ff5e5e", "#8fd14f"];
+const JOY_BG = ["#FFF0C8", "#DCE6FF", "#EDDDF9", "#DEF2E4", "#FFE0D3", "#FCE3EE", "#D9F5EE"];
+visualURL = function (item, pal, fontKey = "grotesk", scale = 1) {
+  const key = ["joy", item.id, item.motif, item.seed, item.overlay, item.aspect, (pal || []).join(), fontKey, scale].join("|");
+  if (VCACHE.has(key)) return VCACHE.get(key);
+  const [W0, H0] = ASPECT[item.aspect] || ASPECT["16:9"]; const W = Math.round(W0 * scale), H = Math.round(H0 * scale);
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const R = rng(item.id + item.motif + item.seed); const M = Math.min(W, H); const ink = "#17171f";
+  const pick = (a) => a[Math.floor(R() * a.length)];
+  const pop = pal && isHex(pal[4] || "") && lum(pal[4]) > .25 && lum(pal[4]) < .85 ? pal[4] : pick(JOY);
+  const cols = [...JOY].sort(() => R() - .5); cols.splice(2, 0, pop);
+  const bg = pick(JOY_BG); const g0 = x.createLinearGradient(0, 0, W, H); g0.addColorStop(0, bg); g0.addColorStop(1, pick(JOY_BG)); x.fillStyle = g0; x.fillRect(0, 0, W, H);
+  const lw = Math.max(2, M * .014); x.lineCap = "round"; x.lineJoin = "round";
+  const blob = (cx, cy, r, col, pts = 8, wob = .22) => { x.fillStyle = col; x.beginPath(); const k = []; for (let i = 0; i < pts; i++) k.push(r * (1 - wob / 2 + R() * wob)); for (let i = 0; i <= pts; i++) { const a = i / pts * Math.PI * 2, rr = k[i % pts]; const px = cx + Math.cos(a) * rr, py = cy + Math.sin(a) * rr; if (!i) x.moveTo(px, py); else { const a0 = (i - .5) / pts * Math.PI * 2; x.quadraticCurveTo(cx + Math.cos(a0) * rr * 1.12, cy + Math.sin(a0) * rr * 1.12, px, py); } } x.fill(); };
+  const star = (cx, cy, r, col, n = 9, inner = .62) => { x.fillStyle = col; x.beginPath(); for (let i = 0; i <= n * 2; i++) { const a = i / (n * 2) * Math.PI * 2 - Math.PI / 2; const rr = i % 2 ? r * inner : r; const px = cx + Math.cos(a) * rr, py = cy + Math.sin(a) * rr; i ? x.lineTo(px, py) : x.moveTo(px, py); } x.closePath(); x.fill(); };
+  const face = (cx, cy, s) => { x.strokeStyle = ink; x.lineWidth = s * .09; x.beginPath(); x.arc(cx - s * .32, cy, s * .16, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); x.beginPath(); x.arc(cx + s * .32, cy, s * .16, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); x.beginPath(); x.arc(cx, cy + s * .12, s * .2, Math.PI * .15, Math.PI * .85); x.stroke(); };
+  const rays = (cx, cy, r) => { x.strokeStyle = ink; x.lineWidth = lw; for (let i = 0; i < 5; i++) { const a = -Math.PI * .85 + i * .38 + R() * .1; x.beginPath(); x.moveTo(cx + Math.cos(a) * r * 1.15, cy + Math.sin(a) * r * 1.15); x.lineTo(cx + Math.cos(a) * r * 1.38, cy + Math.sin(a) * r * 1.38); x.stroke(); } };
+  const squiggle = (sx, sy, len, col = ink) => { x.strokeStyle = col; x.lineWidth = lw; x.beginPath(); x.moveTo(sx, sy); for (let i = 1; i <= 4; i++) x.quadraticCurveTo(sx + len * (i - .5) / 4, sy + (i % 2 ? -1 : 1) * len * .14, sx + len * i / 4, sy); x.stroke(); };
+  const sparkle = (cx, cy, r, col) => { x.fillStyle = col; x.beginPath(); x.moveTo(cx, cy - r); x.quadraticCurveTo(cx, cy, cx + r, cy); x.quadraticCurveTo(cx, cy, cx, cy + r); x.quadraticCurveTo(cx, cy, cx - r, cy); x.quadraticCurveTo(cx, cy, cx, cy - r); x.fill(); };
+  const confetti = (n) => { for (let i = 0; i < n; i++) { const px = R() * W, py = R() * H, s = M * (.012 + R() * .02); x.fillStyle = pick(cols); x.save(); x.translate(px, py); x.rotate(R() * 3); R() > .5 ? x.fillRect(-s, -s / 2, s * 2.4, s) : (x.beginPath(), x.arc(0, 0, s * .8, 0, 7), x.fill()); x.restore(); } };
+  switch (item.motif) {
+    case "spotlight": case "blob": { /* a friendly character, like the Show mascots */
+      const cx = W * (.5 + (R() - .5) * .2), cy = H * .52, r = M * .3;
+      blob(W * .18, H * .82, M * .2, cols[3], 7, .3); blob(W * .86, H * .2, M * .16, cols[4], 7, .3);
+      item.motif === "spotlight" ? star(cx, cy, r, cols[0], 9 + Math.floor(R() * 3), .66) : blob(cx, cy, r, cols[0], 9, .18);
+      face(cx, cy + r * .05, r * .55); rays(cx, cy, r); squiggle(W * .08, H * .16, M * .22); sparkle(W * .82, H * .76, M * .05, cols[1]); confetti(10); break; }
+    case "orbs": for (let i = 0; i < 7; i++) { x.globalAlpha = .92; blob(R() * W, R() * H, M * (.12 + R() * .2), cols[i % cols.length], 8, .2); } x.globalAlpha = 1; confetti(16); sparkle(W * .5, H * .5, M * .07, "#fff"); break;
+    case "arcs": { const cx = W * (.35 + R() * .3), cy = H * 1.02; for (let i = 7; i > 0; i--) { x.fillStyle = i === 1 ? bg : cols[i % cols.length]; x.beginPath(); x.arc(cx, cy, M * .12 * i, Math.PI, 0); x.fill(); } blob(W * .82, H * .25, M * .12, "#fff", 7, .3); blob(W * .7, H * .28, M * .09, "#fff", 7, .3); confetti(8); break; }
+    case "horizon": {
+      const sx = W * (.3 + R() * .4), sy = H * .38, sr = M * .17; star(sx, sy, sr * 1.25, "#ffc94d", 12, .78); x.fillStyle = "#ffb020"; x.beginPath(); x.arc(sx, sy, sr, 0, 7); x.fill(); face(sx, sy, sr * .9);
+      [[.66, "#8fd14f"], [.76, "#3fd0b5"], [.88, "#2bb39a"]].forEach(([y, col]) => { x.fillStyle = col; x.beginPath(); x.moveTo(0, H); x.lineTo(0, H * y); const n = 3; for (let i = 1; i <= n; i++) x.quadraticCurveTo(W * (i - .5) / n, H * (y - .08 - R() * .06), W * i / n, H * y); x.lineTo(W, H); x.fill(); });
+      squiggle(W * .7, H * .16, M * .2); sparkle(W * .12, H * .2, M * .045, cols[1]); break; }
+    case "stripes": { x.save(); x.translate(W / 2, H / 2); x.rotate(-.5); const bw = M * .09; for (let i = -30; i < 30; i++) { x.fillStyle = i % 2 ? cols[(i + 60) % cols.length] : "#ffffff"; x.fillRect(i * bw, -M * 2, bw, M * 4); } x.restore(); blob(W * .5, H * .5, M * .22, "#fff", 9, .15); star(W * .5, H * .5, M * .14, cols[0], 8, .6); break; }
+    case "grid": { const n = 4, cw = W / n, ch = H / Math.max(2, Math.round(n * H / W)); for (let i = 0; i < n; i++) for (let j = 0; j * ch < H; j++) { const col = pick(cols); const r = R(); x.fillStyle = col; const X0 = i * cw, Y0 = j * ch, s = Math.min(cw, ch);
+        if (r < .3) { x.beginPath(); x.arc(X0 + cw / 2, Y0 + ch / 2, s * .4, 0, 7); x.fill(); } else if (r < .55) { x.beginPath(); x.arc(X0 + cw / 2, Y0 + ch, s * .45, Math.PI, 0); x.fill(); } else if (r < .75) star(X0 + cw / 2, Y0 + ch / 2, s * .38, col, 6, .55); else { x.beginPath(); x.roundRect(X0 + s * .14, Y0 + s * .14, cw - s * .28, ch - s * .28, s * .18); x.fill(); } }
+      break; }
+    default: confetti(40); for (let i = 0; i < 5; i++) sparkle(R() * W, R() * H, M * (.03 + R() * .04), pick(cols)); squiggle(W * .2, H * .5, M * .3); squiggle(W * .55, H * .3, M * .25, cols[0]);
+  }
+  if (item.overlay) {
+    const fp = FONT_PAIRS[fontKey] || FONT_PAIRS.pixel; const fs = Math.round(M * .11);
+    x.font = `${fp.w || 800} ${fs}px ${fp.head}`; x.textBaseline = "alphabetic";
+    const words = item.overlay.toUpperCase().split(/\s+/); const lines = []; let line = "";
+    words.forEach(w => { const t = line ? line + " " + w : w; if (x.measureText(t).width > W * .8 && line) { lines.push(line); line = w; } else line = t; }); lines.push(line);
+    const pad = M * .07; let y = H - pad - (lines.length - 1) * fs * .98;
+    x.fillStyle = "rgba(255,255,255,.88)"; const tw = Math.max(...lines.map(l => x.measureText(l).width)); x.beginPath(); x.roundRect(pad * .6, y - fs * 1.05, tw + pad * .8, (lines.length) * fs * .98 + fs * .35, fs * .3); x.fill();
+    x.fillStyle = ink; lines.forEach(l => { x.fillText(l, pad, y); y += fs * .98; });
+  }
+  const url = c.toDataURL("image/jpeg", .88); VCACHE.set(key, url); return url;
+};
+/* the canvas outline duplicates the Showrunner panel; with the panel open the canvas gets the room */
+{ const _cv = canvasView; canvasView = () => { const h = _cv(); return S.srOpen && !S.nodes[S.sel] && innerWidth > 760 ? h.replace(/<aside class="insp" id="insp"><\/aside>/, "") : h; }; }
+{ const _sel = selectNode; selectNode = function (id, tab) { _sel(id, tab); if (S.view === "canvas" && !$("#insp")) render(); else mountSRP(); }; }
+{ const _ds = A.desel; A.desel = function () { _ds(); if (S.view === "canvas" && S.srOpen) render(); }; }
+
+/* every Show page starts with the same pastel header and tabs (smaller than on the timeline) */
+{ const _vb = viewBody; viewBody = function () {
+  const h = _vb(); if (!cur() || innerWidth <= 760 || !["assets", "live", "plan", "needs"].includes(S.view)) return h;
+  return h.replace(/<div class="home-in[^"]*"[^>]*>/, (m) => m + plHero(true));
+}; }
+/* wires stay visible in their colours (dimmer when another node is in focus) */
+{ const _dw2 = drawWires; drawWires = function (ghost) { _dw2(ghost); $$("#wires path[data-edge]:not(.hit)").forEach(p => { if (+p.style.opacity < .2) p.style.opacity = S.sel ? .25 : .55; }); }; }

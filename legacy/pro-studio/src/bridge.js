@@ -63,8 +63,10 @@ if (innerWidth >= 1280 && S.srOpen === undefined) S.srOpen = true;
 { const _r = render; render = function () { _r(); mountSRP(); }; }
 function mountSRP() {
   const main = $(".main"); if (!main) return;
-  main.classList.toggle("has-srp", !!(S.srOpen && cur() && !["home", "connectors"].includes(S.view)));
-  if (!S.srOpen || !cur() || ["home", "connectors"].includes(S.view)) { BR.el?.remove(); return; }
+  /* on the canvas one right-hand panel at a time: a selected node's inspector takes the Showrunner's place */
+  const on = !!(S.srOpen && cur() && !["home", "connectors"].includes(S.view) && !(S.view === "canvas" && S.nodes[S.sel]));
+  main.classList.toggle("has-srp", on);
+  if (!on) { BR.el?.remove(); return; }
   /* keep the same panel element across the studio's full re-renders (focus, scroll and clicks survive) */
   if (!BR.el) { BR.el = document.createElement("aside"); BR.el.id = "srp"; BR.el.className = "srp"; }
   if (BR.el.parentNode !== main) main.append(BR.el);

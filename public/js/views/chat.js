@@ -41,7 +41,7 @@ export function drawerHTML() {
   const chats = chatsList(); const shows = Object.values(state.shows).sort((a, b) => b.createdAt - a.createdAt);
   const row = (c) => `<div class="dr-row${c.id === state.ui.chatId ? " on" : ""}"><button class="dr-b" data-act="openchat" data-id="${c.id}"><span class="sr-av xs">${IC[srOf(c.showrunner).icon]}</span><span class="grow"><b>${esc(c.title || "New chat")}</b><small>${srOf(c.showrunner).role} · ${fmtDate(new Date(c.updatedAt).toISOString().slice(0, 10))}</small></span></button><button class="icon-btn sm" data-act="delchat" data-id="${c.id}" aria-label="Delete chat">${IC.trash}</button></div>`;
   return `<div class="dr-scrim" data-act="drawer"></div><nav class="drawer" aria-label="Chats">
-    <div class="dr-h"><span class="wordmark">webshow<b>.ai</b></span><button class="icon-btn" data-act="drawer" aria-label="Close">${IC.x}</button></div>
+    <div class="dr-h"><span class="logo-row"><img class="logo" src="art/logo-sm.png" alt=""><b>Webshow Play</b></span><button class="icon-btn" data-act="drawer" aria-label="Close">${IC.x}</button></div>
     <button class="btn go dr-new" data-act="newchat">${IC.plus} New chat</button>
     <h3 class="sec">Chats</h3>
     ${chats.length ? chats.map(row).join("") : `<p class="muted small">No chats yet.</p>`}
@@ -129,7 +129,7 @@ export function stageHTML() {
   const label3 = b.total ? `${b.done} of ${b.total} posts written` : "Writing your posts";
   return `<div class="stage-ov" role="status" aria-live="polite" aria-label="Building your Show">
     <div class="st-in">
-      <div class="st-poster s${b.stage}">${posterHTML(x)}<div class="st-cards">${["hook", "show", "convert"].map((k, i) => `<span class="st-card" style="--i:${i}">${["Hook", "Show", "Convert"][i]}</span>`).join("")}</div></div>
+      <div class="st-poster s${b.stage}">${posterHTML({ ...x, art: show?.art || x.art })}<div class="st-cards">${["hook", "show", "convert"].map((k, i) => `<span class="st-card" style="--i:${i}">${["Hook", "Show", "Convert"][i]}</span>`).join("")}</div></div>
       <ol class="st-steps">${STEPS.map(([t, d], i) => { const n = i + 1; const st = b.stage > n ? "ok" : b.stage === n ? "on" : ""; return `<li class="${st}"><span class="b">${st === "ok" ? IC.check : st === "on" ? `<i class="spin"></i>` : ""}</span><span><b>${t}</b><small>${n === 3 ? (b.stage >= 3 ? label3 : "") : d}</small></span></li>`; }).join("")}</ol>
       <p class="muted small st-by">${mascot("think", r.icon)} ${esc(r.role)} is running this production</p>
     </div></div>`;
