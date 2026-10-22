@@ -296,7 +296,7 @@ paintLanes = function () { const b = $("#lanes"); if (b) b.innerHTML = ""; };
 { const _an = addNode; addNode = function (type, x, y, extra = {}) {
   const src = S.lib?.wireFrom && S.nodes[S.lib.wireFrom.node];
   const n = _an(type, x, y, extra);
-  if ((EP_TYPES.has(type) || type === "image") && !n.lane) {
+  if ((EP_TYPES.has(type) || type === "image") && !extra.lane) { /* decided here, not from where the card happens to land */
     const fx = Object.entries(LANE_X).find(([, v]) => v === Math.round(x))?.[0];
     const sl = src && ["hook", "show", "convert"].includes(laneOf(src)) ? laneOf(src) : null;
     n.lane = fx && (type === "image" || fx !== "kit") ? fx : type === "image" ? (sl || "kit") : (sl || "hook");
