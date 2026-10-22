@@ -1,6 +1,6 @@
 /* Webshow – the phone app. One state object (store.js), one render(), one action table.
    Screens: Chat (default) · Today · Shows · Me. Sheets slide up from the bottom. */
-import { state, load, save, resetAll, exportAll, chatsList, showChatOf, hasPro } from "./store.js";
+import { state, load, save, resetAll, exportAll, chatsList, showChatOf } from "./store.js";
 import { $, IC, toast, copyText, copyNow, mascot, esc } from "./lib.js";
 import { ask, initAI, errText, aiMode } from "./ai.js";
 import { normChat, normShowChat } from "../shared/prompts.js";
@@ -10,13 +10,15 @@ import { clip, uid, todayISO, isISO } from "../shared/util.js";
 import { offlineChat, offlineShowChat, guessGoal } from "./offline.js";
 import { rewriteAsset, moveAsset, showsList, showEnd, applyChange, makeConcept, createShowFromConcept, checkMilestones, MILESTONES, setOutcome, retryFailed, writeAssets } from "./campaign.js";
 import { showMD, showCSV, showICS, showJSON, fileBase, saveFile } from "./export.js";
-import { chatView, drawerHTML, currentChat } from "./views/chat.js";
+import { chatView, drawerHTML, currentChat, stageHTML } from "./views/chat.js";
 import { todayView, dueToday } from "./views/today.js";
 import { showsView, showView } from "./views/shows.js";
 import { meView } from "./views/me.js";
 import { sheetHTML, findAsset, previewHTML, promptsHTML } from "./views/sheets.js";
 import { buildPrompts, chatPostPrompt, afterOf, afterLine } from "../shared/make.js";
 import { loadPhoto, savePhoto, removePhoto, renderPost, clearPhotos } from "./photos.js";
+import { proShow } from "./pro.js";
+import { newShowChat } from "../shared/bridge.js";
 import { slug } from "../shared/util.js";
 
 const TABS = [["today", "Home", "home"], ["chat", "Create", "spark"], ["shows", "Shows", "layers"]];
@@ -27,17 +29,18 @@ export function render() {
   const route = state.ui.tab + (state.ui.showId || "") + (state.ui.tab === "chat" ? state.ui.chatId : "");
   const view = $("#view"); const keep = route === lastRoute ? view.scrollTop : 0; const draft = $("#msg")?.value || "";
   const tab = state.ui.tab;
-  view.innerHTML = tab === "chat" ? chatView() : tab === "today" ? todayView() : tab === "show" ? showView(state.shows[state.ui.showId]) : tab === "me" ? meView() : showsView();
+  view.innerHTML = tab === "chat" ? chatView() : tab === "today" ? todayView() : tab === "show" ? showView(state.shows[state.ui.showId], state.ui.showId) : tab === "me" ? meView() : showsView();
   view.dataset.tab = tab;
   $("#tabs").innerHTML = TABS.map(([k, l, ic]) => { const on = k === tab || (k === "shows" && tab === "show"); const n = k === "today" ? dueToday().length : 0;
     return `<a href="#/${k}" class="tab" ${on ? 'aria-current="page"' : ""}>${IC[ic]}<span>${l}</span>${n ? `<i class="badge">${n}</i>` : ""}</a>`; }).join("");
-  renderSheet(); $("#drawer").innerHTML = drawerHTML();
+  renderSheet(); $("#drawer").innerHTML = drawerHTML(); renderStage();
   if (tab === "chat") { const m = $("#msg"); if (m) { m.value = draft; grow(m); } const box = $("#msgs"); view.scrollTop = 0; if (box) box.scrollTop = box.scrollHeight; }
   else view.scrollTop = keep;
   lastRoute = route;
   /* the newest answer animates in once, not on every repaint */
   const f = state.ui.fresh; if (f) setTimeout(() => { if (state.ui.fresh === f) state.ui.fresh = null; }, 900);
 }
+function renderStage() { const el = $("#stage"); if (el) el.innerHTML = stageHTML(); }
 function renderSheet() { const el = $("#sheet"); const keep = el.querySelector(".sheet")?.scrollTop || 0; el.innerHTML = sheetHTML(); el.querySelectorAll("textarea").forEach(fit); const s = el.querySelector(".sheet"); if (s) s.scrollTop = keep; document.body.classList.toggle("locked", !!state.ui.sheet); }
 const fit = (t) => { if (!CSS.supports("field-sizing", "content")) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; } };
 const grow = (t) => { t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; };
@@ -89,7 +92,7 @@ async function nextFlow(chat) {
   if (!p.what) { f.step = "what"; await say(chat, "Love it. What's the business? One sentence is plenty."); return true; }
   if (f.offer === undefined) { f.step = "offer"; await say(chat, OFFER_Q[f.goal] || OFFER_Q.leads, [{ type: "question", q: "", options: ["You pick", ...(p.offer ? [clip(p.offer, 40)] : [])] }]); return true; }
   chat.flow = null;
-  const sr = chat.showrunner || p.showrunner || SR_FOR_GOAL[f.goal] || "ogilvy"; chat.showrunner = sr;
+  const sr = chat.showrunner || SR_FOR_GOAL[f.goal] || "ogilvy"; chat.showrunner = sr; /* picked at the start, or the best fit for the goal */
   await genConcept(chat, { goal: f.goal, what: [p.business, p.what].filter(Boolean).join(" – "), offer: f.offer, note: f.note && f.note !== GOAL_LABEL[f.goal] ? f.note : "" }, sr);
   return true;
 }
@@ -107,12 +110,13 @@ async function genConcept(chat, seed, sr) {
   state.ui.busy = false; render();
 }
 /* A show's own chat, made the first time it's opened. */
+/* The Show's own Showrunner conversation: one per Show, shared with Webshow Pro. */
 function openShowChat(showId) {
-  const s = state.shows[showId]; if (!s) return;
+  const s = state.shows[showId]; const ps = s ? null : proShow(showId); if (!s && !ps) return;
   let c = showChatOf(showId);
-  if (!c) { c = newChat(s.showrunner || state.profile.showrunner || "ogilvy", showId); c.title = s.strategy?.name || "Show";
-    push(c, "sr", `Let's talk about “${s.strategy?.name || "this show"}”. Ask me to change the tone, move dates or rework the idea. I'll show you every change before anything happens.`, [{ type: "question", q: "Where do we start?", options: ["What's next?", "Make the posts shorter", "Move everything a week later"] }]); }
-  go("#/chat/" + c.id);
+  if (!c) { c = newShowChat(showId, s ? s.strategy?.name : ps.name, s ? s.showrunner : ps.showrunner); state.chats[c.id] = c;
+    c.messages[0].cards = [{ type: "question", q: "Where do we start?", options: ["What's next?", "Make the posts shorter", "Move everything a week later"] }]; save(); }
+  state.settings.activeShow = showId; go("#/chat/" + c.id);
 }
 const showSummary = (s) => { const next = s.assets.filter(a => !a.done && !a.pending).sort((x, y) => x.date.localeCompare(y.date))[0];
   return { name: s.strategy?.name, idea: s.strategy?.idea, start: s.brief.start, end: showEnd(s), done: s.assets.filter(a => a.done).length, total: s.assets.length, next: next ? `${KINDS[next.kind].label} on ${next.date}` : "" }; };
@@ -131,6 +135,7 @@ async function send(text) {
   text = String(text || "").trim(); if (!text || state.ui.busy) return;
   const chat = currentChat(); if (!chat) return go("#/chat/new");
   const show = chat.showId ? state.shows[chat.showId] : null;
+  const proSlim = !show && chat.showId ? proShow(chat.showId)?.slim : null; /* a Show made in Webshow Pro */
   if (!chat.title && !chat.flow) chat.title = clip(text, 42);
   if (chat.flow?.step) { push(chat, "user", text); render(); if (await flowStep(chat, text)) return; }
   else push(chat, "user", text);
@@ -142,11 +147,11 @@ async function send(text) {
   const t0 = Date.now(); let r;
   const msgs = chat.messages.slice(-14).map(forAI);
   try {
-    r = show ? normShowChat(await ask("showchat", { profile: prof, show: slimShow(show), messages: msgs, today: todayISO() }), show)
+    r = show || proSlim ? normShowChat(await ask("showchat", { profile: prof, show: show ? slimShow(show) : proSlim, messages: msgs, today: todayISO() }), show || proSlim)
       : normChat(await ask("chat", { profile: prof, messages: msgs, shows: showsList().slice(0, 5).map(showSummary), today: todayISO() }));
   } catch (e) {
     if (e?.code !== "offline") { await pause(t0, 700); push(chat, "sr", "", [{ type: "error", text: errText(e), retry: { kind: "chat", text } }]); state.ui.busy = false; return render(); }
-    r = show ? offlineShowChat({ show, messages: chat.messages }) : offlineChat({ profile: prof, messages: chat.messages });
+    r = show || proSlim ? offlineShowChat({ show: show || proSlim, messages: chat.messages }) : offlineChat({ profile: prof, messages: chat.messages });
   }
   const cards = [...r.cards];
   const fresh = r.remember.filter(x => !p.memory.some(m => m.text.toLowerCase() === x.toLowerCase()));
@@ -182,15 +187,25 @@ const A = {
     const chat = currentChat(); if (!chat || state.ui.busy) return; chat.flow = { ...(chat.flow || {}), step: "goal", goal: d.k };
     push(chat, "user", GOAL_LABEL[d.k] || GOALS[d.k]?.label); render(); await nextFlow(chat);
   },
+  pickrunner(d) { const chat = currentChat(); if (!chat) return; chat.showrunner = d.k; if (d.k) state.profile.showrunner = d.k; save(); render(); },
   makeit(d) { const c = cardOf(d); if (c) { c.state = "pace"; save(); render(); } },
+  /* Approved: build the Show behind a short, real "production" reveal (no fake percentages). */
   async pace(d) {
     const c = cardOf(d); const { chat } = msgOf(d); if (!c || c.state === "approved") return;
-    c.state = "approved"; save(); let first = true;
-    const show = await createShowFromConcept(c.concept, d.v, c.showrunner, (s) => { c.showId = s.id; if (first) { first = false; state.ui.showTab = "journey"; state.ui.stage = null; go("#/show/" + s.id); } else render(); });
+    c.state = "approved"; save(); const t0 = Date.now();
+    state.ui.build = { concept: c.concept, sr: c.showrunner, stage: 2, done: 0, total: 0 }; renderStage(); /* the idea is already approved: step 1 is done */
+    const show = await createShowFromConcept(c.concept, d.v, c.showrunner, (s) => {
+      c.showId = s.id; const b = state.ui.build; if (!b) return;
+      b.showId = s.id; b.total = s.assets.length; b.done = s.assets.filter(a => !a.pending).length;
+      if (Date.now() - t0 > 700) b.stage = Math.max(b.stage, 3); renderStage();
+    });
+    await pause(t0, 2400);
+    const b = state.ui.build; if (b) { b.stage = 4; b.showId = show.id; b.status = show.status; renderStage(); }
     const n = show.assets.filter(a => a.source !== "failed").length;
     push(chat, "sr", show.status === "partial" ? `“${show.strategy.name}” is set up, but some posts didn't get written. Open the show and tap Try again.` : `“${show.strategy.name}” is ready: ${n} posts at a ${PACES[d.v].label.toLowerCase()} pace. First mission: make your first post.`, [{ type: "open", showId: show.id, name: show.strategy.name }]);
-    render();
+    state.settings.activeShow = show.id; save();
   },
+  enterShow() { const id = state.ui.build?.showId; state.ui.build = null; renderStage(); if (id) { state.ui.showTab = "journey"; state.ui.stage = null; go("#/show/" + id); } },
   another(d) { const c = cardOf(d); const { chat } = msgOf(d); if (!c || state.ui.busy) return; c.state = "replaced"; genConcept(chat, { ...c.seed, avoid: [...(c.seed.avoid || []), c.concept.name] }, c.showrunner); },
   restyle(d) { const c = cardOf(d); const { chat } = msgOf(d); if (!c || state.ui.busy) return; c.state = "replaced"; chat.showrunner = d.k; genConcept(chat, { ...c.seed, avoid: [...(c.seed.avoid || []), c.concept.name] }, d.k); },
   tweak(d) { const { chat } = msgOf(d); if (!chat) return; chat.flow = { step: "tweak", m: d.m, c: d.c }; render(); $("#msg")?.focus(); },
@@ -230,7 +245,7 @@ const A = {
     const c = cardOf(d); const { chat } = msgOf(d); if (!c || c.asked || state.ui.busy) return; c.asked = true; save();
     const p = state.profile; genConcept(chat, { goal: c.goal, what: [p.business, p.what].filter(Boolean).join(" – "), offer: c.offer || c.idea, note: `Build on this direction: ${c.name} – ${c.idea}` }, chat.showrunner || p.showrunner || SR_FOR_GOAL[c.goal]);
   },
-  openshow: (d) => { state.ui.showTab = "journey"; state.ui.stage = null; go("#/show/" + d.id); },
+  openshow: (d) => { state.ui.showTab = "journey"; state.ui.stage = null; state.settings.activeShow = d.id; save(); go("#/show/" + d.id); },
   copypost: (d) => { const c = cardOf(d); copyText([c.hook, c.text, c.cta].filter(Boolean).join("\n\n"), "Post copied"); },
   gptpost: (d) => toGPT(chatPostPrompt(cardOf(d), state.profile)),
   openme: () => go("#/me"),
@@ -269,8 +284,7 @@ const A = {
     ({ md: () => saveFile(n + ".md", showMD(s), "text/markdown"), ics: () => saveFile(n + ".ics", showICS(s), "text/calendar"), csv: () => saveFile(n + ".csv", showCSV(s), "text/csv"), json: () => saveFile(n + ".campaign.json", showJSON(s), "application/json") })[d.k]();
   },
   setplan(d) {
-    state.settings.plan = d.k; save(); document.documentElement.dataset.pro = hasPro() ? "yes" : "no"; renderSheet(); render();
-    toast(hasPro() && matchMedia("(min-width: 1024px) and (pointer: fine)").matches ? "Plan changed (demo). Webshow Pro is now yours on this computer." : "Plan changed (demo, no payment)");
+    state.settings.plan = d.k; save(); renderSheet(); render(); toast("Plan changed (demo, no payment)");
   },
   theme(d) { state.settings.theme = d.v; save(); applyTheme(); render(); },
   async nudges() {
@@ -325,6 +339,8 @@ function wire() {
     if (e.key === "Escape" && state.ui.sheet) A.closesheet(); else if (e.key === "Escape" && state.ui.drawer) A.drawer();
   });
   window.addEventListener("hashchange", route);
+  /* Webshow Pro (another tab) wrote to the shared store: pick up conversations and Shows */
+  window.addEventListener("storage", (e) => { if ((e.key === "webshow.v1" || e.key === "wss.local") && !state.ui.busy) { if (e.key === "webshow.v1") load(); render(); } });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) nudge(); });
   setInterval(() => nudge(), 30 * 60e3);
 }

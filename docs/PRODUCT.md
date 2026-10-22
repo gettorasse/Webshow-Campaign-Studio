@@ -21,10 +21,16 @@ A small business owner has one place and one buddy: **their Showrunner**. It liv
 
 There are no payments in the app and nothing is locked by plan yet. **Plans** in *Me* is a clearly labelled demo, so we can watch which plan people pick. Prices live in `public/shared/plans.js`. Pro (desktop) uses the same names and prices in `legacy/pro-studio/src/tiers.js`, where plans do unlock features in the demo.
 
+## Two experiences, one product
+
+- **Webshow Play** (phone, guided): start a Show, pick or auto-pick a Showrunner, approve one idea, watch it being built ("Finding your big idea → Setting the stage → Building your Show", tied to real steps), then missions, creatives and progress. Shows are a collection of productions; each has its Showrunner one tap away.
+- **Webshow Pro** (computer, the studio): sidebar with *New show*, *All shows* and every Show (including ones made in Play), the node canvas, timeline, results, and a **Showrunner panel** for the open Show.
+- Same Show identity and the **same Showrunner conversation** in both. During the demo **Pro is open to everyone** (no plan needed); plans are shown for feedback only.
+
 ## Phone first, desktop is Pro
 
 - **The phone app is the product.** It's light and fast, and mostly a conversation with the Showrunner. Everything it makes is meant to be copied and posted from a phone.
-- **Webshow Pro is part of Premium and Enterprise.** On a computer (wide screen + mouse, no touch) those plans open straight into Pro (`/pro/`); other plans see the phone app with a "See plans" note, and `/pro/` sends them back to the plans. Testers can force the phone app with `?view=phone`.
+- **On a computer Webshow opens as Pro** (wide screen + mouse, no touch) for everyone in the demo. Phones and tablets get Play. `?view=play` / `?view=pro` switch and are remembered.
 - **Webshow Pro (desktop)** is for power users and our own studio team. It has the canvas, nodes and timeline, like CapCut's desktop version. Today it's the legacy studio in `public/pro/`, and the two share a format: export a show as `campaign.json` from the phone. Pro needs porting (see the roadmap).
 
 ## The app: three tabs

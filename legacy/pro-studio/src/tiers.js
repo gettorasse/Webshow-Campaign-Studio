@@ -17,7 +17,7 @@ const ADDONS = [
 ];
 const TIER_RANK = { free: 0, basic: 1, advanced: 2, pro: 3 };
 const NODE_TIER = { brief: 0, text: 0, image: 0, style: 0, page: 0, publish: 0, carousel: 0, popup: 1, metaad: 1, ad: 1, quiz: 1, poll: 1, scheduler: 1, cookie: 1, social: 1, adchannel: 1, chatbot: 2, palette: 2, link: 2 };
-/* Pro is part of Premium and Enterprise; the plan is shared with the phone app (webshow.v1). */
+/* Demo: Pro is open to everyone. The plan is shared with Webshow Play (webshow.v1) and only shown, never charged. */
 const PHONE_TO_PRO = { premium: "advanced", enterprise: "pro" }, PRO_TO_PHONE = { advanced: "premium", pro: "enterprise" };
 const phonePlan = () => { try { return (JSON.parse(localStorage.getItem("webshow.v1") || "{}").settings || {}).plan; } catch { return ""; } };
 S.tier = PHONE_TO_PRO[phonePlan()] || lsGet("wss.tier", "advanced"); if (!PRO_TO_PHONE[S.tier]) S.tier = "advanced";
@@ -66,7 +66,7 @@ libraryPop = function () {
 function plansModal() {
   const pro = false; /* studio services are sold separately on every plan */
   return `<div class="scrim" data-act="closemodal"><div class="modal wide" data-stop="1" role="dialog" aria-label="Plans"><div class="modal-h"><span class="nico" style="--nc:var(--brand)">${ICON.lock}</span><h3>Plans</h3><span class="demo-b">Demo · no payment</span><span class="grow"></span><button class="ib" data-act="closemodal" aria-label="Close">${ICON.x}</button></div>
-    <div class="modal-b"><p class="muted" style="font-size:12.5px">Webshow Pro is part of Premium and Enterprise. Starter and Connect live in the phone app: <a href="../?view=phone" style="text-decoration:underline">open the app</a>. Pick a plan to try it; no account, card or subscription is created.</p>
+    <div class="modal-b"><p class="muted" style="font-size:12.5px">Demo for testers: everything in Webshow Pro is open, whatever plan you pick. Plans are here for feedback only; no account, card or subscription is created.</p>
       <div class="plans">${Object.entries(TIERS).filter(([k]) => PRO_TO_PHONE[k]).map(([k, t]) => `<div class="plan ${S.tier === k ? "on" : ""} ${k === "pro" ? "plan-pro" : ""}"><div class="plan-h"><b class="px">${t.label}</b><span class="price"><b>${t.price}</b> ${t.per}</span><span class="muted">${t.who}</span></div>
         ${S.tier === k ? `<span class="chip st-live"><i></i>Current plan</span>` : `<button class="btn ${TIER_RANK[k] > TIER_RANK[S.tier] ? "primary" : ""}" data-act="settier" data-k="${k}">${TIER_RANK[k] > TIER_RANK[S.tier] ? "Upgrade to" : "Switch to"} ${t.label}</button>`}
         <ul>${t.feats.map(f => `<li>${ICON.check}<span>${esc(f)}</span></li>`).join("")}${t.no.map(f => `<li class="no"><span class="dash">–</span><span>${esc(f)}</span></li>`).join("")}</ul></div>`).join("")}</div>

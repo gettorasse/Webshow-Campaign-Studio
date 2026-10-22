@@ -437,3 +437,35 @@ button.sp-ep{grid-template-columns:110px 28px minmax(0,1fr) auto auto auto}
 .addon{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:var(--r2);box-shadow:inset 0 0 0 .5px var(--line);flex-wrap:wrap}
 .addon .t{flex:1;min-width:200px;display:grid}.addon .t b{font-weight:600}.addon .t span{color:var(--muted);font-size:12.5px}
 .addon .ap{font-size:12.5px;color:var(--muted);white-space:nowrap}
+
+/* ---------- Webshow Pro ↔ Play: sidebar sections, the Showrunner panel ---------- */
+.sb-label{padding:10px 10px 4px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.sb-label.sm{padding-top:12px}
+.sb-new{margin-bottom:6px}
+.sb a.srow{text-decoration:none;color:inherit}
+.srow.from-play .lbl{color:var(--muted)} .sb-play .icon{width:13px;height:13px;color:var(--faint)}
+.srp-btn[aria-pressed="true"]{background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--ink)}
+.srp-btn .icon{width:15px;height:15px}
+.main{position:relative}
+.main.has-srp .body{margin-right:360px}
+.srp{position:absolute;top:52px;right:0;bottom:0;width:360px;display:flex;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);z-index:30}
+.srp-h{display:flex;align-items:center;gap:10px;padding:12px 12px 10px 14px;border-bottom:1px solid var(--line)}
+.srp-av{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--brand);color:#fff;flex:none}.srp-av .icon{width:16px;height:16px}
+.srp-t{flex:1;min-width:0;display:grid}.srp-t b{font-size:14px}.srp-t small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srp-note{font-size:11.5px;color:var(--faint);padding:6px 14px;border-bottom:1px solid var(--line)}
+.srp-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.srp-empty{margin:auto;text-align:center;color:var(--muted);font-size:13px;display:grid;gap:8px;justify-items:center;max-width:240px}.srp-empty .icon{width:28px;height:28px;color:var(--brand)}
+.srp-m{display:grid;gap:6px;max-width:92%}.srp-m.mine{align-self:flex-end;justify-items:end}.srp-m.them{align-self:flex-start}
+.srp-b{padding:8px 12px;border-radius:14px;background:var(--raised);box-shadow:var(--ring);font-size:13.5px;line-height:1.45;white-space:pre-wrap}
+.srp-m.mine .srp-b{background:var(--ink);color:var(--canvas);box-shadow:none}
+.typing-b{padding:10px 12px}
+.srp-card{display:grid;gap:6px;padding:10px 12px;border-radius:12px;background:var(--raised);box-shadow:var(--ring);font-size:13px}
+.srp-card.change{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--brand) 45%,transparent)}.srp-card ul{margin:0;padding-left:18px;display:grid;gap:2px;color:var(--muted)}.srp-card i{color:var(--faint)}
+.srp-card.err{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cta) 45%,transparent)}
+.srp-card.tip{background:color-mix(in srgb,var(--brand) 10%,var(--raised))}
+.srp-opts,.srp-quick{display:flex;flex-wrap:wrap;gap:6px}.srp-quick{padding:8px 12px 0}
+.srp-opts .chip,.srp-quick .chip{cursor:pointer;height:28px;padding:0 10px;font-size:12px}
+.srp-form{display:flex;gap:8px;align-items:flex-end;padding:10px 12px 12px}
+.srp-form textarea{flex:1;resize:none;border:0;outline:0;background:var(--well);border-radius:12px;padding:8px 10px;font:inherit;font-size:13.5px;color:var(--ink);box-shadow:inset 0 0 0 .5px var(--line-2)}
+.srp-form .send{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--brand);color:#fff;border:0;cursor:pointer;flex:none}
+@media (max-width:900px){.main.has-srp .body{margin-right:0}.srp{width:100%;top:52px}}

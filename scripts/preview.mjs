@@ -26,6 +26,6 @@ html = html.replace(/<link rel="stylesheet" href="styles.css">/, () => `<style>\
   .replace(/<script type="module" src="js\/main.js"><\/script>/, () => `<script>\n${js.replace(/<\/script/gi, "<\\/script")}\n</script>`)
   .replace(/<link rel="(manifest|icon|apple-touch-icon)"[^>]*>\n?/g, "")
   .replace(/<script id="desktop-to-pro">[\s\S]*?<\/script>\n?/, "")
-  .replace(/\s*<div class="if-pro">[\s\S]*?<\/div>/, "");
+  .replace(/\s*<a class="btn sm" href="\.\/\?view=pro">[^<]*<\/a>/, "");
 const out = join(ROOT, "dist", "webshow-preview.html"); mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, html);
 console.log(`Wrote ${out} (${(html.length / 1024).toFixed(0)} KB, ${mods.size} modules)`);

@@ -8,6 +8,7 @@ import { SHOWRUNNERS, SR_KEYS, srOf } from "../../shared/showrunners.js";
 import { fmtDate } from "../../shared/util.js";
 import { aiMode } from "../ai.js";
 import { gptMark } from "./sheets.js";
+import { proShow } from "../pro.js";
 
 const QUICK = ["New campaign idea", "What should I post today?", "Write a post", "Give me a tip"];
 const FLOW_HINT = { goal: "Or tell me in your own words…", what: "e.g. A sauna restaurant by the sea in Helsinki", offer: "e.g. Christmas parties for work teams", tweak: "What should change? e.g. more playful, focus on gift cards" };
@@ -16,8 +17,8 @@ export const currentChat = () => state.chats[state.ui.chatId];
 
 export function chatView() {
   const c = currentChat(); if (!c) return `<section class="chat"><div class="msgs"></div></section>`;
-  const show = c.showId ? state.shows[c.showId] : null; const r = srOf(c.showrunner); const busy = state.ui.busy;
-  const title = show ? show.strategy?.name || "Show" : c.title || "New chat";
+  const show = c.showId ? state.shows[c.showId] || proShow(c.showId) : null; const r = srOf(c.showrunner); const busy = state.ui.busy;
+  const title = show ? show.strategy?.name || show.name || "Show" : c.title || "New chat";
   return `<section class="chat">
     <header class="chat-h">
       <button class="icon-btn" data-act="drawer" aria-label="Chats">${IC.menu}</button>
@@ -64,16 +65,17 @@ const opText = (show, o) => {
 function cardHTML(chat, c, m, k, answered) {
   const id = `data-m="${m.id}" data-c="${k}"`;
   switch (c.type) {
-    case "goals": return answered ? "" : `<div class="missions">${MISSIONS.map(([k, l, ic]) => `<button class="mission-b" data-act="goal" data-k="${k}" ${id}>${IC[ic]}<b>${l}</b></button>`).join("")}</div>`;
+    case "goals": return answered ? "" : `<div class="missions">${MISSIONS.map(([k, l, ic]) => `<button class="mission-b" data-act="goal" data-k="${k}" ${id}>${IC[ic]}<b>${l}</b></button>`).join("")}</div>
+      <div class="sr-row" role="group" aria-label="Who runs this Show"><span class="muted small">Run by</span><button class="chip sm${chat.showrunner ? "" : " on"}" data-act="pickrunner" data-k="">Best fit</button>${SR_KEYS.map(k => `<button class="chip sm${chat.showrunner === k ? " on" : ""}" data-act="pickrunner" data-k="${k}" title="${esc(SHOWRUNNERS[k].blurb)} ${SHOWRUNNERS[k].name} style">${SHOWRUNNERS[k].role.replace("The ", "")}</button>`).join("")}</div>`;
     case "concept": return conceptHTML(chat, c, m, k);
     case "error": return `<div class="card error"><span class="kicker">${IC.x} That didn't work</span><p>${esc(c.text)}</p>${c.retried ? "" : `<button class="btn sm" data-act="retry" ${id}>${IC.redo} Try again</button>`}</div>`;
     case "question": return answered ? "" : `<div class="opts">${c.options.map(o => `<button class="chip" data-act="say" data-t="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
     case "plan": return `<div class="card plan"><span class="kicker">${IC.layers} Campaign plan</span><b class="h">${esc(c.name)}</b>${c.idea ? `<p class="idea">“${esc(c.idea)}”</p>` : ""}
       <div class="meta"><span class="tag">${IC.target}${esc(GOALS[c.goal]?.label || "")}</span><span class="tag">${IC.cal}${c.weeks} weeks</span>${c.channels.map(k => `<span class="tag"><i class="dot" style="--c:${CHANNELS[k].c}"></i>${CHANNELS[k].label}</span>`).join("")}</div>
       ${c.showId ? `<button class="btn" data-act="openshow" data-id="${c.showId}">Open the show ${IC.arrow}</button>` : c.asked ? "" : `<button class="btn go" data-act="createplan" ${id}>${IC.spark} See the full idea</button>`}</div>`;
-    case "change": { const show = state.shows[chat.showId];
-      return `<div class="card change"><span class="kicker">${IC.edit} Change to the show</span><b>${esc(c.summary)}</b><ul>${c.ops.map(o => `<li>${esc(opText(show, o))}</li>`).join("")}</ul>
-      ${c.applied ? `<span class="tag live">${IC.check} Applied</span>` : c.dismissed ? `<span class="tag">Skipped</span>` : `<div class="row"><button class="btn go sm" data-act="applychange" ${id}>${IC.check} Apply</button><button class="btn sm" data-act="skipchange" ${id}>Not now</button></div>`}</div>`; }
+    case "change": { const show = state.shows[chat.showId]; const inPro = !show && proShow(chat.showId);
+      return `<div class="card change"><span class="kicker">${IC.edit} Change to the show</span><b>${esc(c.summary)}</b><ul>${c.ops.map(o => `<li>${esc(opText(show || inPro?.slim, o))}</li>`).join("")}</ul>
+      ${c.applied ? `<span class="tag live">${IC.check} Applied</span>` : c.dismissed ? `<span class="tag">Skipped</span>` : show && !c.ops.some(o => (o.ids || (o.id ? [o.id] : [])).some(x => show.assets.some(a => a.id === x)) || o.op === "shift" || o.op === "strategy") ? `<p class="muted small">${IC.desktop} Proposed for the Pro canvas: apply it in Webshow Pro.</p>` : inPro ? `<p class="muted small">${IC.desktop} This Show lives on the Webshow Pro canvas: apply it there, in the Showrunner panel.</p>` : `<div class="row"><button class="btn go sm" data-act="applychange" ${id}>${IC.check} Apply</button><button class="btn sm" data-act="skipchange" ${id}>Not now</button></div>`}</div>`; }
     case "post": return `<div class="card post"><span class="kicker"><i class="dot" style="--c:${CHANNELS[c.channel].c}"></i>${CHANNELS[c.channel].label} post</span>${c.hook ? `<b class="h">${esc(c.hook)}</b>` : ""}<p class="pre">${esc(c.text)}</p>${c.cta ? `<p class="cta">${esc(c.cta)}</p>` : ""}
       ${c.image_prompt ? `<details class="img"><summary>${IC.image} Picture idea</summary><p class="pre">${esc(c.image_prompt)}</p></details>` : ""}
       <div class="row"><button class="btn sm go" data-act="copypost" ${id}>${IC.copy} Copy text</button><button class="btn sm gpt" data-act="gptpost" ${id}>${gptMark()} Image in ChatGPT</button></div></div>`;
@@ -105,4 +107,28 @@ function conceptHTML(chat, c, m, k) {
       : `<div class="c-acts"><button class="btn go big" data-act="makeit" ${id}>${IC.spark} Let's make it</button><div class="row"><button class="btn sm" data-act="another" ${id}>${IC.redo} Different angle</button><button class="btn sm" data-act="tweak" ${id}>${IC.edit} Tweak it</button></div></div>
       <div class="c-style"><span class="muted small">Run by ${r.role} · ${r.name} style</span><div class="row">${SR_KEYS.filter(s => s !== c.showrunner).map(s => `<button class="chip sm" data-act="restyle" data-k="${s}" ${id}>Try ${SHOWRUNNERS[s].role}</button>`).join("")}</div></div>`}
   </div>`;
+}
+
+/* ---------- the production: a new Show coming together, tied to real steps ---------- */
+const STEPS = [["Finding your big idea", "Approved"], ["Setting the stage", "Hook, Show and Convert, on a calendar"], ["Building your Show", ""]];
+export function stageHTML() {
+  const b = state.ui.build; if (!b) return "";
+  const x = b.concept; const r = srOf(b.sr); const show = b.showId ? state.shows[b.showId] : null;
+  if (b.stage === 4 && show) {
+    const first = show.assets.find(a => a.source !== "failed" && !KINDS[a.kind].evergreen) || show.assets[0];
+    return `<div class="stage-ov reveal" role="dialog" aria-modal="true" aria-label="Your new Show">
+      <div class="st-in">
+        ${posterHTML({ ...x, name: show.strategy.name })}
+        <div class="st-welcome">${mascot("happy", r.icon)}<p><b>Welcome to “${esc(show.strategy.name)}”.</b> ${show.status === "partial" ? "Some posts didn't get written; you can retry them inside, nothing is lost." : `${show.assets.length} posts, Hook to Convert. Let's start with your first post${first ? `, an ${esc(KINDS[first.kind].label)}`.replace(/an (?=[^AEIOU])/, "a ") : ""}.`}</p></div>
+        <p class="st-idea">${esc(x.idea)}</p>
+        <button class="btn go big" data-act="enterShow">${IC.arrow} Enter your Show</button>
+      </div></div>`;
+  }
+  const label3 = b.total ? `${b.done} of ${b.total} posts written` : "Writing your posts";
+  return `<div class="stage-ov" role="status" aria-live="polite" aria-label="Building your Show">
+    <div class="st-in">
+      <div class="st-poster s${b.stage}">${posterHTML(x)}<div class="st-cards">${["hook", "show", "convert"].map((k, i) => `<span class="st-card" style="--i:${i}">${["Hook", "Show", "Convert"][i]}</span>`).join("")}</div></div>
+      <ol class="st-steps">${STEPS.map(([t, d], i) => { const n = i + 1; const st = b.stage > n ? "ok" : b.stage === n ? "on" : ""; return `<li class="${st}"><span class="b">${st === "ok" ? IC.check : st === "on" ? `<i class="spin"></i>` : ""}</span><span><b>${t}</b><small>${n === 3 ? (b.stage >= 3 ? label3 : "") : d}</small></span></li>`; }).join("")}</ol>
+      <p class="muted small st-by">${mascot("think", r.icon)} ${esc(r.role)} is running this production</p>
+    </div></div>`;
 }

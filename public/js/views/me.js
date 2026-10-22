@@ -1,5 +1,5 @@
 /* Me: train your Showrunner (what it knows), pick its style, plan and settings. */
-import { state, hasPro } from "../store.js";
+import { state } from "../store.js";
 import { esc, IC } from "../lib.js";
 import { SHOWRUNNERS, SR_KEYS } from "../../shared/showrunners.js";
 import { planOf, priceText } from "../../shared/plans.js";
@@ -35,7 +35,7 @@ export function meView() {
     <div class="card">
       <div class="set"><span>Theme</span><div class="seg sm">${[["", "Auto"], ["light", "Light"], ["dark", "Dark"]].map(([v, l]) => `<button aria-pressed="${state.settings.theme === v}" data-act="theme" data-v="${v}">${l}</button>`).join("")}</div></div>
       <div class="set"><span>AI</span><span class="muted small">${mode === "offline" ? "Demo mode (no AI connected)" : mode === "claude" ? "Connected through Claude" : "Connected"}</span></div>
-      ${hasPro() ? `<a class="set link-row" href="pro/" target="_blank" rel="noopener"><span>${IC.desktop} Webshow Pro</span><span class="muted small">On a computer ${IC.arrow}</span></a>` : `<button class="set link-row" data-act="sheet" data-k="plans"><span>${IC.desktop} Webshow Pro</span><span class="muted small">${IC.lock} Premium and Enterprise</span></button>`}
+      <a class="set link-row" href="./?view=pro"><span>${IC.desktop} Webshow Pro</span><span class="muted small">The full studio · best on a computer ${IC.arrow}</span></a>
       <button class="set link-row" data-act="exportall"><span>${IC.down} Download my data</span></button>
       <button class="set link-row danger" data-act="reset"><span>${IC.trash} ${state.ui.confirmReset ? "Tap again to erase everything" : "Start over"}</span></button>
     </div>

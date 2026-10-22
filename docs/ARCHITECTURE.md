@@ -8,6 +8,24 @@
 - **Code plans, AI writes.** Which posts go out, on which channel and which day is computed in `model.js` (`planSlots`), so the calendar always adds up. The model writes only the words.
 - **Every AI reply is checked.** `normChat`, `normStrategy` and `normAsset` clamp lengths, drop unknown values and fill gaps. When something can't be saved, `offline.js` writes a plain draft instead, so the app never shows a blank.
 
+## One Show, two experiences (Play + Pro)
+
+| | Webshow Play (`/`) | Webshow Pro (`/pro/`) |
+|---|---|---|
+| For | Phones and tablets, guided | Computers, the full studio (canvas, nodes, timeline) |
+| Opens by default on | touch or narrow screens | wide screen + mouse (no plan needed in the demo) |
+| Switch | Me → *Webshow Pro*, desktop side note, `?view=pro` | sidebar → *Webshow Play*, `?view=play` (remembered) |
+| Show store | `localStorage["webshow.v1"].shows` | `localStorage["wss.local"].shows/nodes/edges` |
+
+Rules (pure functions, tested, in `public/shared/bridge.js`; Pro loads them with dynamic `import()`):
+- **Identity:** a Show has one id everywhere. Play Show opened in Pro → `playToPro()` builds its canvas with the **same id** (via Pro's own `buildSeason`). Pro Show → visible in Play via `proToSlim()` (read-only plan + its conversation).
+- **Conversation:** ONE chat per Show id, stored in `webshow.v1.chats` (`chatForShow`, `newShowChat`). Play's show chat and Pro's right-hand Showrunner panel read and write the same chat; a `storage` event keeps an open tab in step.
+- **Showrunner style** travels with the Show (`showrunner`).
+- **AI:** Pro's panel uses the same server task as Play (`showchat`), with the canvas translated by `proToSlim()`. Changes come back as cards; Pro applies `move`, `shift`, `strategy` (DNA) and `rewrite` (Pro's own `buildNode`); ids that belong to the other experience are shown, not applied.
+- **Routing:** `experienceFor()` (and the identical inline script in `index.html`, checked by tests). `/#/show/<id>` on a computer opens that Show in Pro (`/pro/#show=<id>`).
+
+**Known limits (honest, documented in the UI):** the canvas is built from a Play Show **once**; after that, post edits in Play and node edits in Pro don't flow into each other. Emails, reels and stories have no node type in Pro yet, so they are reported as "not on the canvas yet". Both stores are on one device only (no accounts/sync). Pro's built-in generator (`AI.fn`) still only runs inside Claude; outside it builds offline drafts, and its Showrunner panel uses the server.
+
 ## The core flow (v3)
 
 ```
