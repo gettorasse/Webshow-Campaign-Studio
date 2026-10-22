@@ -26,6 +26,12 @@ Rules (pure functions, tested, in `public/shared/bridge.js`; Pro loads them with
 
 **Known limits (honest, documented in the UI):** the canvas is built from a Play Show **once**; after that, post edits in Play and node edits in Pro don't flow into each other. Emails, reels and stories have no node type in Pro yet, so they are reported as "not on the canvas yet". Both stores are on one device only (no accounts/sync). Pro's built-in generator (`AI.fn`) still only runs inside Claude; outside it builds offline drafts, and its Showrunner panel uses the server.
 
+## The Show Timeline
+
+- **Play** (`js/views/timeline.js`): one week at a time (readable on a phone), phase band (Hook/Show/Convert from the posts' own dates), one row per channel the Show uses, an "Always on" row. Three temporal types: **events** (a post on its day), **intervals** (ads with `end`, drawn across their days), **evergreen** (landing page, search ad: always on, no invented dates). Tap opens the post; the sheet reschedules with −1/+1 day or a date picker (`moveAsset`). Arrows or swipe change week. The timeline, the Assets list and Home read the **same asset objects**.
+- **Pro**: the existing studio timeline (`episodes.js`, formerly "On air") is now the default view of every Show, with phase colours. It reads the same nodes as the canvas (Build), so the canvas and the timeline never disagree; dragging on the timeline changes the node's dates.
+- **Artwork**: each Show has one character (`artFor()` in `shared/bridge.js`: starburst, snowflake, leaf, sun), stored as `show.art` and used for posters in Play and the sidebar in Pro. The purple character is the Showrunner. Files in `public/art/` (from the Webshow mascot pack).
+
 ## The core flow (v3)
 
 ```

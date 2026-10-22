@@ -34,10 +34,19 @@ const MASCOT_IC = P('<rect x="2" y="3" width="12" height="11" rx="4"/><circle cx
   const playRows = po.map(s => `<button class="srow from-play" data-act="fromplay" data-id="${esc(s.id)}" title="Made in Webshow Play. Opening it here builds its canvas."><span class="av" style="--nc:${esc(s.strategy?.colors?.[0] || "var(--brand)")}">${esc((s.strategy?.name || "?")[0].toUpperCase())}</span><span class="lbl">${esc(s.strategy?.name || "New show")}</span><span class="ct sb-play">${PHONE_IC}</span></button>`).join("");
   h = h.replace(/(<div class="sb-sep"><\/div>)/, `$1<div class="sb-label">Shows</div>`);
   h = h.replace(/(\s*<\/div>\s*<div class="sb-foot">)/, `${playRows ? `<div class="sb-label sm">From Webshow Play</div>${playRows}` : ""}$1`);
+  /* each Show's character, the same as in Webshow Play */
+  h = h.replace(/(data-id="([^"]+)"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/g, (m, pre, id) => `${pre}${artAv(S.shows[id] || playData()?.shows?.[id] || { id })}`);
+  if (cur()) h = h.replace(/(<button class="sb-head srow"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/, (m, pre) => `${pre}${artAv(cur())}`);
   /* switch experiences */
   h = h.replace(/(<div class="sb-foot">)/, `$1<a class="srow brand" href="../?view=play"><span class="ic">${PHONE_IC}</span><span class="lbl">Webshow Play</span><span class="ct">phone</span></a>`);
   return h;
 }; }
+
+const ART_KEYS = ["starburst", "snowflake", "leaf", "sun"];
+const artOf = (s) => ART_KEYS.includes(s?.art) ? s.art : ART_KEYS[hash(s?.id || s?.name || "") % ART_KEYS.length];
+const artAv = (s) => `<span class="av art"><img src="../art/${artOf(s)}.webp" alt="" draggable="false"></span>`;
+/* the Showrunner panel is part of every Show on a big screen */
+if (innerWidth >= 1280 && S.srOpen === undefined) S.srOpen = true;
 
 /* ---------- topbar: open the Show's Showrunner ---------- */
 { const _tb = topbar; topbar = function () {
@@ -67,9 +76,9 @@ function paintSRP() {
   const k = s.showrunner || "ogilvy"; const r = SHOWRUNNERS[k] || SHOWRUNNERS.ogilvy; const role = { ogilvy: "The Strategist", hormozi: "The Closer", vaynerchuk: "The Creator" }[k] || "Showrunner";
   const c = srpChat(); const msgs = c?.messages || [];
   const scroll = el.querySelector(".srp-msgs")?.scrollTop;
-  const html = `<div class="srp-h"><span class="srp-av">${ICON[r.icon] || MASCOT_IC}</span><span class="srp-t"><b>${esc(role)}</b><small>${esc(r.name)} style · ${esc(s.name)}</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
+  const html = `<div class="srp-h"><span class="srp-av"><img src="../art/showrunner.webp" alt=""><i>${ICON[r.icon] || ""}</i></span><span class="srp-t"><b>${esc(role)}</b><small>${esc(r.name)} style · ${esc(s.name)}</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
     <div class="srp-note">${BR.ai === false ? "Demo answers: the AI isn't set up on this server." : BR.ai ? "Shared with Webshow Play: the same conversation on your phone." : "Shared with Webshow Play."}</div>
-    <div class="srp-msgs">${msgs.length ? msgs.map((m, i) => srpMsg(m, i, msgs)).join("") : `<div class="srp-empty">${MASCOT_IC}<p>This is ${esc(s.name)}'s Showrunner. Ask for changes, ideas or what to do next. Every change is shown before it happens.</p></div>`}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
+    <div class="srp-msgs">${msgs.length ? msgs.map((m, i) => srpMsg(m, i, msgs)).join("") : `<div class="srp-empty"><img src="../art/showrunner.webp" alt=""><p>This is ${esc(s.name)}'s Showrunner. Ask for changes, ideas or what to do next. Every change is shown before it happens.</p></div>`}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
     ${BR.busy ? "" : `<div class="srp-quick">${["What's next?", "Make the posts shorter", "Move everything a week later"].map(q => `<button class="chip" data-act="srsay" data-t="${esc(q)}">${esc(q)}</button>`).join("")}</div>`}
     <form class="srp-form" data-srp-form><textarea id="srp-in" rows="2" placeholder="Ask ${esc(role)} about this show…" ${BR.busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${BR.busy ? "disabled" : ""}>${ICON.send || "→"}</button></form>`;
   /* the studio re-renders often while it builds; only repaint when the conversation changed */
@@ -160,6 +169,7 @@ async function fromPlay(id) {
   /* tell Play this Show now also lives in Pro */
   const pd = playData(); if (pd?.shows?.[id]) { pd.shows[id].inPro = Date.now(); writePlay(pd); }
   await done;
+  if (S.showId === id) { S.view = "timeline"; render(); } /* built on the canvas; now see it on the timeline */
 }
 
 /* ---------- actions, deep links, keeping in step with Play ---------- */

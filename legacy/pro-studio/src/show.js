@@ -208,7 +208,7 @@ function dnaBarHTML() {
 function paintDnaBar() { const el = $("#goalpill"); if (el) el.innerHTML = dnaBarHTML(); const lc = $("#lanechips"); if (lc) lc.innerHTML = laneChipsHTML(); }
 
 /* ---------- navigation: Plan → Build → On air → Results ---------- */
-const VIEW_LABEL = { plan: "Plan", canvas: "Build", timeline: "On air", live: "Results", threads: "Threads", assets: "Assets", needs: "Needs you" };
+const VIEW_LABEL = { plan: "Plan", canvas: "Build", timeline: "Timeline", live: "Results", threads: "Threads", assets: "Assets", needs: "Needs you" };
 { const _vb = viewBody; viewBody = function () { if (S.view === "plan" && cur()) return planView(); return _vb(); }; }
 sidebar = function () {
   const show = cur(); const shows = Object.values(S.shows).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -228,16 +228,16 @@ sidebar = function () {
     ${show ? `<div class="sb-show" style="--st:${tintOf(show)}"><button class="sb-head srow" data-act="settings" style="font-weight:600"><span class="av" style="--nc:${tintOf(show)}">${esc((show.name || "?")[0].toUpperCase())}</span><span class="lbl">${esc(show.name)}</span>${lifeChip(life)}</button>
       ${typeof needsList === "function" ? (() => { const c = needsList().length; return row("view", ICON.inbox, "Needs you", c ? `<span class="badge" title="${c} waiting on you">${c}</span>` : `<span class="ct">0</span>`, S.view === "needs", 'data-v="needs"', "needs-row"); })() : ""}
       <div class="sb-flow">
-      ${row("view", ICON.target, "Plan", +dnaOf(show).target ? "" : `<span class="ct">set goal</span>`, S.view === "plan", 'data-v="plan"')}
+      ${row("view", ICON.timeline, "Timeline", life === "live" && onAirNow(show) ? dot("var(--live)") : "", S.view === "timeline", 'data-v="timeline"')}
       ${row("view", ICON.nodes, "Build", `<span class="ct">${Object.keys(S.nodes).length}</span>`, S.view === "canvas", 'data-v="canvas"')}
-      ${row("view", ICON.onair, "On air", life === "live" && onAirNow(show) ? dot("var(--live)") : "", S.view === "timeline", 'data-v="timeline"')}
-      ${row("view", ICON.trophy, "Results", "", S.view === "live", 'data-v="live"')}</div>
+      ${row("view", ICON.image, "Assets", `<span class="ct">${Object.values(S.nodes).filter(n => n.type === "image").length}</span>`, S.view === "assets", 'data-v="assets"')}
+      ${row("view", ICON.trophy, "Results", "", S.view === "live", 'data-v="live"')}
+      ${row("view", ICON.target, "Plan", +dnaOf(show).target ? "" : `<span class="ct">set goal</span>`, S.view === "plan", 'data-v="plan"')}</div>
       ${row("threadsnav", ICON.chat, "Threads", `${nUnread ? `<span class="badge" title="${nUnread} unread">${nUnread}</span>` : ""}<span class="ct">${th.length}</span>`, S.view === "threads" && S.tfilter === "all", `aria-expanded="${!!S.thOpen}"`)}
       ${S.thOpen ? `<div class="sb-subs">
       <button class="srow sub ${nNeeds ? "needs" : ""}" data-act="view" data-v="threads" data-f="needs" aria-current="${S.view === "threads" && S.tfilter === "needs"}"><span class="ic">${ICON.hand}</span><span class="lbl">Decisions</span><span class="ct">${nNeeds}</span></button>
       <button class="srow sub" data-act="view" data-v="threads" data-f="open" aria-current="${S.view === "threads" && S.tfilter === "open"}"><span class="ic">${ICON.chat}</span><span class="lbl">Open</span><span class="ct">${nOpen}</span></button>
       <button class="srow sub" data-act="view" data-v="threads" data-f="done" aria-current="${S.view === "threads" && S.tfilter === "done"}"><span class="ic">${ICON.check}</span><span class="lbl">Done</span><span class="ct">${nDone}</span></button></div>` : ""}
-      ${row("view", ICON.image, "Assets", `<span class="ct">${Object.values(S.nodes).filter(n => n.type === "image").length}</span>`, S.view === "assets", 'data-v="assets"')}
       ${row("settings", ICON.sliders, "Show settings")}</div>
       <div class="sb-sep"></div>` : ""}
     ${list.filter(s => s.id !== S.showId).slice(0, 8).map(s => `<button class="srow" data-act="open" data-id="${s.id}"><span class="av" style="--nc:${tintOf(s)}">${esc((s.name || "?")[0].toUpperCase())}</span><span class="lbl">${esc(s.name)}</span>${lifeOf(s) === "live" && onAirNow(s) ? dot("var(--live)") : ""}${s.needs ? `<span class="badge">${s.needs}</span>` : ""}</button>`).join("")}

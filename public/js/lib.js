@@ -75,14 +75,8 @@ export const IC = {
   clock: P('<circle cx="8" cy="8" r="5.8"/><path d="M8 4.8V8l2.2 1.4"/>'),
 };
 
-/* ---------- the Showrunner: Webshow's little stage manager ----------
-   Moods: "idle", "think", "happy". Original artwork; the style badge shows who's running the show. */
+/* ---------- the Showrunner: Webshow's character (art/showrunner.webp) ----------
+   Moods move it ("think" bobs, "happy" hops); the style badge shows who's running the show. */
 export function mascot(mood = "idle", badge = "") {
-  const eyes = mood === "happy"
-    ? `<path d="M13.5 22.5q3.5-4.5 7 0M27.5 22.5q3.5-4.5 7 0" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/>`
-    : `<g class="ms-eyes"><ellipse cx="17" cy="21" rx="5" ry="5.8" fill="#fff"/><ellipse cx="31" cy="21" rx="5" ry="5.8" fill="#fff"/><g class="ms-pupils" fill="#15122e">${mood === "think" ? `<circle cx="19" cy="18.6" r="2.5"/><circle cx="33" cy="18.6" r="2.5"/>` : `<circle cx="17.6" cy="21.8" r="2.6"/><circle cx="31.6" cy="21.8" r="2.6"/>`}</g></g>`;
-  const mouth = mood === "happy" ? `<path d="M17 30q7 7 14 0" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/>`
-    : mood === "think" ? `<path d="M21 32h6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`
-    : `<path d="M18.5 30.5q5.5 4 11 0" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/>`;
-  return `<span class="mascot ms-${mood}" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="3" y="5" width="42" height="40" rx="15" fill="var(--go)"/><path d="M9 14q4-7 13-8" stroke="#fff" stroke-opacity=".35" stroke-width="2.4" stroke-linecap="round" fill="none"/>${eyes}${mouth}<path d="M24 5V1.5M19 2.5l1.5 3M29 2.5l-1.5 3" stroke="var(--go)" stroke-width="2" stroke-linecap="round"/></svg>${badge ? `<span class="ms-badge">${IC[badge] || ""}</span>` : ""}</span>`;
+  return `<span class="mascot ms-${mood}" aria-hidden="true"><img src="art/showrunner.webp" alt="" draggable="false">${badge ? `<span class="ms-badge">${IC[badge] || ""}</span>` : ""}</span>`;
 }

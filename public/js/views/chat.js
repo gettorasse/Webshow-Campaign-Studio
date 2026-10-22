@@ -9,6 +9,7 @@ import { fmtDate } from "../../shared/util.js";
 import { aiMode } from "../ai.js";
 import { gptMark } from "./sheets.js";
 import { proShow } from "../pro.js";
+import { ART, artFor } from "../../shared/bridge.js";
 
 const QUICK = ["New campaign idea", "What should I post today?", "Write a post", "Give me a tip"];
 const FLOW_HINT = { goal: "Or tell me in your own words…", what: "e.g. A sauna restaurant by the sea in Helsinki", offer: "e.g. Christmas parties for work teams", tweak: "What should change? e.g. more playful, focus on gift cards" };
@@ -87,9 +88,10 @@ function cardHTML(chat, c, m, k, answered) {
 }
 
 /* ---------- the big reveal: one idea, as a poster ---------- */
-export function posterHTML(c, small) {
-  const [a, b] = c.colors?.length === 2 ? c.colors : ["#6b5bff", "#ffd84d"];
-  return `<div class="poster${small ? " sm" : ""}" style="--p1:${a};--p2:${b}"><span class="p-k">${esc(GOALS[c.goal]?.label || "Campaign")}</span><b class="p-name">${esc(c.name)}</b>${c.hook ? `<span class="p-hook">“${esc(c.hook)}”</span>` : ""}<span class="p-brand">webshow</span></div>`;
+/* A Show's poster: its own character on a soft pastel, the name in bold. The same art follows the Show into Pro. */
+export function posterHTML(c, small, kicker) {
+  const k = artFor(c); const A = ART[k];
+  return `<div class="poster art${small ? " sm" : ""}" style="--pbg:${A.bg};--pink:${A.ink}"><span class="p-k">${esc(kicker || GOALS[c.goal]?.label || "Campaign")}</span><b class="p-name">${esc(c.name)}</b>${c.hook ? `<span class="p-hook">“${esc(c.hook)}”</span>` : ""}<img class="p-art" src="art/${k}.webp" alt="" draggable="false"></div>`;
 }
 function conceptHTML(chat, c, m, k) {
   const x = c.concept; const id = `data-m="${m.id}" data-c="${k}"`; const r = srOf(c.showrunner);
@@ -118,7 +120,7 @@ export function stageHTML() {
     const first = show.assets.find(a => a.source !== "failed" && !KINDS[a.kind].evergreen) || show.assets[0];
     return `<div class="stage-ov reveal" role="dialog" aria-modal="true" aria-label="Your new Show">
       <div class="st-in">
-        ${posterHTML({ ...x, name: show.strategy.name })}
+        ${posterHTML({ ...x, name: show.strategy.name, art: show.art }, false, "New Show")}
         <div class="st-welcome">${mascot("happy", r.icon)}<p><b>Welcome to “${esc(show.strategy.name)}”.</b> ${show.status === "partial" ? "Some posts didn't get written; you can retry them inside, nothing is lost." : `${show.assets.length} posts, Hook to Convert. Let's start with your first post${first ? `, an ${esc(KINDS[first.kind].label)}`.replace(/an (?=[^AEIOU])/, "a ") : ""}.`}</p></div>
         <p class="st-idea">${esc(x.idea)}</p>
         <button class="btn go big" data-act="enterShow">${IC.arrow} Enter your Show</button>

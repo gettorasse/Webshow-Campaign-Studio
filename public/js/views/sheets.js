@@ -24,7 +24,8 @@ function assetSheet({ s: sid, a: aid }) {
   const tab = state.ui.sheet.t === "text" ? "text" : "make"; const ever = K.evergreen;
   const when = ever ? `Ready before ${fmtDate(s.brief.start, { day: "numeric", month: "short" })}` : `${fmtDate(a.date, { weekday: "short", day: "numeric", month: "short" })}${a.time ? ` · ${a.time}` : ""}`;
   return head + `
-    <p class="todo">${IC.target} <span>${esc(a.action)} <span class="muted">${esc(when)}</span></span></p>
+    <p class="todo">${IC.target} <span>${esc(a.action)}</span></p>
+    ${ever ? `<p class="muted small when-line">${esc(when)}</p>` : `<div class="resched" role="group" aria-label="Date"><button class="icon-btn sm" data-act="nudgedate" data-n="-1" ${ids} aria-label="One day earlier">${IC.back}</button><span class="rs-date"><b>${esc(fmtDate(a.date, { weekday: "short", day: "numeric", month: "short" }))}</b>${a.time ? `<small>${a.time}</small>` : ""}${a.end ? `<small>until ${esc(fmtDate(a.end))}</small>` : ""}</span><button class="icon-btn sm" data-act="nudgedate" data-n="1" ${ids} aria-label="One day later">${IC.arrow}</button><label class="link sm rs-pick">${IC.cal} Pick a date<input type="date" value="${a.date}" data-act-change="movedate" ${ids} aria-label="Pick a date"></label></div>`}
     <div class="seg" role="tablist"><button role="tab" aria-selected="${tab === "make"}" data-act="sheettab" data-t="make">${IC.wand} Create</button><button role="tab" aria-selected="${tab === "text"}" data-act="sheettab" data-t="text">${IC.edit} Edit text</button></div>
     ${tab === "text" ? `
     <div class="when"><span>${IC.cal}</span><input type="date" value="${a.date}" data-act-change="movedate" ${ids} aria-label="Date">${a.end ? `<span class="muted small">until ${esc(fmtDate(a.end))}</span>` : ""}</div>

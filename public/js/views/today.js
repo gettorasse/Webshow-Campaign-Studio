@@ -4,8 +4,11 @@ import { esc, IC, mascot } from "../lib.js";
 import { CHANNELS, KINDS } from "../../shared/model.js";
 import { srOf } from "../../shared/showrunners.js";
 import { addDays, fmtDate, hash, todayISO } from "../../shared/util.js";
-import { showsList, nextMission, askOutcome, MILESTONES } from "../campaign.js";
+import { showsList, nextMission, askOutcome, MILESTONES, showEnd } from "../campaign.js";
 import { posterHTML } from "./chat.js";
+import { weekTimeline } from "./timeline.js";
+import { ART, artFor } from "../../shared/bridge.js";
+import { GOALS } from "../../shared/model.js";
 
 /* Every open task across shows, with the show it belongs to. */
 export function tasks() {
@@ -18,22 +21,41 @@ export function dueToday() { const t = todayISO(); return tasks().filter(({ a })
 export function todayView() {
   const shows = showsList(); const hour = new Date().getHours();
   const hi = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const head = `<header class="page-h"><div class="hello">${mascot("idle")}<div><span class="eyebrow">${esc(fmtDate(todayISO(), { weekday: "long", day: "numeric", month: "long" }))}</span><h1>${hi}${state.profile.business ? `, ${esc(state.profile.business)}` : ""}</h1></div></div><button class="icon-btn me-btn" data-act="tab" data-t="me" aria-label="Your business and settings">${IC.user}</button></header>`;
+  const head = `<header class="page-h"><div class="hello"><span class="brandmark">${mascot("idle")}</span><div><span class="eyebrow">Webshow Play · ${esc(fmtDate(todayISO(), { weekday: "long", day: "numeric", month: "long" }))}</span><h1>${hi}${state.profile.business ? `, ${esc(state.profile.business)}` : ""}</h1></div></div><button class="icon-btn me-btn" data-act="tab" data-t="me" aria-label="Your business and settings">${IC.user}</button></header>`;
   if (!shows.length) return `<section class="page">${head}
-    <div class="card empty hero"><b class="h">Let's make something happen.</b><p>Tell me what you want more of. I'll come back with one campaign idea, then help you make the first post.</p><button class="btn go big" data-act="newshow">${IC.spark} Start a campaign</button></div>
+    <div class="hero-card empty">${mascot("happy")}<b class="h">Let's make something happen.</b><p>Tell me what you want more of. I'll come back with one campaign idea, build the Show, and help you make the first post.</p><button class="btn ink big" data-act="newshow">${IC.spark} Start your first Show</button></div>
     ${tipCard()}</section>`;
-  const s = shows.find(x => nextMission(x).kind !== "finished") || shows[0];
-  const t = todayISO(); const week = addDays(t, 7);
-  const next = tasks().filter(({ a }) => !a.done && a.date <= week);
-  const asks = askOutcome().slice(0, 2);
-  return `<section class="page">${head}
-    ${missionCard(s)}
+  const active = state.shows[state.settings.activeShow];
+  const s = active || shows.find(x => nextMission(x).kind !== "finished") || shows[0];
+  const asks = askOutcome().slice(0, 2); const others = shows.filter(x => x.id !== s.id);
+  return `<section class="page home">${head}
+    ${heroCard(s)}
+    <div class="card tl-card"><div class="row between"><h2 class="sec">Campaign timeline</h2><button class="link sm" data-act="showtimeline" data-id="${s.id}">Open ${IC.arrow}</button></div>${weekTimeline(s, { compact: true })}</div>
+    ${missionCard(s, true)}
     ${asks.map(outcomeCard).join("")}
-    ${next.length > 1 ? `<h2 class="sec">This week</h2><div class="list">${next.slice(0, 6).map(taskRow).join("")}</div>` : ""}
+    ${others.length ? `<div class="row between"><h2 class="sec">Your Shows</h2><button class="link sm" data-act="tab" data-t="shows">See all ${IC.arrow}</button></div>
+      <div class="gallery">${others.slice(0, 6).map(miniShow).join("")}<button class="mini-show new" data-act="newshow">${IC.plus}<b>New Show</b></button></div>` : `<button class="row-card tap" data-act="newshow"><span class="ic-round">${IC.plus}</span><span class="grow"><b>New Show</b><span class="muted small">Start another campaign</span></span>${IC.arrow}</button>`}
     ${tipCard()}
     <div class="card row-card"><span class="ic-round">${IC.bell}</span><div class="grow"><b>Daily reminder</b><p class="muted small">A note when something is due. Works while the app is open on this device.</p></div>
       <button class="switch" role="switch" aria-checked="${!!state.settings.nudges}" aria-label="Daily reminder" data-act="nudges"><i></i></button></div>
   </section>`;
+}
+/* The active Show, big: its character, name, goal, real progress, and the way in. */
+export function heroCard(s) {
+  const st = s.strategy || {}; const n = s.assets.length, d = s.assets.filter(a => a.done).length; const pct = n ? Math.round(d / n * 100) : 0;
+  const k = artFor(s); const A = ART[k];
+  return `<div class="hero-card" style="--pbg:${A.bg};--pink:${A.ink}">
+    <span class="pill-k">${state.settings.activeShow === s.id ? "Active Show" : "Your Show"}</span>
+    <b class="hc-name">${esc(st.name || "New show")}</b>
+    <p class="hc-goal">${esc(st.idea || GOALS[s.brief.goal]?.label || "")}</p>
+    <div class="hc-row"><button class="btn ink" data-act="openshow" data-id="${s.id}">Open Show ${IC.arrow}</button>
+      <span class="ring" style="--p:${pct}" role="img" aria-label="${d} of ${n} posted"><b>${pct}%</b></span><small class="hc-n">${d} of ${n}<br>posted</small></div>
+    <img class="hc-art" src="art/${k}.webp" alt="" draggable="false">
+  </div>`;
+}
+function miniShow(s) {
+  const k = artFor(s); const n = s.assets.length, d = s.assets.filter(a => a.done).length; const pct = n ? Math.round(d / n * 100) : 0;
+  return `<button class="mini-show" style="--pbg:${ART[k].bg}" data-act="openshow" data-id="${s.id}"><img src="art/${k}.webp" alt=""><b>${esc(s.strategy?.name || "Show")}</b><small>${esc(fmtDate(s.brief.start))} – ${esc(fmtDate(showEnd(s)))}</small><span class="bar"><i style="width:${pct}%"></i></span></button>`;
 }
 
 /* The current show as a poster, its progress, and the ONE next thing to do. */

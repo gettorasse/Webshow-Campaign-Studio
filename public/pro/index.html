@@ -1430,6 +1430,14 @@ button.sp-ep{grid-template-columns:110px 28px minmax(0,1fr) auto auto auto}
 .srp-form textarea{flex:1;resize:none;border:0;outline:0;background:var(--well);border-radius:12px;padding:8px 10px;font:inherit;font-size:13.5px;color:var(--ink);box-shadow:inset 0 0 0 .5px var(--line-2)}
 .srp-form .send{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--brand);color:#fff;border:0;cursor:pointer;flex:none}
 @media (max-width:900px){.main.has-srp .body{margin-right:0}.srp{width:100%;top:52px}}
+
+/* v5: Show characters in the sidebar, phase colours on the timeline */
+.sb .av.art{background:none;box-shadow:none;padding:0}.sb .av.art img{width:100%;height:100%;object-fit:contain;display:block}
+.tl-sub.ph-hook .tl-name b{color:#3f55d9}.tl-sub.ph-show .tl-name b{color:#8a4fc4}.tl-sub.ph-convert .tl-name b{color:#d2622e}
+.tl-sub.ph-hook{background:color-mix(in srgb,#DCE6FF 70%,transparent)}.tl-sub.ph-show{background:color-mix(in srgb,#EDDDF9 70%,transparent)}.tl-sub.ph-convert{background:color-mix(in srgb,#FFE0D3 70%,transparent)}
+[data-theme="dark"] .tl-sub.ph-hook{background:#1d2447}[data-theme="dark"] .tl-sub.ph-show{background:#2a1f3d}[data-theme="dark"] .tl-sub.ph-convert{background:#3a2318}
+.srp-av{position:relative;background:none!important}.srp-av img{width:34px;height:34px;object-fit:contain}.srp-av i{position:absolute;right:-4px;bottom:-4px;width:16px;height:16px;border-radius:50%;background:var(--panel);display:grid;place-items:center;color:var(--ink);box-shadow:0 0 0 1px var(--line-2)}.srp-av i .icon{width:10px;height:10px}
+.srp-empty img{width:72px;height:72px;object-fit:contain}
 </style>
 <div id="app"></div><div id="layer"></div><div id="toastbox"></div>
 <script>
@@ -3419,7 +3427,7 @@ const A = {
   home() { S.view = "home"; S.sbOpen = false; Room.set({ v: "home" }); render(); },
   threadsnav() { const here = S.view === "threads" && S.tfilter === "all"; S.thOpen = here ? !S.thOpen : true; lsSet("wss.thOpen", S.thOpen); if (here) return renderSidebarOnly(); A.view({ dataset: { v: "threads", f: "all" } }); },
   templates() { S.modal = "templates"; paintLayer(); },
-  open(t) { S.sbOpen = false; openShow(t.dataset.id, t.dataset.v || "canvas"); },
+  open(t) { S.sbOpen = false; openShow(t.dataset.id, t.dataset.v || "timeline"); }, /* the Timeline is every Show's main view */
   view(t) { S.view = t.dataset.v; if (t.dataset.f) { S.tfilter = t.dataset.f; S.thread = null; } S.sbOpen = false; Room.set({ v: S.view }); render(); },
   settings() { if (!cur()) return; S.modal = "settings"; paintLayer(); },
   share() { S.modal = "share"; paintLayer(); },
@@ -5712,7 +5720,7 @@ function dnaBarHTML() {
 function paintDnaBar() { const el = $("#goalpill"); if (el) el.innerHTML = dnaBarHTML(); const lc = $("#lanechips"); if (lc) lc.innerHTML = laneChipsHTML(); }
 
 /* ---------- navigation: Plan → Build → On air → Results ---------- */
-const VIEW_LABEL = { plan: "Plan", canvas: "Build", timeline: "On air", live: "Results", threads: "Threads", assets: "Assets", needs: "Needs you" };
+const VIEW_LABEL = { plan: "Plan", canvas: "Build", timeline: "Timeline", live: "Results", threads: "Threads", assets: "Assets", needs: "Needs you" };
 { const _vb = viewBody; viewBody = function () { if (S.view === "plan" && cur()) return planView(); return _vb(); }; }
 sidebar = function () {
   const show = cur(); const shows = Object.values(S.shows).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -5732,16 +5740,16 @@ sidebar = function () {
     ${show ? `<div class="sb-show" style="--st:${tintOf(show)}"><button class="sb-head srow" data-act="settings" style="font-weight:600"><span class="av" style="--nc:${tintOf(show)}">${esc((show.name || "?")[0].toUpperCase())}</span><span class="lbl">${esc(show.name)}</span>${lifeChip(life)}</button>
       ${typeof needsList === "function" ? (() => { const c = needsList().length; return row("view", ICON.inbox, "Needs you", c ? `<span class="badge" title="${c} waiting on you">${c}</span>` : `<span class="ct">0</span>`, S.view === "needs", 'data-v="needs"', "needs-row"); })() : ""}
       <div class="sb-flow">
-      ${row("view", ICON.target, "Plan", +dnaOf(show).target ? "" : `<span class="ct">set goal</span>`, S.view === "plan", 'data-v="plan"')}
+      ${row("view", ICON.timeline, "Timeline", life === "live" && onAirNow(show) ? dot("var(--live)") : "", S.view === "timeline", 'data-v="timeline"')}
       ${row("view", ICON.nodes, "Build", `<span class="ct">${Object.keys(S.nodes).length}</span>`, S.view === "canvas", 'data-v="canvas"')}
-      ${row("view", ICON.onair, "On air", life === "live" && onAirNow(show) ? dot("var(--live)") : "", S.view === "timeline", 'data-v="timeline"')}
-      ${row("view", ICON.trophy, "Results", "", S.view === "live", 'data-v="live"')}</div>
+      ${row("view", ICON.image, "Assets", `<span class="ct">${Object.values(S.nodes).filter(n => n.type === "image").length}</span>`, S.view === "assets", 'data-v="assets"')}
+      ${row("view", ICON.trophy, "Results", "", S.view === "live", 'data-v="live"')}
+      ${row("view", ICON.target, "Plan", +dnaOf(show).target ? "" : `<span class="ct">set goal</span>`, S.view === "plan", 'data-v="plan"')}</div>
       ${row("threadsnav", ICON.chat, "Threads", `${nUnread ? `<span class="badge" title="${nUnread} unread">${nUnread}</span>` : ""}<span class="ct">${th.length}</span>`, S.view === "threads" && S.tfilter === "all", `aria-expanded="${!!S.thOpen}"`)}
       ${S.thOpen ? `<div class="sb-subs">
       <button class="srow sub ${nNeeds ? "needs" : ""}" data-act="view" data-v="threads" data-f="needs" aria-current="${S.view === "threads" && S.tfilter === "needs"}"><span class="ic">${ICON.hand}</span><span class="lbl">Decisions</span><span class="ct">${nNeeds}</span></button>
       <button class="srow sub" data-act="view" data-v="threads" data-f="open" aria-current="${S.view === "threads" && S.tfilter === "open"}"><span class="ic">${ICON.chat}</span><span class="lbl">Open</span><span class="ct">${nOpen}</span></button>
       <button class="srow sub" data-act="view" data-v="threads" data-f="done" aria-current="${S.view === "threads" && S.tfilter === "done"}"><span class="ic">${ICON.check}</span><span class="lbl">Done</span><span class="ct">${nDone}</span></button></div>` : ""}
-      ${row("view", ICON.image, "Assets", `<span class="ct">${Object.values(S.nodes).filter(n => n.type === "image").length}</span>`, S.view === "assets", 'data-v="assets"')}
       ${row("settings", ICON.sliders, "Show settings")}</div>
       <div class="sb-sep"></div>` : ""}
     ${list.filter(s => s.id !== S.showId).slice(0, 8).map(s => `<button class="srow" data-act="open" data-id="${s.id}"><span class="av" style="--nc:${tintOf(s)}">${esc((s.name || "?")[0].toUpperCase())}</span><span class="lbl">${esc(s.name)}</span>${lifeOf(s) === "live" && onAirNow(s) ? dot("var(--live)") : ""}${s.needs ? `<span class="badge">${s.needs}</span>` : ""}</button>`).join("")}
@@ -6249,11 +6257,11 @@ timelineView = function () {
       <div class="tl-lane" style="width:${W}px">${lane}</div>
       <div class="tl-perf">${m ? `<span class="v"><b class="px">${num(m.value)}</b><small>${m.label}${m.real ? "" : " · sample"}</small></span>${m.series.some(Boolean) ? sparkSVG(m.series) : ""}${r.top ? `<span class="topb">${ICON.check} ${r.top}</span>` : ""}` : `<small class="${r.ep && ["missed", "due"].includes(r.dv.k) ? "dlv-warn" : "faint"}">${r.ep ? esc(dlvLabel(r.dv)) : r.kind === "trigger" ? "Leads arrive in Results" : "No results yet"}</small>`}</div></div>`; };
   const group = (title, desc, inner, cls = "") => `<div class="tl-stage tl-group ${cls}"><div class="tl-name"><b>${title}</b><span>${desc}</span></div><div class="tl-lane" style="width:${W}px"></div><div class="tl-perf"></div></div>${inner}`;
-  const sub = (l, dsc, rs) => `<div class="tl-row tl-sub"><div class="tl-name"><b>${l}</b><span>${dsc}</span></div><div class="tl-lane" style="width:${W}px"></div><div class="tl-perf"></div></div>${rs.map(rowHTML).join("")}`;
+  const sub = (l, dsc, rs, k = "") => `<div class="tl-row tl-sub ph-${k}"><div class="tl-name"><b>${l}</b><span>${dsc}</span></div><div class="tl-lane" style="width:${W}px"></div><div class="tl-perf"></div></div>${rs.map(rowHTML).join("")}`;
   const eng = rows.filter(r => r.kind === "engine"), eps = rows.filter(r => r.kind === "episode"), trg = rows.filter(r => r.kind === "trigger"), chs = rows.filter(r => r.kind === "channel");
   const grid = [
     eng.length ? group("Always on", "The engine every episode sends people to", eng.map(rowHTML).join(""), "g-engine") : "",
-    group("Episodes", "One-off posts ◆ and campaign windows ▬", STAGES.map(([k, l, dsc]) => { const rs = eps.filter(r => r.stage === k); return rs.length ? sub(l, dsc, rs) : ""; }).join("") || `<div class="tl-row"><div class="tl-name"><span class="faint" style="font-size:12px;padding-left:4px">No episodes yet</span></div><div class="tl-lane" style="width:${W}px"></div><div class="tl-perf"></div></div>`, "g-eps"),
+    group("Episodes", "One-off posts ◆ and campaign windows ▬", STAGES.map(([k, l, dsc]) => { const rs = eps.filter(r => r.stage === k); return rs.length ? sub(l, dsc, rs, k) : ""; }).join("") || `<div class="tl-row"><div class="tl-name"><span class="faint" style="font-size:12px;padding-left:4px">No episodes yet</span></div><div class="tl-lane" style="width:${W}px"></div><div class="tl-perf"></div></div>`, "g-eps"),
     trg.length ? group("Triggers", "Fire when a visitor does something", trg.map(rowHTML).join(""), "g-trig") : "",
     chs.length ? group("Ad channels", "Campaigns that run episodes as ads", chs.map(rowHTML).join(""), "g-ch") : "",
   ].join("");
@@ -6271,7 +6279,7 @@ function onairHead(rows, t, d, ds, de, nav = "") {
   const next = rows.flatMap(r => [r.kind === "episode" && ["scheduled", "planned"].includes(r.win?.state) && r.win.s >= t ? { d: r.win.s, what: `Ep ${epNo(r.n)} · ${r.n.title}` } : null, ...r.marks.filter(m => !m.done).map(m => ({ d: m.d, what: `${r.n.title} posts` }))]).filter(Boolean).sort((a, b) => a.d - b.d)[0];
   const top = rows.filter(r => r.top).sort((a, b) => (b.metric.kind === "leads") - (a.metric.kind === "leads"))[0];
   const status = ds == null ? `<b>No dates yet</b><span class="muted">Set the show's start and end in Plan.</span>` : `<b>${life === "draft" ? "Not scheduled" : life === "paused" ? "Paused" : t < ds ? `Starts ${fmtDay(ds)}` : de != null && t > de ? "The show has ended" : `Day ${t - ds + 1}${de != null ? ` of ${de - ds + 1}` : ""}`}</b><span class="muted">${fmtDay(ds)} → ${de != null ? fmtDay(de) : "open"}</span>${de != null ? `<span class="tl-prog"><i style="width:${Math.max(0, Math.min(100, (t - ds + 1) / (de - ds + 1) * 100))}%"></i></span>` : ""}`;
-  return `<div class="dash-h"><div style="display:grid;gap:4px"><span class="px vt" style="font-size:24px">On air</span><span class="muted">${esc(cur()?.name || "")} · what runs when, and how each part is doing</span></div>${nav}</div>
+  return `<div class="dash-h"><div style="display:grid;gap:4px"><span class="px vt" style="font-size:24px">Timeline</span><span class="muted">${esc(cur()?.name || "")} · what runs when, and how each part is doing</span></div>${nav}</div>
     <div class="tl-cards"><div class="dk">${status}</div>
       <div class="dk"><span class="dk-l">Goal</span>${+d.target ? `<b class="px">${num(pr.res)} <small class="muted" style="font-size:13px">/ ${num(+d.target)}</small></b><span class="muted" style="font-size:12px">${unitOf(d.goal, 2)}${pr.sample ? " · sample" : ""}</span>` : `<button class="btn sm" data-act="view" data-v="plan">Set the goal</button>`}</div>
       <div class="dk"><span class="dk-l">Next up</span>${next ? `<b style="font-size:14px;font-weight:600">${esc(next.what)}</b><span class="muted" style="font-size:12px">${next.d === t ? "Today" : next.d === t + 1 ? "Tomorrow" : fmtDay(next.d, { weekday: "short", day: "numeric", month: "short" })}</span>` : `<span class="muted">Nothing scheduled</span>`}</div>
@@ -7075,10 +7083,19 @@ const MASCOT_IC = P('<rect x="2" y="3" width="12" height="11" rx="4"/><circle cx
   const playRows = po.map(s => `<button class="srow from-play" data-act="fromplay" data-id="${esc(s.id)}" title="Made in Webshow Play. Opening it here builds its canvas."><span class="av" style="--nc:${esc(s.strategy?.colors?.[0] || "var(--brand)")}">${esc((s.strategy?.name || "?")[0].toUpperCase())}</span><span class="lbl">${esc(s.strategy?.name || "New show")}</span><span class="ct sb-play">${PHONE_IC}</span></button>`).join("");
   h = h.replace(/(<div class="sb-sep"><\/div>)/, `$1<div class="sb-label">Shows</div>`);
   h = h.replace(/(\s*<\/div>\s*<div class="sb-foot">)/, `${playRows ? `<div class="sb-label sm">From Webshow Play</div>${playRows}` : ""}$1`);
+  /* each Show's character, the same as in Webshow Play */
+  h = h.replace(/(data-id="([^"]+)"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/g, (m, pre, id) => `${pre}${artAv(S.shows[id] || playData()?.shows?.[id] || { id })}`);
+  if (cur()) h = h.replace(/(<button class="sb-head srow"[^>]*>)<span class="av" style="--nc:[^"]*">[^<]*<\/span>/, (m, pre) => `${pre}${artAv(cur())}`);
   /* switch experiences */
   h = h.replace(/(<div class="sb-foot">)/, `$1<a class="srow brand" href="../?view=play"><span class="ic">${PHONE_IC}</span><span class="lbl">Webshow Play</span><span class="ct">phone</span></a>`);
   return h;
 }; }
+
+const ART_KEYS = ["starburst", "snowflake", "leaf", "sun"];
+const artOf = (s) => ART_KEYS.includes(s?.art) ? s.art : ART_KEYS[hash(s?.id || s?.name || "") % ART_KEYS.length];
+const artAv = (s) => `<span class="av art"><img src="../art/${artOf(s)}.webp" alt="" draggable="false"></span>`;
+/* the Showrunner panel is part of every Show on a big screen */
+if (innerWidth >= 1280 && S.srOpen === undefined) S.srOpen = true;
 
 /* ---------- topbar: open the Show's Showrunner ---------- */
 { const _tb = topbar; topbar = function () {
@@ -7108,9 +7125,9 @@ function paintSRP() {
   const k = s.showrunner || "ogilvy"; const r = SHOWRUNNERS[k] || SHOWRUNNERS.ogilvy; const role = { ogilvy: "The Strategist", hormozi: "The Closer", vaynerchuk: "The Creator" }[k] || "Showrunner";
   const c = srpChat(); const msgs = c?.messages || [];
   const scroll = el.querySelector(".srp-msgs")?.scrollTop;
-  const html = `<div class="srp-h"><span class="srp-av">${ICON[r.icon] || MASCOT_IC}</span><span class="srp-t"><b>${esc(role)}</b><small>${esc(r.name)} style · ${esc(s.name)}</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
+  const html = `<div class="srp-h"><span class="srp-av"><img src="../art/showrunner.webp" alt=""><i>${ICON[r.icon] || ""}</i></span><span class="srp-t"><b>${esc(role)}</b><small>${esc(r.name)} style · ${esc(s.name)}</small></span><button class="ib" data-act="srpanel" aria-label="Close the Showrunner">${ICON.x}</button></div>
     <div class="srp-note">${BR.ai === false ? "Demo answers: the AI isn't set up on this server." : BR.ai ? "Shared with Webshow Play: the same conversation on your phone." : "Shared with Webshow Play."}</div>
-    <div class="srp-msgs">${msgs.length ? msgs.map((m, i) => srpMsg(m, i, msgs)).join("") : `<div class="srp-empty">${MASCOT_IC}<p>This is ${esc(s.name)}'s Showrunner. Ask for changes, ideas or what to do next. Every change is shown before it happens.</p></div>`}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
+    <div class="srp-msgs">${msgs.length ? msgs.map((m, i) => srpMsg(m, i, msgs)).join("") : `<div class="srp-empty"><img src="../art/showrunner.webp" alt=""><p>This is ${esc(s.name)}'s Showrunner. Ask for changes, ideas or what to do next. Every change is shown before it happens.</p></div>`}${BR.busy ? `<div class="srp-m them"><div class="srp-b typing-b"><span class="tdots"><i></i><i></i><i></i></span></div></div>` : ""}</div>
     ${BR.busy ? "" : `<div class="srp-quick">${["What's next?", "Make the posts shorter", "Move everything a week later"].map(q => `<button class="chip" data-act="srsay" data-t="${esc(q)}">${esc(q)}</button>`).join("")}</div>`}
     <form class="srp-form" data-srp-form><textarea id="srp-in" rows="2" placeholder="Ask ${esc(role)} about this show…" ${BR.busy ? "disabled" : ""}></textarea><button class="send" aria-label="Send" ${BR.busy ? "disabled" : ""}>${ICON.send || "→"}</button></form>`;
   /* the studio re-renders often while it builds; only repaint when the conversation changed */
@@ -7201,6 +7218,7 @@ async function fromPlay(id) {
   /* tell Play this Show now also lives in Pro */
   const pd = playData(); if (pd?.shows?.[id]) { pd.shows[id].inPro = Date.now(); writePlay(pd); }
   await done;
+  if (S.showId === id) { S.view = "timeline"; render(); } /* built on the canvas; now see it on the timeline */
 }
 
 /* ---------- actions, deep links, keeping in step with Play ---------- */

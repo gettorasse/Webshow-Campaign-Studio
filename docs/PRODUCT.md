@@ -21,6 +21,11 @@ A small business owner has one place and one buddy: **their Showrunner**. It liv
 
 There are no payments in the app and nothing is locked by plan yet. **Plans** in *Me* is a clearly labelled demo, so we can watch which plan people pick. Prices live in `public/shared/plans.js`. Pro (desktop) uses the same names and prices in `legacy/pro-studio/src/tiers.js`, where plans do unlock features in the demo.
 
+## Navigation (v5)
+
+- **Play:** Home (active Show hero, this week's timeline, next mission, your Shows) · Shows · Create. Inside a Show: **Timeline | Assets | Chat**, plus *The idea*.
+- **Pro:** sidebar *New show*, *All shows*, Shows (each with its character); inside a Show: **Timeline** (default) · Build (canvas) · Assets · Results · Plan; the Showrunner panel on the right (open by default on wide screens).
+
 ## Two experiences, one product
 
 - **Webshow Play** (phone, guided): start a Show, pick or auto-pick a Showrunner, approve one idea, watch it being built ("Finding your big idea → Setting the stage → Building your Show", tied to real steps), then missions, creatives and progress. Shows are a collection of productions; each has its Showrunner one tap away.

@@ -6,7 +6,8 @@ import { ask, initAI, errText, aiMode } from "./ai.js";
 import { normChat, normShowChat } from "../shared/prompts.js";
 import { srOf, SHOWRUNNERS, SR_FOR_GOAL } from "../shared/showrunners.js";
 import { copyOf, KINDS, GOALS, PACES } from "../shared/model.js";
-import { clip, uid, todayISO, isISO } from "../shared/util.js";
+import { clip, uid, todayISO, isISO, addDays, fmtDate } from "../shared/util.js";
+import { defaultWeek, mondayOf } from "./views/timeline.js";
 import { offlineChat, offlineShowChat, guessGoal } from "./offline.js";
 import { rewriteAsset, moveAsset, showsList, showEnd, applyChange, makeConcept, createShowFromConcept, checkMilestones, MILESTONES, setOutcome, retryFailed, writeAssets } from "./campaign.js";
 import { showMD, showCSV, showICS, showJSON, fileBase, saveFile } from "./export.js";
@@ -21,7 +22,7 @@ import { proShow } from "./pro.js";
 import { newShowChat } from "../shared/bridge.js";
 import { slug } from "../shared/util.js";
 
-const TABS = [["today", "Home", "home"], ["chat", "Create", "spark"], ["shows", "Shows", "layers"]];
+const TABS = [["today", "Home", "home"], ["shows", "Shows", "layers"], ["chat", "Create", "spark"]];
 
 /* ---------- render ---------- */
 let lastRoute = "";
@@ -205,7 +206,7 @@ const A = {
     push(chat, "sr", show.status === "partial" ? `“${show.strategy.name}” is set up, but some posts didn't get written. Open the show and tap Try again.` : `“${show.strategy.name}” is ready: ${n} posts at a ${PACES[d.v].label.toLowerCase()} pace. First mission: make your first post.`, [{ type: "open", showId: show.id, name: show.strategy.name }]);
     state.settings.activeShow = show.id; save();
   },
-  enterShow() { const id = state.ui.build?.showId; state.ui.build = null; renderStage(); if (id) { state.ui.showTab = "journey"; state.ui.stage = null; go("#/show/" + id); } },
+  enterShow() { const id = state.ui.build?.showId; state.ui.build = null; renderStage(); if (id) { state.ui.showTab = "timeline"; state.ui.stage = null; go("#/show/" + id); } },
   another(d) { const c = cardOf(d); const { chat } = msgOf(d); if (!c || state.ui.busy) return; c.state = "replaced"; genConcept(chat, { ...c.seed, avoid: [...(c.seed.avoid || []), c.concept.name] }, c.showrunner); },
   restyle(d) { const c = cardOf(d); const { chat } = msgOf(d); if (!c || state.ui.busy) return; c.state = "replaced"; chat.showrunner = d.k; genConcept(chat, { ...c.seed, avoid: [...(c.seed.avoid || []), c.concept.name] }, d.k); },
   tweak(d) { const { chat } = msgOf(d); if (!chat) return; chat.flow = { step: "tweak", m: d.m, c: d.c }; render(); $("#msg")?.focus(); },
@@ -224,6 +225,10 @@ const A = {
     if (d.v === "yes") cheer(s); else if (d.v === "no") toast("Noted. One post rarely does it alone; the next ones build on it.", 3500);
   },
   stage: (d) => { state.ui.stage = d.k; render(); },
+  /* the timeline: change week, jump in from Home, nudge a date */
+  week(d) { const s = state.shows[d.s]; if (!s) return; const w = (state.ui.weeks ||= {}); w[s.id] = addDays(w[s.id] || defaultWeek(s), +d.d); render(); },
+  showtimeline(d) { state.ui.showTab = "timeline"; state.settings.activeShow = d.id; save(); go("#/show/" + d.id); },
+  nudgedate(d) { const { s, a } = findAsset(d.s, d.a); if (!a) return; moveAsset(a, addDays(a.date, +d.n)); const w = (state.ui.weeks ||= {}); w[s.id] = mondayOf(a.date); renderSheet(); render(); toast(`Moved to ${fmtDate(a.date, { weekday: "long", day: "numeric", month: "short" })}`); },
   newchat: () => go("#/chat/new"),
   openchat: (d) => go("#/chat/" + d.id),
   showchat: (d) => openShowChat(d.id),
@@ -245,7 +250,7 @@ const A = {
     const c = cardOf(d); const { chat } = msgOf(d); if (!c || c.asked || state.ui.busy) return; c.asked = true; save();
     const p = state.profile; genConcept(chat, { goal: c.goal, what: [p.business, p.what].filter(Boolean).join(" – "), offer: c.offer || c.idea, note: `Build on this direction: ${c.name} – ${c.idea}` }, chat.showrunner || p.showrunner || SR_FOR_GOAL[c.goal]);
   },
-  openshow: (d) => { state.ui.showTab = "journey"; state.ui.stage = null; state.settings.activeShow = d.id; save(); go("#/show/" + d.id); },
+  openshow: (d) => { state.ui.showTab = "timeline"; state.ui.stage = null; state.settings.activeShow = d.id; save(); go("#/show/" + d.id); },
   copypost: (d) => { const c = cardOf(d); copyText([c.hook, c.text, c.cta].filter(Boolean).join("\n\n"), "Post copied"); },
   gptpost: (d) => toGPT(chatPostPrompt(cardOf(d), state.profile)),
   openme: () => go("#/me"),
@@ -339,6 +344,10 @@ function wire() {
     if (e.key === "Escape" && state.ui.sheet) A.closesheet(); else if (e.key === "Escape" && state.ui.drawer) A.drawer();
   });
   window.addEventListener("hashchange", route);
+  /* swipe the timeline to change week */
+  let sx = null, sy = 0, sid = null;
+  document.addEventListener("touchstart", (e) => { const w = e.target.closest?.("[data-swipe-week]"); if (!w || w.classList.contains("compact")) return; sx = e.touches[0].clientX; sy = e.touches[0].clientY; sid = w.dataset.swipeWeek; }, { passive: true });
+  document.addEventListener("touchend", (e) => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy; sx = null; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) A.week({ s: sid, d: dx < 0 ? 7 : -7 }); }, { passive: true });
   /* Webshow Pro (another tab) wrote to the shared store: pick up conversations and Shows */
   window.addEventListener("storage", (e) => { if ((e.key === "webshow.v1" || e.key === "wss.local") && !state.ui.busy) { if (e.key === "webshow.v1") load(); render(); } });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) nudge(); });

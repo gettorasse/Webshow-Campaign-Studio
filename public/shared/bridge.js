@@ -63,7 +63,7 @@ export function playToPro(s, profile = {}) {
     eps.push({ lane: a.phase === "always" ? "hook" : a.phase, arc: a.phase === "convert" ? "urgency" : a.phase === "show" ? "proof" : "teaser", type, day, title: (a.title || KINDS[a.kind]?.label || "Episode").slice(0, 40), angle: HOOKLINE(a), channels: [], boost: 0, on: true, from: a.id });
   }
   return {
-    show: { id: s.id, name: (st.name || "New show").slice(0, 48), showrunner: s.showrunner || "ogilvy", play: { id: s.id, at: Date.now() } },
+    show: { id: s.id, name: (st.name || "New show").slice(0, 48), showrunner: s.showrunner || "ogilvy", art: artFor(s), play: { id: s.id, at: Date.now() } },
     dna: { goal, idea: st.idea || "", business: profile.business || st.name || "", offer: st.offer || b.offer || "", audience: st.audience || b.audience || "", cta: st.cta || GOALS[b.goal]?.cta || "", facts: profile.facts || "", start: b.start || "", end: b.start ? campaignEnd(b) : "", budget: +b.budget ? b.budget : "" },
     season: { format: FORMAT_FOR[b.goal] || "launch", eps, strategy: { who: st.audience || "", message: st.message || st.idea || "", whyNow: st.why || st.tagline || "" }, look: null },
     skipped,
@@ -96,3 +96,9 @@ export function experienceFor({ width = 0, finePointer = false, hover = false, i
   const desktop = width >= 1024 && finePointer && hover && !ipad;
   return { choice: desktop ? "pro" : "play", store: null };
 }
+
+/* ---------- Show artwork: one character per Show, the same in Play and Pro ---------- */
+export const ART = { starburst: { bg: "#DCE6FF", ink: "#2a3bb7" }, snowflake: { bg: "#EDDDF9", ink: "#6a3aa6" }, leaf: { bg: "#DEF2E4", ink: "#2c7a48" }, sun: { bg: "#FFF0C8", ink: "#9a6a00" } };
+export const ART_KEYS = Object.keys(ART);
+const h32 = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+export const artFor = (show) => ART[show?.art] ? show.art : ART_KEYS[h32(show?.id || show?.name || "") % ART_KEYS.length];

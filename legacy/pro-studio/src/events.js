@@ -24,7 +24,7 @@ const A = {
   home() { S.view = "home"; S.sbOpen = false; Room.set({ v: "home" }); render(); },
   threadsnav() { const here = S.view === "threads" && S.tfilter === "all"; S.thOpen = here ? !S.thOpen : true; lsSet("wss.thOpen", S.thOpen); if (here) return renderSidebarOnly(); A.view({ dataset: { v: "threads", f: "all" } }); },
   templates() { S.modal = "templates"; paintLayer(); },
-  open(t) { S.sbOpen = false; openShow(t.dataset.id, t.dataset.v || "canvas"); },
+  open(t) { S.sbOpen = false; openShow(t.dataset.id, t.dataset.v || "timeline"); }, /* the Timeline is every Show's main view */
   view(t) { S.view = t.dataset.v; if (t.dataset.f) { S.tfilter = t.dataset.f; S.thread = null; } S.sbOpen = false; Room.set({ v: S.view }); render(); },
   settings() { if (!cur()) return; S.modal = "settings"; paintLayer(); },
   share() { S.modal = "share"; paintLayer(); },

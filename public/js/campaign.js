@@ -11,6 +11,7 @@ import { uid, addDays, todayISO, daysBetween } from "../shared/util.js";
 import { offlineAsset, offlineStrategy, offlineConcept, GOAL_CHANNELS } from "./offline.js";
 import { toast } from "./lib.js";
 import { defaultAfter } from "../shared/make.js";
+import { artFor } from "../shared/bridge.js";
 
 export const showsList = () => Object.values(state.shows).sort((a, b) => b.createdAt - a.createdAt);
 export const sortedAssets = (s) => s.assets.slice().sort((x, y) => x.date.localeCompare(y.date) || x.order - y.order);
@@ -31,7 +32,7 @@ export async function createShowFromConcept(c, pace, showrunner, onChange) {
   const brief = { goal: c.goal, offer: c.offer || p.offer, audience: c.audience || p.audience, channels: c.channels?.length ? c.channels : GOAL_CHANNELS[c.goal] || ["instagram", "email"], start: addDays(todayISO(), 1), weeks: c.weeks || 4, budget: 0, idea: c.idea, pace: pace || "light" };
   brief.after = defaultAfter(brief.goal, p);
   const strategy = { name: c.name, idea: c.idea, tagline: c.why, audience: c.audience, insight: c.insight, message: c.message, offer: c.offer, cta: c.cta || GOALS[c.goal]?.cta, arc: c.arc, voice: c.voice, visual: c.visual, offerIdeas: [], hook: c.hook, why: c.why, colors: c.colors };
-  const show = { id: uid("s"), createdAt: Date.now(), showrunner, source: c.source || "ai", status: "writing", brief, strategy, assets: [], milestones: { idea: Date.now() } };
+  const show = { id: uid("s"), createdAt: Date.now(), showrunner, source: c.source || "ai", status: "writing", brief, strategy, assets: [], milestones: { idea: Date.now() }, art: artFor({ name: c.name }) };
   show.assets = planSlots(brief).map(s => ({ ...s, title: "", fields: {}, image: "", goal: "", done: false, pending: true }));
   state.shows[show.id] = show; save(); onChange?.(show);
   await writeAssets(show, show.assets, "", onChange);
