@@ -1448,8 +1448,8 @@ button.sp-ep{grid-template-columns:110px 28px minmax(0,1fr) auto auto auto}
 
 /* buttons: rounder, chunkier */
 .btn{border-radius:999px;font-weight:600}
-.btn.primary{background:linear-gradient(180deg,#5b6cff,var(--tint));box-shadow:0 2px 0 #3442c9}
-.btn.primary:active{transform:translateY(1px);box-shadow:none}
+.btn.primary{background:var(--tint);box-shadow:none}
+.btn.primary:active{filter:brightness(.94)}
 
 /* sidebar: a white floating card with the logo, nav and Show characters */
 @media (min-width: 761px){
@@ -1466,7 +1466,7 @@ button.sp-ep{grid-template-columns:110px 28px minmax(0,1fr) auto auto auto}
 .sb .srow .ic .icon{width:17px;height:17px}
 .sb .srow[aria-current="true"]{background:var(--select);color:var(--tint);font-weight:600}
 .sb .srow[aria-current="true"] .ic{color:var(--tint)!important}
-.sb .sb-new{background:linear-gradient(180deg,#5b6cff,var(--tint));color:#fff!important;justify-content:center;font-weight:700;height:40px;box-shadow:0 2px 0 #3442c9;margin-bottom:6px}
+.sb .sb-new{background:var(--tint);color:#fff!important;justify-content:center;font-weight:700;height:40px;box-shadow:none;margin-bottom:6px}
 .sb .sb-new .ic{color:#fff!important}
 .sb .sb-search{border-radius:12px}
 .sb .av.art{width:28px;height:28px;border-radius:9px;background:var(--well)!important;padding:2px}
@@ -1619,7 +1619,7 @@ button.sp-ep{grid-template-columns:110px 28px minmax(0,1fr) auto auto auto}
 .srp-st{display:grid}.srp-st b{font-size:13px}.srp-st small{font-size:12px;color:var(--muted)}
 .srp-form{padding:8px 12px 6px}
 .srp-form textarea{border-radius:18px;padding:11px 14px;background:var(--well)}
-.srp-form .send{width:40px;height:40px;background:linear-gradient(180deg,#5b6cff,var(--tint))}
+.srp-form .send{width:40px;height:40px;background:var(--tint)}
 .srp-quick{padding:0 12px 14px}
 .srp-quick .chip{height:30px;border-radius:999px;font-weight:600;background:var(--select);color:var(--tint);box-shadow:none}
 .srp-note{border-bottom:0;text-align:center}
@@ -1709,12 +1709,27 @@ html:not(#pl){ --pt-text:#8b5cf6; --pt-image:#ff7a3d; --pt-style:#22b07d; --pt-p
 .ob-hero .ob-row{max-width:calc(100% - 200px)}
 .ob-card{border-radius:26px!important}
 .ob-ch h2{font-weight:700}
-.ob-go,.ob-send{background:linear-gradient(180deg,#5b6cff,var(--tint))!important;color:#fff!important;box-shadow:0 2px 0 #3442c9!important;border-radius:999px}
+.ob-go,.ob-send{background:var(--tint)!important;color:#fff!important;box-shadow:none!important;border-radius:999px}
 .ob-chip{border-radius:999px}
 .tpl-thumb,.tprev-map,.tprev-page{border-radius:16px}
 .li{border-radius:12px}
 .insp-h h3{font:700 17px var(--f-pixel)}
 .empty{border-radius:24px}
+
+/* simple, flat buttons: no edges, outlines or glows */
+.btn{box-shadow:none!important;background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.btn:hover{background:color-mix(in srgb,var(--ink) 10%,transparent)}
+.btn.primary,.btn.primary:hover{background:var(--tint)}
+.pl-btn,.pl-btn.ghost,.pl-ib,.pl-seg button[aria-pressed="true"],.chip,.srp-quick .chip,.ob-chip,.pl-tabs .pl-switch{box-shadow:none!important}
+
+/* no raised bottom edges on cards and clips either */
+.pl-hero{box-shadow:none}
+.pl-clip.tl-bar,.pl-clip.span{box-shadow:none}
+.pl-clip.tl-bar:hover{box-shadow:0 6px 16px -8px rgba(20,24,70,.35)}
+.pl-clip.tl-bar.sel{box-shadow:0 0 0 2.5px var(--ink)}
+.pl-clip.st2-scheduled,.pl-clip.st2-posted,.pl-clip.st2-running,.pl-clip.st2-live{box-shadow:inset 0 0 0 2px var(--tint)}
+.pl-clip.st2-missed,.pl-clip.st2-due{box-shadow:inset 0 0 0 2px var(--cta)}
+.pl-ci,.pl-tile,.pl-ph-ic,.pl-nh .nico{box-shadow:none!important}
 </style>
 <div id="app"></div><div id="layer"></div><div id="toastbox"></div>
 <script>
