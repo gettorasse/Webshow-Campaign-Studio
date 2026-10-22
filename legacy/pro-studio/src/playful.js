@@ -274,3 +274,81 @@ visualURL = function (item, pal, fontKey = "grotesk", scale = 1) {
 }; }
 /* wires stay visible in their colours (dimmer when another node is in focus) */
 { const _dw2 = drawWires; drawWires = function (ghost) { _dw2(ghost); $$("#wires path[data-edge]:not(.hit)").forEach(p => { if (+p.style.opacity < .2) p.style.opacity = S.sel ? .25 : .55; }); }; }
+
+/* ============================================================
+   Free canvas: no Kit / Hook / Show / Convert columns. Place things anywhere.
+   - A node's phase is stored on the node (n.lane) instead of being read from where it sits.
+     Older nodes get it once from their position, then keep it however they're moved.
+   - One dot in, one dot out: drop a wire anywhere on a node and it plugs into the matching input.
+   - "+" on a node's right edge, or dragging a wire into empty space, offers what usually comes next.
+     The Showrunner's picks are wired and, for blocks it can build, built straight away.
+   - ▷ builds everything that isn't built yet. Preview opens the Show's landing page.
+   ============================================================ */
+const _laneX = laneOf;
+laneOf = function (n) {
+  if (!n) return "kit"; if (KIT_TYPES.has(n.type) || CONVERT_TYPES.has(n.type)) return _laneX(n);
+  if (["kit", "hook", "show", "convert"].includes(n.lane)) return n.lane;
+  const l = _laneX(n); n.lane = l; return l;
+};
+const stampLanes = () => Object.values(S.nodes).forEach(n => laneOf(n));
+{ const _pw = paintWorld; paintWorld = function () { stampLanes(); _pw(); }; }
+paintLanes = function () { const b = $("#lanes"); if (b) b.innerHTML = ""; };
+{ const _an = addNode; addNode = function (type, x, y, extra = {}) {
+  const src = S.lib?.wireFrom && S.nodes[S.lib.wireFrom.node];
+  const n = _an(type, x, y, extra);
+  if ((EP_TYPES.has(type) || type === "image") && !n.lane) {
+    const fx = Object.entries(LANE_X).find(([, v]) => v === Math.round(x))?.[0];
+    const sl = src && ["hook", "show", "convert"].includes(laneOf(src)) ? laneOf(src) : null;
+    n.lane = fx && (type === "image" || fx !== "kit") ? fx : type === "image" ? (sl || "kit") : (sl || "hook");
+    if (!isEx()) Store.put("nodes", S.showId, n);
+  }
+  return n;
+}; }
+A.eplane = function (b) { const n = selNode(); if (!n) return; const l = b.dataset.v; n.lane = l; hist(n, l === "kit" ? "Now a shared visual" : "Phase: " + LANES.find(x => x[0] === l)[1]); commitNode(n); paintWorld(); S.inspFor = null; paintInspector(); renderSidebarOnly(); };
+{ const _ib = inspectorBody; inspectorBody = function (n) {
+  let h = _ib(n).replace(/<span>Lane<\/span>/, "<span>Phase</span>");
+  if (n.type === "image") {
+    const L = laneOf(n); const btn = (v, l) => `<button data-act="eplane" data-v="${v}" aria-pressed="${L === v}">${l}</button>`;
+    const pick = `<div class="fld"><span>Use this image as</span><div class="seg" style="justify-self:start;flex-wrap:wrap">${btn("kit", "Shared visual")}${btn("hook", "Hook post")}${btn("show", "Show post")}${btn("convert", "Convert post")}</div></div>`;
+    h = L === "kit" ? pick + h : h.replace(/<div class="fld"><span>Phase<\/span>[\s\S]*?<\/div><\/div>/, pick);
+  }
+  return h;
+}; }
+
+/* nodes: an edit button, and "+" for the next step */
+{ const _nh2 = nodeHTML; nodeHTML = function (n) {
+  const h = _nh2(n); const d = NT[n.type]; if (!d?.outputs?.length) return h;
+  return h.replace(/<\/div>\s*$/, `<button class="pl-next" data-act="plnext" data-id="${n.id}" aria-label="What comes after ${esc(n.title)}?" title="Add what comes next">${ICON.plus}</button></div>`);
+}; }
+const PL_NEXT = ["page", "carousel", "metaad", "ad", "popup", "publish", "quiz", "poll", "chatbot", "scheduler", "social", "adchannel", "image", "text"];
+A.plnext = function (b) {
+  const n = S.nodes[b.dataset.id]; const o = NT[n?.type]?.outputs?.[0]; if (!o) return; const r = b.getBoundingClientRect();
+  S.lib = { sx: r.right + 10, sy: r.top - 40, wx: n.x + nodeW(n) + 110, wy: n.y, wireFrom: { node: n.id, port: o.k, t: o.t } }; S.libq = ""; paintLayer();
+};
+{ const _lp = libraryPop; libraryPop = function () {
+  const h = _lp(); const L = S.lib; if (!L?.wireFrom) return h;
+  const sug = PL_NEXT.filter(k => NT[k] && (typeof nodeAllowed !== "function" || nodeAllowed(k)) && NT[k].inputs.some(i => i.t === L.wireFrom.t)).slice(0, 3);
+  if (!sug.length) return h;
+  const row = `<div class="pl-sugrow"><h5>${ICON.sparkle || ICON.spark} Showrunner suggests</h5><div class="pl-sugs">${sug.map(k => `<button class="pl-sug" data-act="pladd" data-t="${k}"><span class="nico" style="--nc:${NT[k].color}">${ICON[NT[k].icon]}</span><b>${esc(NT[k].label)}</b><small>${BUILDABLE.has(k) ? "Wired and built for you" : "Wired for you"}</small></button>`).join("")}</div><h5>Or pick anything</h5></div>`;
+  return h.replace(/(<label class="sb-search"[\s\S]*?<\/label>)/, `$1${row}`);
+}; }
+A.pladd = function (b) { A.addnode(b); const n = S.nodes[S.sel]; if (n && BUILDABLE.has(n.type)) { toast(`Building “${n.title}”…`); buildNode(n).catch(() => toast("Couldn't build it just now. Try Build in the inspector.")); } };
+
+/* canvas chrome like the reference: Canvas | Preview, ▷, zoom pill, fit */
+{ const _cv2 = canvasView; canvasView = () => {
+  let h = _cv2();
+  h = h.replace(/<div class="zoomer">([\s\S]*?)<\/div>/, (m, inner) => { const parts = inner.match(/<button[\s\S]*?<\/button>|<span[\s\S]*?<\/span>/g) || []; const pill = parts.slice(0, 3).join(""), rest = parts.slice(3).join("");
+    return `<div class="zoomer pl-zoom"><button class="pl-round play" data-act="plbuildall" title="Let Showrunner build everything that isn't built yet" aria-label="Build everything">${ICON.play}</button><div class="pl-zpill">${pill}</div>${rest}</div>`; });
+  return h.replace('<div class="rail"', `<div class="pl-cvtabs" role="tablist"><button role="tab" aria-selected="true">Canvas</button><button role="tab" aria-selected="false" data-act="plpreview">Preview</button></div><div class="rail"`);
+}; }
+A.plpreview = function () { const pg = mainPage(); if (!pg) return toast("Add a landing page first: press + on a node and pick Landing page."); S.sel = pg.id; A.preview(); };
+A.plbuildall = async function () {
+  if (S.plBuilding) return; const list = Object.values(S.nodes).filter(n => BUILDABLE.has(n.type) && n.status !== "building" && (!n.builtAt || G.stale(n)));
+  if (!list.length) return toast("Everything is built. Change something and press play again.");
+  S.plBuilding = true; toast(`Showrunner is building ${list.length} block${list.length > 1 ? "s" : ""}…`);
+  for (const n of list) { try { await buildNode(n); } catch { } }
+  S.plBuilding = false; toast("Built. Look them over; nothing goes out until you publish.");
+};
+/* a big canvas opens readable, at the beginning of the flow; the fit button still shows everything */
+{ const _fit = fit; fit = function () { const user = S.plUserFit; S.plUserFit = false; _fit(); const b = bounds(); if (!user && b && (S.vp.k < .6 || S.vp.k > .85)) { const k = .72; S.vp = { k, x: 150 - b.x0 * k, y: 110 - b.y0 * k }; applyVp(); } }; }
+{ const _af = A.fit; A.fit = function (b) { S.plUserFit = true; return _af ? _af(b) : fit(); }; }

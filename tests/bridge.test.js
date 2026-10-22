@@ -70,3 +70,11 @@ test("a Pro Show reads back in the shape the Showrunner understands", () => {
   assert.deepEqual(slim.assets.map(a => [a.phase, a.kind, a.done]), [["hook", "ig_post", false], ["convert", "ig_carousel", true]]);
   assert.equal(laneOfX(1360), "show");
 });
+
+test("a Pro episode keeps its phase wherever it sits on the canvas", async () => {
+  const { proToSlim } = await import("../public/shared/bridge.js");
+  const s = { id: "p1", name: "Free placement", dna: { goal: "leads", start: "2026-11-01", end: "2026-11-28" } };
+  const nodes = { a: { id: "a", type: "image", x: 0, lane: "show", p: { start: "2026-11-05" } }, b: { id: "b", type: "carousel", x: 2400, lane: "hook", p: { start: "2026-11-02" } }, c: { id: "c", type: "image", x: 900, lane: "kit", p: {} }, d: { id: "d", type: "carousel", x: 700, p: { start: "2026-11-03" } } };
+  const slim = proToSlim(s, nodes); const ph = Object.fromEntries(slim.assets.map(a => [a.id, a.phase]));
+  assert.equal(ph.a, "show"); assert.equal(ph.b, "hook"); assert.equal(ph.c, undefined, "a shared visual is not an episode"); assert.equal(ph.d, "hook", "older nodes fall back to where they sit");
+});

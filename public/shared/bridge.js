@@ -76,16 +76,18 @@ export function playToPro(s, profile = {}) {
 const EP_TYPES = new Set(["image", "carousel", "poll", "quiz", "metaad", "ad"]);
 const LANE_X = { kit: 0, hook: 640, show: 1360, convert: 2080 };
 export function laneOfX(x = 0) { return x >= LANE_X.convert - 80 ? "convert" : x >= LANE_X.show - 80 ? "show" : x >= LANE_X.hook - 80 ? "hook" : "kit"; }
+/* a node's phase is stored on it (nodes can sit anywhere on the canvas); older nodes fall back to where they sit */
+export const phaseOfNode = (n) => ["kit", "hook", "show", "convert"].includes(n?.lane) ? n.lane : laneOfX(n?.x);
 export function proToSlim(s, nodes = {}) {
   const d = s.dna || {}; const list = Object.values(nodes);
-  const eps = list.filter(n => EP_TYPES.has(n.type) && laneOfX(n.x) !== "kit").sort((a, b) => (a.p?.start || "9").localeCompare(b.p?.start || "9"));
+  const eps = list.filter(n => EP_TYPES.has(n.type) && phaseOfNode(n) !== "kit").sort((a, b) => (a.p?.start || "9").localeCompare(b.p?.start || "9"));
   const goal = GOAL_FROM_PRO[d.goal] || "leads";
   const weeks = d.start && d.end ? Math.max(1, Math.round((new Date(d.end) - new Date(d.start)) / 6048e5)) : 4;
   return {
     id: s.id, showrunner: s.showrunner || "ogilvy", from: "pro",
     brief: { goal, offer: d.offer || "", audience: d.audience || "", channels: [], start: d.start || "", weeks, budget: +d.budget || 0 },
     strategy: { name: s.name, idea: d.idea || "", message: d.idea || "", offer: d.offer || "", cta: d.cta || "", audience: d.audience || "", arc: {} },
-    assets: eps.map(n => ({ id: n.id, date: n.p?.start || "", kind: PRO_TO_KIND[n.type] || "ig_post", phase: laneOfX(n.x), done: !!(n.p?.posts || []).some(p => p.done), title: n.title || "", fields: { first: n.p?.angle || "" } })),
+    assets: eps.map(n => ({ id: n.id, date: n.p?.start || "", kind: PRO_TO_KIND[n.type] || "ig_post", phase: phaseOfNode(n), done: !!(n.p?.posts || []).some(p => p.done), title: n.title || "", fields: { first: n.p?.angle || "" } })),
   };
 }
 
